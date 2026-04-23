@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+dist/
+build/
+*.egg-info/
+.eggs/
+*.egg
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Node
+node_modules/
+.svelte-kit/
+.output/
+.vercel/
+.netlify/
+build/
+dist/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# SOPS artifacts
+*.sops.yaml
+*.enc.yaml
+!*.enc.yaml.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Docker
+.dockerignore
+
+# uv
+.python-version
+
+# Logs
+*.log
+logs/

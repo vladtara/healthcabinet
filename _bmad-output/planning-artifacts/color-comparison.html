@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthCabinet Color Palette Comparison</title>
+  <link rel="stylesheet" href="https://unpkg.com/98.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --base: #1E1E2A;
+      --raised: #2A2A3A;
+      --sunken-bg: #14141E;
+      --text-primary: #E0E0F0;
+      --text-secondary: #8888AA;
+      --text-disabled: #555566;
+      --alt-row: #22222E;
+      --accent: #E07020;
+      --accent-light: #F0A060;
+      --border-raised-light: #3A3A4A;
+      --border-raised-dark: #121220;
+      --border-sunken-light: #121220;
+      --border-sunken-dark: #3A3A4A;
+
+      --status-optimal: #2E8B57;
+      --status-borderline: #DAA520;
+      --status-concerning: #E07020;
+      --status-action: #CC3333;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--base);
+      color: var(--text-primary);
+    }
+
+    /* ===== Theme switcher bar ===== */
+    .theme-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--raised);
+      border-bottom: 2px solid var(--border-raised-dark);
+      flex-shrink: 0;
+    }
+    .theme-bar .label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+    .theme-bar .current-label {
+      font-size: 13px;
+      color: var(--accent-light);
+      font-weight: 600;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .theme-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 14px;
+      border: 2px solid var(--border-raised-dark);
+      border-radius: 3px;
+      background: var(--base);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .theme-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--accent);
+    }
+    .theme-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ===== Override 98.css for theming ===== */
+    body.dark-mode button,
+    body.dark-mode .window .title-bar,
+    body.dark-mode input[type="text"],
+    body.dark-mode textarea,
+    body.dark-mode select {
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Dark mode 98.css overrides */
+    body.dark-mode button:not(.theme-btn) {
+      background: var(--raised);
+      color: var(--text-primary);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+    }
+    body.dark-mode button:not(.theme-btn):active {
+      box-shadow:
+        inset 1px 1px 0 var(--border-raised-dark),
+        inset -1px -1px 0 var(--border-raised-light);
+    }
+    body.dark-mode .title-bar {
+      background: var(--accent) !important;
+      color: #fff !important;
+    }
+    body.dark-mode .title-bar-text {
+      color: #fff !important;
+    }
+    body.dark-mode .title-bar-controls button {
+      background: var(--raised) !important;
+      border: 1px solid var(--border-raised-light) !important;
+      box-shadow: none !important;
+    }
+    body.dark-mode input[type="text"],
+    body.dark-mode textarea {
+      background: var(--sunken-bg);
+      color: var(--text-primary);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-sunken-dark),
+        inset 1px 1px 0 var(--border-sunken-light);
+    }
+    body.dark-mode .sunken-panel {
+      background: var(--sunken-bg);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-sunken-dark),
+        inset 1px 1px 0 var(--border-sunken-light);
+    }
+    body.dark-mode .raised-panel {
+      background: var(--raised);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+    }
+
+    /* Light mode 98.css overrides */
+    body.light-mode button:not(.theme-btn) {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--raised);
+      color: var(--text-primary);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+    }
+    body.light-mode button:not(.theme-btn):active {
+      box-shadow:
+        inset 1px 1px 0 var(--border-raised-dark),
+        inset -1px -1px 0 var(--border-raised-light);
+    }
+    body.light-mode .title-bar {
+      background: var(--accent) !important;
+      color: #fff !important;
+    }
+    body.light-mode .title-bar-text {
+      color: #fff !important;
+    }
+    body.light-mode .title-bar-controls button {
+      background: var(--raised) !important;
+      border: 1px solid var(--border-raised-dark) !important;
+      box-shadow: none !important;
+    }
+    body.light-mode input[type="text"],
+    body.light-mode textarea {
+      background: var(--sunken-bg);
+      color: var(--text-primary);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-sunken-dark),
+        inset 1px 1px 0 var(--border-sunken-light);
+    }
+    body.light-mode .sunken-panel {
+      background: var(--sunken-bg);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-sunken-dark),
+        inset 1px 1px 0 var(--border-sunken-light);
+    }
+    body.light-mode .raised-panel {
+      background: var(--raised);
+      border: none;
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+    }
+
+    /* ===== App layout ===== */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--raised);
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+      flex-shrink: 0;
+    }
+    .app-header .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+    .app-header .user-info {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .app-header .user-info a {
+      color: var(--accent-light);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .app-header .user-info a:hover { text-decoration: underline; }
+
+    .app-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Left nav */
+    .left-nav {
+      width: 180px;
+      flex-shrink: 0;
+      background: var(--sunken-bg);
+      box-shadow:
+        inset -1px -1px 0 var(--border-sunken-dark),
+        inset 1px 1px 0 var(--border-sunken-light);
+      padding: 12px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .nav-header {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-disabled);
+      padding: 4px 16px 8px;
+    }
+    .nav-item {
+      font-size: 14px;
+      padding: 7px 16px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.1s, color 0.1s;
+    }
+    .nav-item:hover { background: var(--base); color: var(--text-primary); }
+    .nav-item.active {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    .nav-sep {
+      height: 1px;
+      background: var(--border-raised-dark);
+      margin: 6px 12px;
+    }
+
+    /* Content area */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Patient summary bar */
+    .patient-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--raised);
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .patient-bar .patient-fields {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .patient-bar .field-label { color: var(--text-secondary); }
+    .patient-bar .field-value { color: var(--text-primary); font-weight: 600; }
+    .patient-bar .sep { color: var(--text-disabled); }
+
+    .import-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      background: var(--accent) !important;
+      color: #fff !important;
+      border: none !important;
+      box-shadow: none !important;
+      cursor: pointer;
+    }
+    .import-btn:hover { opacity: 0.9; }
+
+    /* Biomarker table */
+    .biomarker-section {
+      background: var(--sunken-bg);
+      box-shadow:
+        inset -1px -1px 0 var(--border-sunken-dark),
+        inset 1px 1px 0 var(--border-sunken-light);
+      padding: 2px;
+    }
+    .biomarker-section .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 14px 6px;
+      color: var(--text-primary);
+    }
+    .bio-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .bio-table th {
+      text-align: left;
+      padding: 7px 12px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-disabled);
+      border-bottom: 1px solid var(--border-raised-dark);
+    }
+    .bio-table td {
+      padding: 8px 12px;
+      vertical-align: middle;
+      border-bottom: 1px solid var(--border-raised-dark);
+    }
+    .bio-table tr.alt { background: var(--alt-row); }
+    .bio-table tr:not(.alt) { background: transparent; }
+
+    /* Status left border */
+    .bio-table tr[data-status="borderline"] td:first-child { box-shadow: inset 3px 0 0 var(--status-borderline); }
+    .bio-table tr[data-status="concerning"] td:first-child { box-shadow: inset 3px 0 0 var(--status-concerning); }
+    .bio-table tr[data-status="action"] td:first-child { box-shadow: inset 3px 0 0 var(--status-action); }
+
+    .bio-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+    .bio-unit { color: var(--text-secondary); }
+    .bio-value { font-weight: 500; color: var(--text-primary); }
+    .bio-ref { color: var(--text-secondary); font-size: 12px; }
+    .bio-expand { color: var(--text-disabled); cursor: pointer; font-size: 16px; font-weight: 700; width: 28px; text-align: center; }
+
+    .status-optimal { color: var(--status-optimal); font-weight: 700; }
+    .status-borderline { color: var(--status-borderline); font-weight: 700; }
+    .status-concerning { color: var(--status-concerning); font-weight: 700; }
+    .status-action { color: var(--status-action); font-weight: 700; }
+
+    .sparkline {
+      display: inline-block;
+      width: 80px;
+      height: 20px;
+    }
+    .sparkline svg { width: 100%; height: 100%; }
+    .sparkline path { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .spark-optimal path { stroke: var(--status-optimal); }
+    .spark-borderline path { stroke: var(--status-borderline); }
+    .spark-concerning path { stroke: var(--status-concerning); }
+    .spark-action path { stroke: var(--status-action); }
+    .spark-mixed path { stroke: var(--text-secondary); }
+
+    /* Trend arrows */
+    .trend-up { color: var(--status-action); }
+    .trend-down { color: var(--status-optimal); }
+    .trend-stable { color: var(--text-secondary); }
+
+    /* AI Note */
+    .ai-note {
+      padding: 14px 16px;
+      background: var(--raised);
+      border-left: 4px solid var(--accent);
+      box-shadow:
+        inset -1px -1px 0 var(--border-raised-dark),
+        inset 1px 1px 0 var(--border-raised-light);
+    }
+    .ai-note .note-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-light);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ai-note p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Chat window */
+    .chat-window {
+      display: flex;
+      flex-direction: column;
+      border: 2px solid var(--border-raised-dark);
+    }
+    .chat-title-bar {
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-title-bar .controls { display: flex; gap: 4px; }
+    .chat-title-bar .ctrl-btn {
+      width: 16px; height: 16px;
+      background: var(--raised) !important;
+      border: 1px solid var(--border-raised-light) !important;
+      box-shadow: none !important;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary) !important;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .chat-body {
+      background: var(--sunken-bg);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 120px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .chat-msg {
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .chat-msg .sender { font-weight: 700; margin-right: 4px; }
+    .chat-msg .time { font-size: 11px; color: var(--text-disabled); margin-right: 4px; }
+    .chat-msg.ai .sender { color: var(--accent-light); }
+    .chat-msg.user .sender { color: var(--status-optimal); }
+    .chat-msg .text { color: var(--text-secondary); }
+
+    .chat-input-area {
+      display: flex;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--raised);
+      border-top: 1px solid var(--border-raised-dark);
+    }
+    .chat-input-area input[type="text"] {
+      flex: 1;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 4px 8px;
+    }
+    .chat-input-area button {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      padding: 4px 12px;
+      cursor: pointer;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 12px;
+      font-size: 11px;
+      color: var(--text-disabled);
+      background: var(--raised);
+      border-top: 1px solid var(--border-raised-dark);
+      flex-shrink: 0;
+    }
+    .status-bar .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--status-optimal);
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    /* Scrollbar styling for dark themes */
+    body.dark-mode .content-area::-webkit-scrollbar { width: 10px; }
+    body.dark-mode .content-area::-webkit-scrollbar-track { background: var(--sunken-bg); }
+    body.dark-mode .content-area::-webkit-scrollbar-thumb { background: var(--border-raised-light); }
+    body.dark-mode .content-area::-webkit-scrollbar-thumb:hover { background: var(--text-disabled); }
+
+    /* Bottom section layout */
+    .bottom-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <div class="app-shell">
+
+    <!-- Theme switcher -->
+    <div class="theme-bar">
+      <span class="label">Compare:</span>
+      <button class="theme-btn active" onclick="setTheme('a')">A) Dark Clinical</button>
+      <button class="theme-btn" onclick="setTheme('b')">B) Warm Slate</button>
+      <button class="theme-btn" onclick="setTheme('c')">C) Arctic Blue</button>
+      <button class="theme-btn" onclick="setTheme('d')">D) Midnight Teal</button>
+      <button class="theme-btn" onclick="setTheme('e')">E) Charcoal + Amber</button>
+      <span class="current-label">Currently viewing: <strong id="current-theme-name">Dark Mode Clinical</strong></span>
+    </div>
+
+    <!-- App header -->
+    <div class="app-header">
+      <div class="logo">&#9877; HealthCabinet</div>
+      <div class="user-info">
+        sofia.k@example.com
+        <a>[Sign Out]</a>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="app-body">
+
+      <!-- Left nav -->
+      <div class="left-nav">
+        <div class="nav-header">Navigation</div>
+        <div class="nav-item active">&#9638; Dashboard</div>
+        <div class="nav-item">&#128196; Documents</div>
+        <div class="nav-item">&#128229; Import</div>
+        <div class="nav-item">&#128100; Profile</div>
+        <div class="nav-item">&#9881; Settings</div>
+        <div class="nav-sep"></div>
+        <div class="nav-item">&#128274; Admin</div>
+      </div>
+
+      <!-- Content -->
+      <div class="content-area">
+
+        <!-- Patient summary -->
+        <div class="patient-bar">
+          <div class="patient-fields">
+            <span><span class="field-label">Patient:</span> <span class="field-value">Sofia K.</span></span>
+            <span class="sep">|</span>
+            <span><span class="field-label">Age:</span> <span class="field-value">34</span></span>
+            <span class="sep">|</span>
+            <span><span class="field-label">Sex:</span> <span class="field-value">F</span></span>
+            <span class="sep">|</span>
+            <span><span class="field-label">Conditions:</span> <span class="field-value">3 &#9660;</span></span>
+            <span class="sep">|</span>
+            <span><span class="field-label">Documents:</span> <span class="field-value">4</span></span>
+            <span class="sep">|</span>
+            <span><span class="field-label">Biomarkers:</span> <span class="field-value">18</span></span>
+          </div>
+          <button class="import-btn">&#128194; Import Document</button>
+        </div>
+
+        <!-- Biomarker table -->
+        <div class="biomarker-section">
+          <div class="section-title">Biomarker Overview</div>
+          <table class="bio-table">
+            <thead>
+              <tr>
+                <th style="width:28px"></th>
+                <th>Biomarker</th>
+                <th>Unit</th>
+                <th>Last Value</th>
+                <th>Ref Range</th>
+                <th>Status</th>
+                <th>Trend</th>
+                <th>History</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-status="action">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">TSH</td>
+                <td class="bio-unit">mIU/L</td>
+                <td class="bio-value">8.2</td>
+                <td class="bio-ref">0.4 &ndash; 4.0</td>
+                <td class="status-action">&#9650; Action</td>
+                <td class="trend-up">&uarr; Rising</td>
+                <td><span class="sparkline spark-action"><svg viewBox="0 0 80 20"><path d="M2,16 L16,14 L30,12 L44,8 L58,5 L72,3"/></svg></span></td>
+              </tr>
+              <tr class="alt" data-status="borderline">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Free T4</td>
+                <td class="bio-unit">ng/dL</td>
+                <td class="bio-value">0.7</td>
+                <td class="bio-ref">0.8 &ndash; 1.8</td>
+                <td class="status-borderline">&#9888; Borderline</td>
+                <td class="trend-down">&darr; Falling</td>
+                <td><span class="sparkline spark-borderline"><svg viewBox="0 0 80 20"><path d="M2,5 L16,7 L30,9 L44,12 L58,14 L72,16"/></svg></span></td>
+              </tr>
+              <tr>
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Free T3</td>
+                <td class="bio-unit">pg/mL</td>
+                <td class="bio-value">2.8</td>
+                <td class="bio-ref">2.3 &ndash; 4.2</td>
+                <td class="status-optimal">&#9679; Optimal</td>
+                <td class="trend-stable">&harr; Stable</td>
+                <td><span class="sparkline spark-optimal"><svg viewBox="0 0 80 20"><path d="M2,10 L16,11 L30,10 L44,9 L58,10 L72,10"/></svg></span></td>
+              </tr>
+              <tr class="alt" data-status="action">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Anti-TPO</td>
+                <td class="bio-unit">IU/mL</td>
+                <td class="bio-value">312</td>
+                <td class="bio-ref">&lt; 35</td>
+                <td class="status-action">&#9650; Action</td>
+                <td class="trend-up">&uarr; Rising</td>
+                <td><span class="sparkline spark-action"><svg viewBox="0 0 80 20"><path d="M2,18 L16,14 L30,10 L44,6 L58,4 L72,2"/></svg></span></td>
+              </tr>
+              <tr>
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Hemoglobin</td>
+                <td class="bio-unit">g/dL</td>
+                <td class="bio-value">13.2</td>
+                <td class="bio-ref">12.0 &ndash; 16.0</td>
+                <td class="status-optimal">&#9679; Optimal</td>
+                <td class="trend-stable">&harr; Stable</td>
+                <td><span class="sparkline spark-optimal"><svg viewBox="0 0 80 20"><path d="M2,9 L16,10 L30,10 L44,11 L58,10 L72,10"/></svg></span></td>
+              </tr>
+              <tr class="alt" data-status="borderline">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Ferritin</td>
+                <td class="bio-unit">ng/mL</td>
+                <td class="bio-value">18</td>
+                <td class="bio-ref">20 &ndash; 200</td>
+                <td class="status-borderline">&#9888; Borderline</td>
+                <td class="trend-down">&darr; Falling</td>
+                <td><span class="sparkline spark-borderline"><svg viewBox="0 0 80 20"><path d="M2,6 L16,8 L30,10 L44,12 L58,15 L72,17"/></svg></span></td>
+              </tr>
+              <tr data-status="concerning">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Vitamin D</td>
+                <td class="bio-unit">ng/mL</td>
+                <td class="bio-value">22</td>
+                <td class="bio-ref">30 &ndash; 100</td>
+                <td class="status-concerning">&#9670; Concerning</td>
+                <td class="trend-down">&darr; Falling</td>
+                <td><span class="sparkline spark-concerning"><svg viewBox="0 0 80 20"><path d="M2,4 L16,7 L30,10 L44,13 L58,15 L72,17"/></svg></span></td>
+              </tr>
+              <tr class="alt">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">LDL Cholesterol</td>
+                <td class="bio-unit">mg/dL</td>
+                <td class="bio-value">110</td>
+                <td class="bio-ref">&lt; 130</td>
+                <td class="status-optimal">&#9679; Optimal</td>
+                <td class="trend-stable">&harr; Stable</td>
+                <td><span class="sparkline spark-optimal"><svg viewBox="0 0 80 20"><path d="M2,12 L16,11 L30,10 L44,10 L58,11 L72,10"/></svg></span></td>
+              </tr>
+              <tr>
+                <td class="bio-expand">+</td>
+                <td class="bio-name">HDL Cholesterol</td>
+                <td class="bio-unit">mg/dL</td>
+                <td class="bio-value">62</td>
+                <td class="bio-ref">&gt; 40</td>
+                <td class="status-optimal">&#9679; Optimal</td>
+                <td class="trend-up">&uarr; Rising</td>
+                <td><span class="sparkline spark-optimal"><svg viewBox="0 0 80 20"><path d="M2,16 L16,14 L30,12 L44,10 L58,8 L72,6"/></svg></span></td>
+              </tr>
+              <tr class="alt" data-status="borderline">
+                <td class="bio-expand">+</td>
+                <td class="bio-name">Triglycerides</td>
+                <td class="bio-unit">mg/dL</td>
+                <td class="bio-value">165</td>
+                <td class="bio-ref">&lt; 150</td>
+                <td class="status-borderline">&#9888; Borderline</td>
+                <td class="trend-up">&uarr; Rising</td>
+                <td><span class="sparkline spark-borderline"><svg viewBox="0 0 80 20"><path d="M2,16 L16,13 L30,11 L44,8 L58,6 L72,4"/></svg></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bottom panels -->
+        <div class="bottom-panels">
+          <!-- AI Clinical Note -->
+          <div class="ai-note">
+            <div class="note-title">&#129302; AI Clinical Summary</div>
+            <p>
+              Sofia presents with elevated TSH (8.2 mIU/L) and borderline-low Free T4 (0.7 ng/dL), consistent with
+              subclinical hypothyroidism. Anti-TPO antibodies are significantly elevated (312 IU/mL), suggesting
+              Hashimoto's thyroiditis as the underlying etiology. Ferritin is borderline low (18 ng/mL) and Vitamin D
+              is insufficient (22 ng/mL) &mdash; both common in thyroid autoimmunity. Lipid panel is largely within range,
+              though triglycerides are mildly elevated (165 mg/dL). Recommend endocrinology follow-up, iron and
+              Vitamin D supplementation, and repeat thyroid panel in 6&ndash;8 weeks.
+            </p>
+          </div>
+
+          <!-- Chat window -->
+          <div class="chat-window">
+            <div class="chat-title-bar">
+              <span>&#128172; AI Health Assistant</span>
+              <div class="controls">
+                <button class="ctrl-btn">_</button>
+                <button class="ctrl-btn">&#9633;</button>
+                <button class="ctrl-btn">&#10005;</button>
+              </div>
+            </div>
+            <div class="chat-body">
+              <div class="chat-msg ai">
+                <span class="time">14:32</span>
+                <span class="sender">HealthBot:</span>
+                <span class="text">Hi Sofia! I've reviewed your latest lab results. Would you like me to explain any of the findings?</span>
+              </div>
+              <div class="chat-msg user">
+                <span class="time">14:33</span>
+                <span class="sender">Sofia:</span>
+                <span class="text">Yes, what does the high Anti-TPO mean?</span>
+              </div>
+              <div class="chat-msg ai">
+                <span class="time">14:33</span>
+                <span class="sender">HealthBot:</span>
+                <span class="text">Anti-TPO antibodies at 312 IU/mL (normal &lt;35) indicate your immune system is producing antibodies against thyroid peroxidase, an enzyme in your thyroid. This is the hallmark of Hashimoto's thyroiditis and explains your elevated TSH.</span>
+              </div>
+              <div class="chat-msg user">
+                <span class="time">14:34</span>
+                <span class="sender">Sofia:</span>
+                <span class="text">Should I be worried about the Vitamin D level?</span>
+              </div>
+              <div class="chat-msg ai">
+                <span class="time">14:34</span>
+                <span class="sender">HealthBot:</span>
+                <span class="text">Your Vitamin D at 22 ng/mL is insufficient (optimal is 30&ndash;100). Low Vitamin D is common with thyroid autoimmunity and can worsen symptoms. Supplementation usually helps significantly.</span>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" placeholder="Ask about your health data...">
+              <button>Send</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content-area -->
+    </div><!-- /app-body -->
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span><span class="status-dot"></span>Connected &mdash; Last sync: 2 min ago</span>
+      <span>HealthCabinet v2.4.0 &mdash; EU-Central-1</span>
+    </div>
+
+  </div><!-- /app-shell -->
+
+  <script>
+    const themes = {
+      a: {
+        name: 'Dark Mode Clinical',
+        dark: true,
+        vars: {
+          '--base': '#1E1E2A',
+          '--raised': '#2A2A3A',
+          '--sunken-bg': '#14141E',
+          '--text-primary': '#E0E0F0',
+          '--text-secondary': '#8888AA',
+          '--text-disabled': '#555566',
+          '--alt-row': '#22222E',
+          '--accent': '#E07020',
+          '--accent-light': '#F0A060',
+          '--border-raised-light': '#3A3A4A',
+          '--border-raised-dark': '#121220',
+          '--border-sunken-light': '#121220',
+          '--border-sunken-dark': '#3A3A4A'
+        }
+      },
+      b: {
+        name: 'Warm Slate',
+        dark: false,
+        vars: {
+          '--base': '#E8E4DE',
+          '--raised': '#F2EEE8',
+          '--sunken-bg': '#FFFFFF',
+          '--text-primary': '#2A2420',
+          '--text-secondary': '#7A7068',
+          '--text-disabled': '#A8A098',
+          '--alt-row': '#F5F2EE',
+          '--accent': '#C45820',
+          '--accent-light': '#E08050',
+          '--border-raised-light': '#FFFFFF',
+          '--border-raised-dark': '#B8B0A8',
+          '--border-sunken-light': '#B8B0A8',
+          '--border-sunken-dark': '#FFFFFF'
+        }
+      },
+      c: {
+        name: 'Arctic Blue',
+        dark: false,
+        vars: {
+          '--base': '#E4EAF0',
+          '--raised': '#EEF2F8',
+          '--sunken-bg': '#FFFFFF',
+          '--text-primary': '#1A2030',
+          '--text-secondary': '#5A6A80',
+          '--text-disabled': '#8898A8',
+          '--alt-row': '#EEF2F8',
+          '--accent': '#3366FF',
+          '--accent-light': '#6690FF',
+          '--border-raised-light': '#FFFFFF',
+          '--border-raised-dark': '#A0B0C0',
+          '--border-sunken-light': '#A0B0C0',
+          '--border-sunken-dark': '#FFFFFF'
+        }
+      },
+      d: {
+        name: 'Midnight Teal',
+        dark: true,
+        vars: {
+          '--base': '#1A2428',
+          '--raised': '#243034',
+          '--sunken-bg': '#0E181C',
+          '--text-primary': '#D0E0E8',
+          '--text-secondary': '#6A8A98',
+          '--text-disabled': '#3A5A68',
+          '--alt-row': '#1E2C30',
+          '--accent': '#20C0A0',
+          '--accent-light': '#40E0C0',
+          '--border-raised-light': '#304048',
+          '--border-raised-dark': '#101820',
+          '--border-sunken-light': '#101820',
+          '--border-sunken-dark': '#304048'
+        }
+      },
+      e: {
+        name: 'Charcoal + Amber',
+        dark: true,
+        vars: {
+          '--base': '#2A2A2A',
+          '--raised': '#383838',
+          '--sunken-bg': '#1E1E1E',
+          '--text-primary': '#E8E8E8',
+          '--text-secondary': '#999999',
+          '--text-disabled': '#666666',
+          '--alt-row': '#2E2E2E',
+          '--accent': '#F0A030',
+          '--accent-light': '#FFB840',
+          '--border-raised-light': '#484848',
+          '--border-raised-dark': '#1A1A1A',
+          '--border-sunken-light': '#1A1A1A',
+          '--border-sunken-dark': '#484848'
+        }
+      }
+    };
+
+    function setTheme(key) {
+      const theme = themes[key];
+      const root = document.documentElement;
+
+      // Update CSS custom properties
+      for (const [prop, value] of Object.entries(theme.vars)) {
+        root.style.setProperty(prop, value);
+      }
+
+      // Update body class for dark/light mode
+      document.body.className = theme.dark ? 'dark-mode' : 'light-mode';
+
+      // Update label
+      document.getElementById('current-theme-name').textContent = theme.name;
+
+      // Update active tab
+      document.querySelectorAll('.theme-btn').forEach((btn, i) => {
+        const keys = ['a', 'b', 'c', 'd', 'e'];
+        btn.classList.toggle('active', keys[i] === key);
+      });
+    }
+  </script>
+</body>
+</html>

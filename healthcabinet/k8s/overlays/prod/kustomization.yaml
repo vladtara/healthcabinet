@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: healthcabinet
+resources:
+  - ../../apps/backend/namespace.yaml
+  - ../../apps/backend/deployment.yaml
+  - ../../apps/backend/service.yaml
+  - ../../apps/backend/ingress.yaml
+  - ../../apps/backend/hpa.yaml
+  - ../../apps/backend/secrets.enc.yaml
+  - ../../apps/frontend/deployment.yaml
+  - ../../apps/frontend/service.yaml
+  - ../../apps/frontend/ingress.yaml
+  - ../../apps/worker/deployment.yaml
+  - ../../apps/worker/hpa.yaml
+  - ../../apps/infrastructure/redis/deployment.yaml
+  - ../../apps/monitoring/kustomization.yaml
+images:
+  - name: backend
+    newTag: latest  # FluxCD updates this
+  - name: frontend
+    newTag: latest

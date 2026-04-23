@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: healthcabinet
+resources:
+  - ../../apps/backend/namespace.yaml
+  - ../../apps/backend/deployment.yaml
+  - ../../apps/backend/service.yaml
+  - ../../apps/backend/ingress.yaml
+  - ../../apps/backend/secrets.enc.yaml
+  - ../../apps/frontend/deployment.yaml
+  - ../../apps/frontend/service.yaml
+  - ../../apps/frontend/ingress.yaml
+  - ../../apps/worker/deployment.yaml
+  - ../../apps/infrastructure/redis/deployment.yaml
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: backend
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: worker
+images:
+  - name: backend
+    newTag: dev
+  - name: frontend
+    newTag: dev

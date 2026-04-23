@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthCabinet Font Comparison</title>
+<link rel="stylesheet" href="https://unpkg.com/98.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/mona-sans@5.0.0/index.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #C0C0C0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Font switcher bar */
+  #font-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #C0C0C0;
+    border-bottom: 2px solid #808080;
+    flex-shrink: 0;
+  }
+
+  #font-switcher label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  #font-switcher button {
+    font-size: 13px;
+    padding: 4px 14px;
+    cursor: pointer;
+  }
+
+  #font-switcher button.active {
+    background: #E07020;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  #font-label {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* App shell */
+  #app-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh);
+  }
+
+  /* Header */
+  #app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+
+  #app-header .brand {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  #app-header .user-info {
+    font-size: 14px;
+    color: #333;
+  }
+
+  /* Body split */
+  #app-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  /* Left nav */
+  #left-nav {
+    width: 180px;
+    flex-shrink: 0;
+    padding: 6px;
+    overflow-y: auto;
+  }
+
+  #left-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #left-nav li {
+    padding: 5px 8px;
+    font-size: 14px;
+    cursor: default;
+    border-radius: 0;
+  }
+
+  #left-nav li.active {
+    background: #E07020;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  #left-nav li:not(.active):hover {
+    background: #D0D0D0;
+  }
+
+  #left-nav hr {
+    border: none;
+    border-top: 1px solid #808080;
+    margin: 4px 0;
+  }
+
+  /* Main content */
+  #main-content {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    overflow-y: auto;
+  }
+
+  /* Patient summary bar */
+  #patient-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  #patient-summary .summary-text {
+    font-weight: 500;
+  }
+
+  /* Table area */
+  #table-area {
+    margin-bottom: 8px;
+    padding: 4px;
+  }
+
+  #table-area table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  #table-area thead th {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    padding: 5px 8px;
+    background: #D4D0C8;
+    border: 1px solid #808080;
+    border-bottom: 2px solid #808080;
+    white-space: nowrap;
+  }
+
+  #table-area tbody td {
+    padding: 4px 8px;
+    border: 1px solid #C0C0C0;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  #table-area tbody tr:nth-child(odd) {
+    background: #fff;
+  }
+
+  #table-area tbody tr:nth-child(even) {
+    background: #F0F0F0;
+  }
+
+  .status-optimal    { color: #2E8B57; font-weight: 600; }
+  .status-borderline { color: #DAA520; font-weight: 600; }
+  .status-concerning { color: #E07020; font-weight: 600; }
+  .status-action     { color: #CC3333; font-weight: 600; }
+
+  /* AI panel */
+  #ai-panel {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid #E07020;
+  }
+
+  #ai-panel h3 {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #E07020;
+  }
+
+  #ai-panel p {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+  }
+
+  #ai-panel .disclaimer {
+    font-size: 13px;
+    color: #808080;
+    font-style: italic;
+  }
+
+  /* Status bar */
+  #status-bar {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    font-size: 14px;
+    color: #333;
+    border-top: 2px solid #fff;
+  }
+</style>
+</head>
+<body>
+
+<div id="app-shell">
+
+  <!-- Font switcher -->
+  <div id="font-switcher">
+    <label>Font:</label>
+    <button class="active" onclick="switchFont('Inter', this)">Inter</button>
+    <button onclick="switchFont('Geist', this)">Geist Sans</button>
+    <button onclick="switchFont('Mona Sans', this)">Mona Sans</button>
+    <button onclick="switchFont('DM Sans', this)">Switzer (DM Sans fallback)</button>
+    <span id="font-label">Currently viewing: <strong>Inter</strong></span>
+  </div>
+
+  <!-- App header -->
+  <div id="app-header" class="sunken-panel" style="border:none;">
+    <div style="padding:6px 12px; width:100%; display:flex; justify-content:space-between; align-items:center; background:#D4D0C8; border:2px outset #fff;">
+      <span class="brand">&starf; HealthCabinet</span>
+      <span class="user-info">sofia.k@example.com <button>Sign Out</button></span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div id="app-body">
+
+    <!-- Left nav -->
+    <div id="left-nav" class="sunken-panel">
+      <ul>
+        <li class="active">&#x1F4CA; Dashboard</li>
+        <li>&#x1F4C1; Documents</li>
+        <li>&#x1F464; Medical Profile</li>
+        <li>&#x2699; Settings</li>
+        <li><hr></li>
+        <li>&#x1F527; Admin</li>
+      </ul>
+    </div>
+
+    <!-- Main content -->
+    <div id="main-content" class="sunken-panel">
+
+      <!-- Patient summary -->
+      <div id="patient-summary" style="border:2px outset #fff; background:#D4D0C8;">
+        <span class="summary-text">Patient: Sofia K. &nbsp;|&nbsp; Age: 34 &nbsp;|&nbsp; Sex: F &nbsp;|&nbsp; Conditions: Hashimoto's &nbsp;|&nbsp; Documents: 4 &nbsp;|&nbsp; Biomarkers: 18</span>
+        <button>&#x1F4C2; Import Document</button>
+      </div>
+
+      <!-- Cumulative Results Matrix -->
+      <div id="table-area" class="sunken-panel">
+        <table>
+          <thead>
+            <tr>
+              <th>Biomarker</th>
+              <th>Unit</th>
+              <th>2026-01-15</th>
+              <th>2026-03-01</th>
+              <th>2026-03-28</th>
+              <th>Ref. Range</th>
+              <th>Status</th>
+              <th>Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TSH</td><td>mIU/L</td>
+              <td>3.90</td><td>4.60</td><td>5.82</td>
+              <td>0.4 &ndash; 4.0</td>
+              <td class="status-borderline">&#x26A0; Borderline</td>
+              <td>&#x2191;&#x2191;</td>
+            </tr>
+            <tr>
+              <td>Free T4</td><td>ng/dL</td>
+              <td>0.95</td><td>0.92</td><td>0.91</td>
+              <td>0.8 &ndash; 1.8</td>
+              <td class="status-optimal">&#x25CF; Optimal</td>
+              <td>&rarr;</td>
+            </tr>
+            <tr>
+              <td>Free T3</td><td>pg/mL</td>
+              <td>&mdash;</td><td>2.50</td><td>2.40</td>
+              <td>2.3 &ndash; 4.2</td>
+              <td class="status-optimal">&#x25CF; Optimal</td>
+              <td>&rarr;</td>
+            </tr>
+            <tr>
+              <td>Anti-TPO</td><td>IU/mL</td>
+              <td>289.0</td><td>301.0</td><td>312.0</td>
+              <td>&lt; 35.0</td>
+              <td class="status-action">&#x25B2; Action</td>
+              <td>&#x2191;</td>
+            </tr>
+            <tr>
+              <td>Hemoglobin</td><td>g/dL</td>
+              <td>13.1</td><td>&mdash;</td><td>12.8</td>
+              <td>12.0 &ndash; 16.0</td>
+              <td class="status-optimal">&#x25CF; Optimal</td>
+              <td>&rarr;</td>
+            </tr>
+            <tr>
+              <td>Ferritin</td><td>ng/mL</td>
+              <td>32.0</td><td>24.0</td><td>18.0</td>
+              <td>20 &ndash; 200</td>
+              <td class="status-concerning">&#x25C6; Concerning</td>
+              <td>&#x2193;&#x2193;</td>
+            </tr>
+            <tr>
+              <td>Vitamin D</td><td>ng/mL</td>
+              <td>&mdash;</td><td>25.1</td><td>22.4</td>
+              <td>30 &ndash; 100</td>
+              <td class="status-borderline">&#x26A0; Borderline</td>
+              <td>&#x2193;</td>
+            </tr>
+            <tr>
+              <td>LDL</td><td>mmol/L</td>
+              <td>&mdash;</td><td>&mdash;</td><td>3.20</td>
+              <td>&lt; 3.4</td>
+              <td class="status-optimal">&#x25CF; Optimal</td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td>HDL</td><td>mmol/L</td>
+              <td>&mdash;</td><td>&mdash;</td><td>1.42</td>
+              <td>&gt; 1.2</td>
+              <td class="status-optimal">&#x25CF; Optimal</td>
+              <td>&mdash;</td>
+            </tr>
+            <tr>
+              <td>Triglycerides</td><td>mmol/L</td>
+              <td>&mdash;</td><td>&mdash;</td><td>1.80</td>
+              <td>&lt; 1.7</td>
+              <td class="status-borderline">&#x26A0; Borderline</td>
+              <td>&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- AI Panel -->
+      <div id="ai-panel" class="sunken-panel">
+        <h3>&#x2139; AI Clinical Note</h3>
+        <p>TSH has risen from 3.90 to 5.82 mIU/L over the past three months, now exceeding the upper reference limit. Combined with persistently elevated Anti-TPO antibodies (312 IU/mL), this trend is consistent with progressive autoimmune thyroid dysfunction. Consider discussing dose adjustment of levothyroxine with your endocrinologist.</p>
+        <p>Ferritin has declined steadily from 32.0 to 18.0 ng/mL and is now below the reference floor. Iron-deficiency anemia risk is elevated, particularly given borderline hemoglobin. Dietary iron intake and possible supplementation should be reviewed.</p>
+        <p>Vitamin D remains below optimal at 22.4 ng/mL. Supplementation adherence should be reassessed.</p>
+        <p class="disclaimer">This AI-generated summary is for informational purposes only and does not constitute medical advice. Always consult a qualified healthcare professional before making clinical decisions.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div id="status-bar" class="sunken-panel">
+    Ready &nbsp;|&nbsp; 4 Documents &nbsp;|&nbsp; 18 Biomarkers &nbsp;|&nbsp; Last Import: 2026-03-28
+  </div>
+
+</div>
+
+<script>
+function switchFont(fontFamily, btn) {
+  document.body.style.fontFamily = "'" + fontFamily + "', sans-serif";
+
+  // Update active button
+  var buttons = document.querySelectorAll('#font-switcher button');
+  buttons.forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  // Update label
+  var label = btn.textContent;
+  document.getElementById('font-label').innerHTML = 'Currently viewing: <strong>' + label + '</strong>';
+}
+</script>
+
+</body>
+</html>

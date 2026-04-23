@@ -1,0 +1,830 @@
+# Story 7-5 review diff
+
+diff --git a/healthcabinet/frontend/src/app.css b/healthcabinet/frontend/src/app.css
+index e78b825..6816364 100644
+--- a/healthcabinet/frontend/src/app.css
++++ b/healthcabinet/frontend/src/app.css
+@@ -582,6 +582,211 @@ input[type='radio'].hc-radio + label::before {
+ 	50% { opacity: 1; }
+ }
+ 
++/* MetricCard */
++.hc-metric-card {
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #fff,
++		inset 1px 1px #0a0a0a,
++		inset -2px -2px #dfdfdf,
++		inset 2px 2px grey;
++	padding: var(--spacing-4);
++	display: flex;
++	flex-direction: column;
++	gap: var(--spacing-1);
++	font-family: inherit;
++}
++
++.hc-metric-label {
++	font-size: 14px;
++	font-weight: 400;
++	color: var(--text-secondary);
++	letter-spacing: 0.02em;
++	text-transform: uppercase;
++	margin: 0;
++}
++
++.hc-metric-value {
++	font-size: 24px;
++	font-weight: 700;
++	color: var(--text-primary);
++	font-feature-settings: 'tnum' 1;
++	margin: 0;
++	line-height: 1.2;
++}
++
++/* DataTable */
++.hc-data-table {
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #fff,
++		inset 1px 1px #0a0a0a,
++		inset -2px -2px #dfdfdf,
++		inset 2px 2px grey;
++	overflow: hidden;
++	font-family: inherit;
++}
++
++.hc-data-table table {
++	width: 100%;
++	border-collapse: collapse;
++}
++
++.hc-data-table th {
++	font-size: 14px;
++	font-weight: 700;
++	color: var(--text-primary);
++	background: var(--surface-raised);
++	padding: 8px 12px;
++	text-align: left;
++	border-bottom: 2px solid #808080;
++	white-space: nowrap;
++	font-feature-settings: 'tnum' 1;
++}
++
++.hc-data-table td {
++	font-size: 15px;
++	color: var(--text-primary);
++	padding: 6px 12px;
++	border-bottom: 1px solid #dfdfdf;
++	font-feature-settings: 'tnum' 1;
++}
++
++.hc-data-table tbody tr:nth-child(even) {
++	background: var(--row-alternate);
++}
++
++.hc-data-table tbody tr.hc-row-interactive {
++	cursor: pointer;
++}
++
++.hc-data-table tbody tr.hc-row-interactive:hover {
++	background: var(--surface-raised);
++}
++
++.hc-data-table tbody tr.hc-row-interactive:focus-visible {
++	outline: 1px dotted #000;
++	outline-offset: -1px;
++}
++
++.hc-sort-indicator {
++	display: inline-block;
++	margin-left: 4px;
++	font-size: 10px;
++	color: var(--text-secondary);
++	vertical-align: middle;
++}
++
++.hc-sort-indicator.hc-sort-active {
++	color: var(--text-primary);
++}
++
++.hc-sort-button {
++	all: unset;
++	cursor: pointer;
++	display: inline;
++	font: inherit;
++	color: inherit;
++	font-weight: inherit;
++	user-select: none;
++}
++
++.hc-sort-button:focus-visible {
++	outline: 1px dotted #000;
++	outline-offset: -2px;
++}
++
++.hc-sort-button:hover {
++	text-decoration: underline;
++}
++
++/* StatusRow */
++.hc-status-row {
++	display: flex;
++	align-items: center;
++	justify-content: space-between;
++	padding: var(--spacing-2) var(--spacing-3);
++	border-bottom: 1px solid #dfdfdf;
++	font-family: inherit;
++	font-size: 15px;
++}
++
++.hc-status-row:last-child {
++	border-bottom: none;
++}
++
++.hc-status-row-label {
++	color: var(--text-secondary);
++}
++
++.hc-status-row-value {
++	display: flex;
++	align-items: center;
++	gap: 6px;
++	font-weight: 600;
++	color: var(--text-primary);
++	font-feature-settings: 'tnum' 1;
++}
++
++.hc-status-dot {
++	width: 8px;
++	height: 8px;
++	border-radius: 50%;
++	display: inline-block;
++	flex-shrink: 0;
++}
++
++.hc-status-text {
++	font-size: 13px;
++	font-weight: 400;
++}
++
++.hc-status-dot-optimal { background: var(--status-optimal); }
++.hc-status-dot-borderline { background: var(--status-borderline); }
++.hc-status-dot-concerning { background: var(--status-concerning); }
++.hc-status-dot-action { background: var(--status-action); }
++
++/* SlideOverPanel */
++.hc-slide-over-backdrop {
++	position: fixed;
++	inset: 0;
++	z-index: 50;
++	background: rgba(0, 0, 0, 0.4);
++}
++
++.hc-slide-over {
++	position: fixed;
++	top: 0;
++	right: 0;
++	bottom: 0;
++	z-index: 51;
++	width: 100%;
++	max-width: 480px;
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #0a0a0a,
++		inset 1px 1px #fff,
++		inset -2px -2px grey,
++		inset 2px 2px #dfdfdf,
++		-4px 0 12px rgba(0, 0, 0, 0.15);
++	display: flex;
++	flex-direction: column;
++	transform: translateX(0);
++	transition: transform 200ms ease;
++}
++
++@media (prefers-reduced-motion: reduce) {
++	.hc-slide-over {
++		transition: none;
++	}
++}
++
++.hc-slide-over-body {
++	flex: 1;
++	overflow-y: auto;
++	padding: var(--spacing-4);
++}
++
+ /* StatusBar */
+ .hc-status-bar {
+ 	height: 24px;
+diff --git a/frontend/src/lib/components/ui/data-table/data-table.svelte b/frontend/src/lib/components/ui/data-table/data-table.svelte
+new file mode 100644
+index 0000000..fb8b29f
+--- /dev/null
++++ b/frontend/src/lib/components/ui/data-table/data-table.svelte
+@@ -0,0 +1,106 @@
++<script lang="ts">
++	import type { HTMLAttributes } from 'svelte/elements';
++
++	export interface Column {
++		key: string;
++		label: string;
++		sortable?: boolean;
++		align?: 'left' | 'center' | 'right';
++		class?: string;
++	}
++
++	interface Props extends HTMLAttributes<HTMLDivElement> {
++		columns: Column[];
++		rows: Record<string, unknown>[];
++		onRowClick?: (row: Record<string, unknown>) => void;
++	}
++
++	let { columns, rows, onRowClick, class: className, ...rest }: Props = $props();
++	let classes = $derived(`hc-data-table ${className ?? ''}`.trim());
++
++	let sortKey = $state<string | null>(null);
++	let sortDir = $state<'asc' | 'desc'>('asc');
++
++	function toggleSort(key: string) {
++		if (sortKey === key) {
++			sortDir = sortDir === 'asc' ? 'desc' : 'asc';
++		} else {
++			sortKey = key;
++			sortDir = 'asc';
++		}
++	}
++
++	let sortedRows = $derived.by(() => {
++		if (!sortKey) return rows;
++		const key = sortKey;
++		return [...rows].sort((a, b) => {
++			const av = a[key];
++			const bv = b[key];
++			const cmp = av == null && bv == null ? 0 : av == null ? -1 : bv == null ? 1 : av < bv ? -1 : av > bv ? 1 : 0;
++			return sortDir === 'asc' ? cmp : -cmp;
++		});
++	});
++
++	function handleRowKeydown(e: KeyboardEvent, row: Record<string, unknown>) {
++		if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
++			if (e.key === ' ') e.preventDefault();
++			onRowClick(row);
++		}
++	}
++
++	function ariaSortValue(colKey: string): 'ascending' | 'descending' | 'none' {
++		if (sortKey !== colKey) return 'none';
++		return sortDir === 'asc' ? 'ascending' : 'descending';
++	}
++</script>
++
++<div class={classes} {...rest}>
++	<table>
++		<thead>
++			<tr>
++				{#each columns as col}
++					<th
++						style={col.align ? `text-align: ${col.align}` : undefined}
++						class={col.class ?? undefined}
++						aria-sort={col.sortable ? ariaSortValue(col.key) : undefined}
++					>
++						{#if col.sortable}
++							<button
++								type="button"
++								class="hc-sort-button"
++								onclick={() => toggleSort(col.key)}
++							>
++								{col.label}
++								<span class="hc-sort-indicator {sortKey === col.key ? 'hc-sort-active' : ''}" aria-hidden="true">
++									{#if sortKey === col.key}
++										{sortDir === 'asc' ? '▲' : '▼'}
++									{:else}
++										⇅
++									{/if}
++								</span>
++							</button>
++						{:else}
++							{col.label}
++						{/if}
++					</th>
++				{/each}
++			</tr>
++		</thead>
++		<tbody>
++			{#each sortedRows as row}
++				<tr
++					class={onRowClick ? 'hc-row-interactive' : undefined}
++					onclick={onRowClick ? () => onRowClick!(row) : undefined}
++					onkeydown={onRowClick ? (e: KeyboardEvent) => handleRowKeydown(e, row) : undefined}
++					tabindex={onRowClick ? 0 : undefined}
++				>
++					{#each columns as col}
++						<td style={col.align ? `text-align: ${col.align}` : undefined} class={col.class ?? undefined}>
++							{row[col.key] ?? ''}
++						</td>
++					{/each}
++				</tr>
++			{/each}
++		</tbody>
++	</table>
++</div>
+diff --git a/frontend/src/lib/components/ui/data-table/data-table.test.ts b/frontend/src/lib/components/ui/data-table/data-table.test.ts
+new file mode 100644
+index 0000000..5a5f014
+--- /dev/null
++++ b/frontend/src/lib/components/ui/data-table/data-table.test.ts
+@@ -0,0 +1,111 @@
++import { describe, expect, test, vi } from 'vitest';
++import { tick } from 'svelte';
++import { renderComponent } from '$lib/test-utils/render';
++import DataTable from './data-table.svelte';
++
++const columns = [
++	{ key: 'name', label: 'Name', sortable: true },
++	{ key: 'value', label: 'Value', sortable: true, align: 'right' as const },
++	{ key: 'status', label: 'Status' }
++];
++
++const rows = [
++	{ name: 'TSH', value: 5.82, status: 'Borderline' },
++	{ name: 'T3', value: 120, status: 'Optimal' },
++	{ name: 'Glucose', value: 95, status: 'Optimal' }
++];
++
++describe('DataTable', () => {
++	test('renders column headers', () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const headers = container.querySelectorAll('th');
++		expect(headers.length).toBe(3);
++		expect(headers[0].textContent).toContain('Name');
++		expect(headers[1].textContent).toContain('Value');
++		expect(headers[2].textContent).toContain('Status');
++	});
++
++	test('renders data rows', () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const tds = container.querySelectorAll('tbody td');
++		expect(tds.length).toBe(9); // 3 rows × 3 columns
++		expect(tds[0].textContent).toContain('TSH');
++		expect(tds[1].textContent).toContain('5.82');
++	});
++
++	test('renders sort indicator on sortable columns', () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const indicators = container.querySelectorAll('.hc-sort-indicator');
++		expect(indicators.length).toBe(2); // Name and Value are sortable
++	});
++
++	test('sort toggles on header click', async () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const sortButton = container.querySelector('.hc-sort-button') as HTMLButtonElement;
++		expect(sortButton).toBeInTheDocument();
++
++		// Click to sort ascending by name
++		sortButton.click();
++		await tick();
++		const firstCellAfterSort = container.querySelector('tbody tr:first-child td');
++		expect(firstCellAfterSort?.textContent).toContain('Glucose'); // G < T alphabetically
++
++		// Click again to sort descending
++		sortButton.click();
++		await tick();
++		const firstCellDesc = container.querySelector('tbody tr:first-child td');
++		expect(firstCellDesc?.textContent).toContain('TSH'); // T > G
++	});
++
++	test('row click fires callback', () => {
++		const onRowClick = vi.fn();
++		const { container } = renderComponent(DataTable, { columns, rows, onRowClick });
++		const firstRow = container.querySelector('tbody tr') as HTMLTableRowElement;
++		expect(firstRow).toBeInTheDocument();
++		firstRow.click();
++		expect(onRowClick).toHaveBeenCalledOnce();
++		expect(onRowClick).toHaveBeenCalledWith(rows[0]);
++	});
++
++	test('Enter key fires row click callback', () => {
++		const onRowClick = vi.fn();
++		const { container } = renderComponent(DataTable, { columns, rows, onRowClick });
++		const firstRow = container.querySelector('tbody tr') as HTMLTableRowElement;
++		firstRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
++		expect(onRowClick).toHaveBeenCalledOnce();
++	});
++
++	test('interactive rows have tabindex', () => {
++		const onRowClick = vi.fn();
++		const { container } = renderComponent(DataTable, { columns, rows, onRowClick });
++		const firstRow = container.querySelector('tbody tr') as HTMLTableRowElement;
++		expect(firstRow.getAttribute('tabindex')).toBe('0');
++	});
++
++	test('non-interactive rows lack tabindex', () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const firstRow = container.querySelector('tbody tr') as HTMLTableRowElement;
++		expect(firstRow.getAttribute('tabindex')).toBeNull();
++	});
++
++	test('sorted column header has aria-sort attribute', async () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const sortButton = container.querySelector('.hc-sort-button') as HTMLButtonElement;
++		sortButton.click();
++		await tick();
++		const th = sortButton.closest('th');
++		expect(th?.getAttribute('aria-sort')).toBe('ascending');
++	});
++
++	test('applies hc-data-table class', () => {
++		const { container } = renderComponent(DataTable, { columns, rows });
++		const el = container.firstElementChild;
++		expect(el?.classList.contains('hc-data-table')).toBe(true);
++	});
++
++	test('applies custom class', () => {
++		const { container } = renderComponent(DataTable, { columns, rows, class: 'mt-4' });
++		const el = container.firstElementChild;
++		expect(el?.classList.contains('mt-4')).toBe(true);
++	});
++});
+diff --git a/frontend/src/lib/components/ui/data-table/index.ts b/frontend/src/lib/components/ui/data-table/index.ts
+new file mode 100644
+index 0000000..e27a88a
+--- /dev/null
++++ b/frontend/src/lib/components/ui/data-table/index.ts
+@@ -0,0 +1,2 @@
++export { default as DataTable } from './data-table.svelte';
++export type { Column } from './data-table.svelte';
+diff --git a/frontend/src/lib/components/ui/metric-card/index.ts b/frontend/src/lib/components/ui/metric-card/index.ts
+new file mode 100644
+index 0000000..481d19f
+--- /dev/null
++++ b/frontend/src/lib/components/ui/metric-card/index.ts
+@@ -0,0 +1 @@
++export { default as MetricCard } from './metric-card.svelte';
+diff --git a/frontend/src/lib/components/ui/metric-card/metric-card.svelte b/frontend/src/lib/components/ui/metric-card/metric-card.svelte
+new file mode 100644
+index 0000000..82129ad
+--- /dev/null
++++ b/frontend/src/lib/components/ui/metric-card/metric-card.svelte
+@@ -0,0 +1,21 @@
++<script lang="ts">
++	import type { Snippet } from 'svelte';
++	import type { HTMLAttributes } from 'svelte/elements';
++
++	interface Props extends HTMLAttributes<HTMLDivElement> {
++		label: string;
++		value: string | number;
++		children?: Snippet;
++	}
++
++	let { label, value, children, class: className, ...rest }: Props = $props();
++	let classes = $derived(`hc-metric-card ${className ?? ''}`.trim());
++</script>
++
++<div class={classes} {...rest}>
++	<p class="hc-metric-label">{label}</p>
++	<p class="hc-metric-value">{value}</p>
++	{#if children}
++		{@render children()}
++	{/if}
++</div>
+diff --git a/frontend/src/lib/components/ui/metric-card/metric-card.test.ts b/frontend/src/lib/components/ui/metric-card/metric-card.test.ts
+new file mode 100644
+index 0000000..ed7f038
+--- /dev/null
++++ b/frontend/src/lib/components/ui/metric-card/metric-card.test.ts
+@@ -0,0 +1,48 @@
++import { describe, expect, test } from 'vitest';
++import { renderComponent } from '$lib/test-utils/render';
++import { textSnippet } from '$lib/test-utils/snippet';
++import MetricCard from './metric-card.svelte';
++
++describe('MetricCard', () => {
++	test('renders label', () => {
++		const { container } = renderComponent(MetricCard, { label: 'Total Uploads', value: 42 });
++		expect(container.textContent).toContain('Total Uploads');
++	});
++
++	test('renders numeric value', () => {
++		const { container } = renderComponent(MetricCard, { label: 'Count', value: 1234 });
++		expect(container.textContent).toContain('1234');
++	});
++
++	test('renders string value', () => {
++		const { container } = renderComponent(MetricCard, { label: 'Rate', value: '95.2%' });
++		expect(container.textContent).toContain('95.2%');
++	});
++
++	test('renders children snippet', () => {
++		const { container } = renderComponent(MetricCard, {
++			label: 'Trend',
++			value: 42,
++			children: textSnippet('↑ 12%')
++		});
++		expect(container.textContent).toContain('↑ 12%');
++	});
++
++	test('applies hc-metric-card class', () => {
++		const { container } = renderComponent(MetricCard, { label: 'Test', value: 0 });
++		const el = container.firstElementChild;
++		expect(el?.classList.contains('hc-metric-card')).toBe(true);
++	});
++
++	test('has label and value elements with correct classes', () => {
++		const { container } = renderComponent(MetricCard, { label: 'Metric', value: 99 });
++		expect(container.querySelector('.hc-metric-label')).toBeInTheDocument();
++		expect(container.querySelector('.hc-metric-value')).toBeInTheDocument();
++	});
++
++	test('applies custom class', () => {
++		const { container } = renderComponent(MetricCard, { label: 'Test', value: 0, class: 'my-card' });
++		const el = container.firstElementChild;
++		expect(el?.classList.contains('my-card')).toBe(true);
++	});
++});
+diff --git a/frontend/src/lib/components/ui/slide-over/index.ts b/frontend/src/lib/components/ui/slide-over/index.ts
+new file mode 100644
+index 0000000..0f18ceb
+--- /dev/null
++++ b/frontend/src/lib/components/ui/slide-over/index.ts
+@@ -0,0 +1 @@
++export { default as SlideOver } from './slide-over.svelte';
+diff --git a/frontend/src/lib/components/ui/slide-over/slide-over.svelte b/frontend/src/lib/components/ui/slide-over/slide-over.svelte
+new file mode 100644
+index 0000000..a7ccae0
+--- /dev/null
++++ b/frontend/src/lib/components/ui/slide-over/slide-over.svelte
+@@ -0,0 +1,65 @@
++<script lang="ts">
++	import type { Snippet } from 'svelte';
++
++	interface Props {
++		open: boolean;
++		title: string;
++		children?: Snippet;
++		class?: string;
++	}
++
++	let { open = $bindable(), title, children, class: className }: Props = $props();
++
++	let panelEl: HTMLDivElement | undefined;
++	let previouslyFocused: HTMLElement | null = null;
++
++	function close() {
++		open = false;
++		if (previouslyFocused) {
++			previouslyFocused.focus();
++			previouslyFocused = null;
++		}
++	}
++
++	function handleBackdropClick() {
++		close();
++	}
++
++	function handleKeydown(e: KeyboardEvent) {
++		if (e.key === 'Escape') {
++			close();
++		}
++	}
++
++	$effect(() => {
++		if (open && panelEl) {
++			previouslyFocused = document.activeElement as HTMLElement;
++			panelEl.focus();
++		}
++	});
++</script>
++
++{#if open}
++	<!-- svelte-ignore a11y_no_static_element_interactions -->
++	<div class="hc-slide-over-backdrop" onclick={handleBackdropClick}>
++	</div>
++	<div
++		bind:this={panelEl}
++		class={`hc-slide-over hc-window ${className ?? ''}`.trim()}
++		role="dialog"
++		aria-modal="true"
++		aria-label={title}
++		tabindex="-1"
++		onkeydown={handleKeydown}
++	>
++		<div class="title-bar">
++			<div class="title-bar-text">{title}</div>
++			<div class="title-bar-controls">
++				<button type="button" aria-label="Close" onclick={close}></button>
++			</div>
++		</div>
++		<div class="hc-slide-over-body">
++			{@render children?.()}
++		</div>
++	</div>
++{/if}
+diff --git a/frontend/src/lib/components/ui/slide-over/slide-over.test.ts b/frontend/src/lib/components/ui/slide-over/slide-over.test.ts
+new file mode 100644
+index 0000000..0b4f160
+--- /dev/null
++++ b/frontend/src/lib/components/ui/slide-over/slide-over.test.ts
+@@ -0,0 +1,99 @@
++import { describe, expect, test } from 'vitest';
++import { renderComponent } from '$lib/test-utils/render';
++import { textSnippet } from '$lib/test-utils/snippet';
++import SlideOver from './slide-over.svelte';
++
++describe('SlideOver', () => {
++	test('renders when open is true', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Details',
++			children: textSnippet('Panel content')
++		});
++		expect(container.querySelector('.hc-slide-over')).toBeInTheDocument();
++		expect(container.textContent).toContain('Panel content');
++	});
++
++	test('hidden when open is false', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: false,
++			title: 'Details'
++		});
++		expect(container.querySelector('.hc-slide-over')).not.toBeInTheDocument();
++	});
++
++	test('renders title in title bar', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Document Details'
++		});
++		const titleText = container.querySelector('.title-bar-text');
++		expect(titleText?.textContent).toContain('Document Details');
++	});
++
++	test('renders children content', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Test',
++			children: textSnippet('Custom body content')
++		});
++		expect(container.textContent).toContain('Custom body content');
++	});
++
++	test('has role="dialog" and aria-modal', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Test'
++		});
++		const panel = container.querySelector('.hc-slide-over');
++		expect(panel?.getAttribute('role')).toBe('dialog');
++		expect(panel?.getAttribute('aria-modal')).toBe('true');
++	});
++
++	test('has aria-label matching title', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'My Panel'
++		});
++		const panel = container.querySelector('.hc-slide-over');
++		expect(panel?.getAttribute('aria-label')).toBe('My Panel');
++	});
++
++	test('renders backdrop', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Test'
++		});
++		expect(container.querySelector('.hc-slide-over-backdrop')).toBeInTheDocument();
++	});
++
++	test('renders close button in title bar', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Test'
++		});
++		const closeBtn = container.querySelector('.title-bar-controls button');
++		expect(closeBtn).toBeInTheDocument();
++		expect(closeBtn?.getAttribute('type')).toBe('button');
++		expect(closeBtn?.getAttribute('aria-label')).toBe('Close');
++	});
++
++	test('has scrollable body', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Test',
++			children: textSnippet('Body')
++		});
++		expect(container.querySelector('.hc-slide-over-body')).toBeInTheDocument();
++	});
++
++	test('applies custom class to panel', () => {
++		const { container } = renderComponent(SlideOver, {
++			open: true,
++			title: 'Test',
++			class: 'extra-wide'
++		});
++		const panel = container.querySelector('.hc-slide-over');
++		expect(panel?.classList.contains('extra-wide')).toBe(true);
++	});
++});
+diff --git a/frontend/src/lib/components/ui/status-row/index.ts b/frontend/src/lib/components/ui/status-row/index.ts
+new file mode 100644
+index 0000000..7c277ba
+--- /dev/null
++++ b/frontend/src/lib/components/ui/status-row/index.ts
+@@ -0,0 +1 @@
++export { default as StatusRow } from './status-row.svelte';
+diff --git a/frontend/src/lib/components/ui/status-row/status-row.svelte b/frontend/src/lib/components/ui/status-row/status-row.svelte
+new file mode 100644
+index 0000000..e6a96d3
+--- /dev/null
++++ b/frontend/src/lib/components/ui/status-row/status-row.svelte
+@@ -0,0 +1,32 @@
++<script lang="ts">
++	import type { HTMLAttributes } from 'svelte/elements';
++
++	type Status = 'optimal' | 'borderline' | 'concerning' | 'action';
++
++	const statusLabels: Record<Status, string> = {
++		optimal: 'Optimal',
++		borderline: 'Borderline',
++		concerning: 'Concerning',
++		action: 'Action needed'
++	};
++
++	interface Props extends HTMLAttributes<HTMLDivElement> {
++		label: string;
++		value: string | number;
++		status?: Status;
++	}
++
++	let { label, value, status, class: className, ...rest }: Props = $props();
++	let classes = $derived(`hc-status-row ${className ?? ''}`.trim());
++</script>
++
++<div class={classes} {...rest}>
++	<span class="hc-status-row-label">{label}</span>
++	<span class="hc-status-row-value">
++		{#if status}
++			<span class="hc-status-dot hc-status-dot-{status}" aria-hidden="true"></span>
++			<span class="hc-status-text">{statusLabels[status]}</span>
++		{/if}
++		{value}
++	</span>
++</div>
+diff --git a/frontend/src/lib/components/ui/status-row/status-row.test.ts b/frontend/src/lib/components/ui/status-row/status-row.test.ts
+new file mode 100644
+index 0000000..803408f
+--- /dev/null
++++ b/frontend/src/lib/components/ui/status-row/status-row.test.ts
+@@ -0,0 +1,53 @@
++import { describe, expect, test } from 'vitest';
++import { renderComponent } from '$lib/test-utils/render';
++import StatusRow from './status-row.svelte';
++
++describe('StatusRow', () => {
++	test('renders label', () => {
++		const { container } = renderComponent(StatusRow, { label: 'TSH', value: '5.82 mIU/L' });
++		expect(container.textContent).toContain('TSH');
++	});
++
++	test('renders value', () => {
++		const { container } = renderComponent(StatusRow, { label: 'TSH', value: '5.82 mIU/L' });
++		expect(container.textContent).toContain('5.82 mIU/L');
++	});
++
++	test('renders numeric value', () => {
++		const { container } = renderComponent(StatusRow, { label: 'Count', value: 42 });
++		expect(container.textContent).toContain('42');
++	});
++
++	test('renders status dot and text label when status provided', () => {
++		const { container } = renderComponent(StatusRow, { label: 'TSH', value: '5.82', status: 'borderline' });
++		const dot = container.querySelector('.hc-status-dot');
++		expect(dot).toBeInTheDocument();
++		expect(dot?.classList.contains('hc-status-dot-borderline')).toBe(true);
++		expect(container.textContent).toContain('Borderline');
++	});
++
++	test('renders optimal status dot and label', () => {
++		const { container } = renderComponent(StatusRow, { label: 'T3', value: '120', status: 'optimal' });
++		const dot = container.querySelector('.hc-status-dot');
++		expect(dot?.classList.contains('hc-status-dot-optimal')).toBe(true);
++		expect(container.textContent).toContain('Optimal');
++	});
++
++	test('no dot when no status provided', () => {
++		const { container } = renderComponent(StatusRow, { label: 'TSH', value: '5.82' });
++		const dot = container.querySelector('.hc-status-dot');
++		expect(dot).not.toBeInTheDocument();
++	});
++
++	test('applies hc-status-row class', () => {
++		const { container } = renderComponent(StatusRow, { label: 'Test', value: '0' });
++		const el = container.firstElementChild;
++		expect(el?.classList.contains('hc-status-row')).toBe(true);
++	});
++
++	test('applies custom class', () => {
++		const { container } = renderComponent(StatusRow, { label: 'Test', value: '0', class: 'mt-2' });
++		const el = container.firstElementChild;
++		expect(el?.classList.contains('mt-2')).toBe(true);
++	});
++});

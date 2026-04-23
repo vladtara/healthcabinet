@@ -1,0 +1,1324 @@
+diff --git a/healthcabinet/frontend/src/app.css b/healthcabinet/frontend/src/app.css
+index 8a5f980..2749fb8 100644
+--- a/healthcabinet/frontend/src/app.css
++++ b/healthcabinet/frontend/src/app.css
+@@ -1665,6 +1665,307 @@ input[type='radio'].hc-radio + label::before {
+ 	50% { opacity: 1; }
+ }
+ 
++/* ── Admin Extraction Queue ── */
++
++.hc-admin-queue-page {
++	width: 100%;
++	max-width: 1400px;
++	box-sizing: border-box;
++	padding: 24px;
++	display: flex;
++	flex-direction: column;
++	gap: 16px;
++}
++
++.hc-admin-queue-header {
++	display: flex;
++	align-items: flex-start;
++	justify-content: space-between;
++	gap: 12px;
++	flex-wrap: wrap;
++}
++
++.hc-admin-queue-title {
++	margin: 0;
++	font-size: 18px;
++	font-weight: 700;
++	color: var(--text-primary);
++}
++
++.hc-admin-queue-subtitle {
++	margin: 4px 0 0;
++	font-size: 13px;
++	color: var(--text-secondary);
++}
++
++.hc-admin-queue-count-cell {
++	text-align: center;
++	font-variant-numeric: tabular-nums;
++}
++
++.hc-admin-queue-count-concerning {
++	color: var(--status-concerning);
++	font-weight: 600;
++}
++
++.hc-admin-queue-count-action {
++	color: var(--status-action);
++	font-weight: 600;
++}
++
++.hc-admin-queue-empty-panel {
++	padding: 24px;
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #fff,
++		inset 1px 1px #0a0a0a,
++		inset -2px -2px #dfdfdf,
++		inset 2px 2px grey;
++}
++
++.hc-admin-queue-skeleton {
++	display: flex;
++	flex-direction: column;
++	gap: 8px;
++}
++
++.hc-admin-queue-skeleton-row {
++	min-height: 40px;
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #fff,
++		inset 1px 1px #0a0a0a,
++		inset -2px -2px #dfdfdf,
++		inset 2px 2px grey;
++	animation: hc-admin-queue-skeleton-pulse 1.5s ease-in-out infinite;
++}
++
++@media (prefers-reduced-motion: reduce) {
++	.hc-admin-queue-skeleton-row {
++		animation: none;
++		opacity: 0.85;
++	}
++}
++
++@keyframes hc-admin-queue-skeleton-pulse {
++	0%, 100% { opacity: 0.6; }
++	50% { opacity: 1; }
++}
++
++.hc-admin-queue-footer-count {
++	margin: 0;
++	font-size: 12px;
++	color: var(--text-secondary);
++}
++
++/* ── Admin Correction Detail ── */
++
++.hc-admin-correction-page {
++	width: 100%;
++	max-width: 1400px;
++	box-sizing: border-box;
++	padding: 24px;
++	display: flex;
++	flex-direction: column;
++	gap: 16px;
++}
++
++.hc-admin-correction-back-row {
++	display: flex;
++}
++
++.hc-admin-correction-header {
++	display: flex;
++	flex-direction: column;
++	gap: 4px;
++}
++
++.hc-admin-correction-title {
++	margin: 0;
++	font-size: 18px;
++	font-weight: 700;
++	color: var(--text-primary);
++}
++
++.hc-admin-correction-subtitle {
++	margin: 0;
++	font-size: 13px;
++	color: var(--text-secondary);
++}
++
++.hc-admin-correction-meta-grid {
++	display: grid;
++	grid-template-columns: repeat(4, 1fr);
++	gap: 8px 24px;
++	margin: 0;
++}
++
++.hc-admin-correction-meta-grid > div {
++	display: flex;
++	flex-direction: column;
++	gap: 2px;
++}
++
++.hc-admin-correction-meta-grid dt {
++	font-size: 12px;
++	color: var(--text-secondary);
++	text-transform: uppercase;
++	letter-spacing: 0.02em;
++}
++
++.hc-admin-correction-meta-grid dd {
++	margin: 0;
++	font-size: 14px;
++	color: var(--text-primary);
++}
++
++.hc-admin-correction-meta-grid dd.hc-admin-correction-meta-mono {
++	font-family: var(--font-mono, monospace);
++	font-size: 12px;
++	word-break: break-all;
++}
++
++.hc-admin-correction-table {
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #fff,
++		inset 1px 1px #0a0a0a,
++		inset -2px -2px #dfdfdf,
++		inset 2px 2px grey;
++	padding: 4px;
++}
++
++.hc-admin-correction-table table {
++	width: 100%;
++	border-collapse: collapse;
++	background: var(--surface-base);
++}
++
++.hc-admin-correction-table th,
++.hc-admin-correction-table td {
++	padding: 8px 12px;
++	font-size: 13px;
++	border-bottom: 1px solid var(--border-sunken-outer);
++	vertical-align: top;
++	text-align: left;
++}
++
++.hc-admin-correction-table th {
++	font-weight: 600;
++	color: var(--text-secondary);
++	text-transform: uppercase;
++	letter-spacing: 0.02em;
++	font-size: 11px;
++	background: var(--surface-sunken);
++}
++
++.hc-admin-correction-table tbody tr:last-child td {
++	border-bottom: none;
++}
++
++.hc-admin-correction-biomarker-name {
++	font-weight: 600;
++	color: var(--text-primary);
++}
++
++.hc-admin-correction-biomarker-canonical {
++	font-size: 12px;
++	color: var(--text-secondary);
++	margin-top: 2px;
++}
++
++.hc-admin-correction-value-cell {
++	font-family: var(--font-mono, monospace);
++	text-align: right;
++	font-variant-numeric: tabular-nums;
++	white-space: nowrap;
++}
++
++.hc-admin-correction-confidence-ok {
++	font-size: 12px;
++	color: var(--text-secondary);
++}
++
++.hc-admin-correction-no-flag {
++	color: var(--text-secondary);
++}
++
++.hc-admin-correction-range-cell {
++	font-size: 12px;
++	color: var(--text-secondary);
++	text-align: center;
++	white-space: nowrap;
++}
++
++.hc-admin-correction-success {
++	display: flex;
++	align-items: center;
++	gap: 6px;
++	font-size: 13px;
++	font-weight: 600;
++	color: var(--status-optimal);
++}
++
++.hc-admin-correction-form {
++	display: flex;
++	flex-direction: column;
++	gap: 6px;
++}
++
++.hc-admin-correction-form-row {
++	display: flex;
++	gap: 6px;
++	flex-wrap: wrap;
++}
++
++.hc-admin-correction-input-value.hc-input {
++	width: 90px;
++}
++
++.hc-admin-correction-input-reason.hc-input {
++	width: 200px;
++}
++
++.hc-admin-correction-field-error {
++	margin: 0;
++	font-size: 12px;
++	color: var(--status-action);
++}
++
++.hc-admin-correction-row-highlight {
++	background: color-mix(in srgb, var(--accent) 8%, transparent);
++	box-shadow: inset 3px 0 0 var(--accent);
++}
++
++.hc-admin-correction-skeleton {
++	display: flex;
++	flex-direction: column;
++	gap: 8px;
++}
++
++.hc-admin-correction-skeleton-row {
++	min-height: 40px;
++	background: var(--surface-sunken);
++	box-shadow:
++		inset -1px -1px #fff,
++		inset 1px 1px #0a0a0a,
++		inset -2px -2px #dfdfdf,
++		inset 2px 2px grey;
++	animation: hc-admin-correction-skeleton-pulse 1.5s ease-in-out infinite;
++}
++
++@media (prefers-reduced-motion: reduce) {
++	.hc-admin-correction-skeleton-row {
++		animation: none;
++		opacity: 0.85;
++	}
++}
++
++@keyframes hc-admin-correction-skeleton-pulse {
++	0%, 100% { opacity: 0.6; }
++	50% { opacity: 1; }
++}
++
+ /* ── Toast Notifications ── */
+ 
+ .hc-toast-container {
+diff --git a/healthcabinet/frontend/src/routes/(admin)/admin/documents/+page.svelte b/healthcabinet/frontend/src/routes/(admin)/admin/documents/+page.svelte
+index d65f3af..fffbf06 100644
+--- a/healthcabinet/frontend/src/routes/(admin)/admin/documents/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(admin)/admin/documents/+page.svelte
+@@ -2,6 +2,7 @@
+ 	import { goto } from '$app/navigation';
+ 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+ 	import { getErrorQueue } from '$lib/api/admin';
++	import { DataTable, type Column } from '$lib/components/ui/data-table';
+ 
+ 	const queryClient = useQueryClient();
+ 
+@@ -31,59 +32,78 @@
+ 	function getFlagReason(flaggedCount: number): string {
+ 		return flaggedCount > 0 ? 'User-flagged' : '—';
+ 	}
++
++	const columns: Column[] = [
++		{ key: 'document_id', label: 'Document ID', sortable: true },
++		{ key: 'user_id', label: 'User ID', sortable: true },
++		{ key: 'filename', label: 'Filename', sortable: true },
++		{ key: 'upload_date', label: 'Upload Date', sortable: true },
++		{ key: 'status', label: 'Status', sortable: true },
++		{ key: 'value_count', label: 'Values', sortable: true, align: 'center' },
++		{ key: 'low_confidence_count', label: 'Low Conf.', sortable: true, align: 'center' },
++		{ key: 'flagged_count', label: 'Flagged', sortable: true, align: 'center' },
++		{ key: 'flag_reason', label: 'Flag Reason' },
++	];
++
++	let rows = $derived(
++		(queueQuery.data?.items ?? []).map((item) => ({
++			document_id: item.document_id,
++			user_id: item.user_id,
++			filename: item.filename,
++			upload_date: item.upload_date,
++			status: item.status,
++			value_count: item.value_count,
++			low_confidence_count: item.low_confidence_count,
++			flagged_count: item.flagged_count,
++			flag_reason: getFlagReason(item.flagged_count),
++		}))
++	);
++
++	function handleRowClick(row: Record<string, unknown>) {
++		const id = row.document_id;
++		if (typeof id === 'string') {
++			goto(`/admin/documents/${id}`);
++		}
++	}
+ </script>
+ 
+-<main class="p-8">
+-	<div class="mb-6 flex items-center justify-between">
++<main class="hc-admin-queue-page">
++	<header class="hc-admin-queue-header">
+ 		<div>
+-			<h1 class="text-2xl font-semibold">Extraction Error Queue</h1>
+-			<p class="mt-1 text-sm text-muted-foreground">
++			<h1 class="hc-admin-queue-title">Extraction Error Queue</h1>
++			<p class="hc-admin-queue-subtitle">
+ 				Documents with extraction problems requiring review
+ 			</p>
+ 		</div>
+ 		<button
++			type="button"
++			class="btn-standard"
+ 			onclick={handleRefresh}
+-			class="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+ 			aria-label="Refresh queue"
+ 		>
+ 			Refresh
+ 		</button>
+-	</div>
++	</header>
+ 
+ 	{#if queueQuery.isPending}
+-		<div class="rounded-lg border border-border" role="status" aria-label="Loading queue">
+-			<table class="w-full">
+-				<thead class="border-b border-border bg-muted/50">
+-					<tr>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Document ID</th>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User ID</th>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Filename</th>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Upload Date</th>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+-						<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Values</th>
+-						<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Low Conf.</th>
+-						<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Flagged</th>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Flag Reason</th>
+-					</tr>
+-				</thead>
+-				<tbody>
+-					{#each Array(3) as _}
+-						<tr class="border-b border-border">
+-							{#each Array(9) as _}
+-								<td class="px-4 py-3"><div class="h-4 w-20 animate-pulse rounded bg-muted"></div></td>
+-							{/each}
+-						</tr>
+-					{/each}
+-				</tbody>
+-			</table>
++		<div
++			class="hc-admin-queue-skeleton"
++			role="status"
++			aria-label="Loading queue"
++		>
++			{#each Array(3) as _}
++				<div class="hc-admin-queue-skeleton-row"></div>
++			{/each}
+ 		</div>
+ 	{:else if queueQuery.isError}
+-		<div role="alert" class="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-sm text-destructive">
+-			<p class="font-semibold">Unable to load extraction error queue.</p>
+-			<p class="mt-1 text-muted-foreground">Try refreshing the page or contact support if the issue persists.</p>
++		<div class="hc-state hc-state-error" role="alert">
++			<p class="hc-state-title">Unable to load extraction error queue.</p>
++			<p>Try refreshing the page or contact support if the issue persists.</p>
+ 			<button
++				type="button"
++				class="btn-standard"
+ 				onclick={handleRefresh}
+-				class="mt-3 rounded-md bg-destructive/20 px-3 py-1.5 text-xs font-medium hover:bg-destructive/30 transition-colors"
++				aria-label="Retry loading extraction error queue"
+ 			>
+ 				Try again
+ 			</button>
+@@ -91,85 +111,54 @@
+ 	{:else if queueQuery.data}
+ 		{@const data = queueQuery.data}
+ 		{#if data.items.length === 0}
+-			<div class="rounded-lg border border-border bg-card p-12 text-center">
+-				<svg class="mx-auto h-12 w-12 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+-				</svg>
+-				<p class="mt-4 font-medium">No documents requiring review</p>
+-				<p class="mt-1 text-sm text-muted-foreground">
+-					All documents have been processed successfully or no values need correction.
+-				</p>
++			<div class="hc-admin-queue-empty-panel">
++				<div class="hc-state hc-state-empty">
++					<p class="hc-state-title">No documents requiring review</p>
++					<p>
++						All documents have been processed successfully or no values need correction.
++					</p>
++				</div>
+ 			</div>
+ 		{:else}
+-			<div class="rounded-lg border border-border overflow-hidden">
+-				<table class="w-full">
+-					<thead class="border-b border-border bg-muted/50">
+-						<tr>
+-							<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Document ID</th>
+-							<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User ID</th>
+-							<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Filename</th>
+-							<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Upload Date</th>
+-							<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+-							<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Values</th>
+-							<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Low Conf.</th>
+-							<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Flagged</th>
+-							<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Flag Reason</th>
+-						</tr>
+-					</thead>
+-					<tbody class="divide-y divide-border">
+-						{#each data.items as item (item.document_id)}
+-							<tr
+-								class="hover:bg-muted/30 cursor-pointer transition-colors"
+-								onclick={() => goto(`/admin/documents/${item.document_id}`)}
+-								onkeydown={(e) => e.key === 'Enter' && goto(`/admin/documents/${item.document_id}`)}
+-								role="button"
+-								tabindex="0"
+-							>
+-								<td class="px-4 py-3 font-mono text-xs">{truncateId(item.document_id)}</td>
+-								<td class="px-4 py-3 font-mono text-xs">{truncateId(item.user_id)}</td>
+-								<td class="px-4 py-3 text-sm">{item.filename}</td>
+-								<td class="px-4 py-3 text-sm text-muted-foreground">{formatDate(item.upload_date)}</td>
+-								<td class="px-4 py-3">
+-									{#if item.status === 'failed'}
+-										<span class="inline-flex items-center rounded-md bg-action/10 px-2 py-1 text-xs font-medium text-action">
+-											Failed
+-										</span>
+-									{:else if item.status === 'partial'}
+-										<span class="inline-flex items-center rounded-md bg-concerning/10 px-2 py-1 text-xs font-medium text-concerning">
+-											Partial
+-										</span>
+-									{:else}
+-										<span class="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+-											{item.status}
+-										</span>
+-									{/if}
+-								</td>
+-								<td class="px-4 py-3 text-center text-sm tabular-nums">{item.value_count}</td>
+-								<td class="px-4 py-3 text-center text-sm tabular-nums">
+-									{#if item.low_confidence_count > 0}
+-										<span class="text-concerning">{item.low_confidence_count}</span>
+-									{:else}
+-										<span class="text-muted-foreground">{item.low_confidence_count}</span>
+-									{/if}
+-								</td>
+-								<td class="px-4 py-3 text-center text-sm tabular-nums">
+-									{#if item.flagged_count > 0}
+-										<span class="text-action">{item.flagged_count}</span>
+-									{:else}
+-										<span class="text-muted-foreground">{item.flagged_count}</span>
+-									{/if}
+-								</td>
+-								<td class="px-4 py-3 text-sm">
+-									<span class={item.flagged_count > 0 ? 'text-action' : 'text-muted-foreground'}>
+-										{getFlagReason(item.flagged_count)}
+-									</span>
+-								</td>
+-							</tr>
+-						{/each}
+-					</tbody>
+-				</table>
+-			</div>
+-			<p class="mt-2 text-xs text-muted-foreground">
++			<DataTable {columns} {rows} onRowClick={handleRowClick}>
++				{#snippet children(row, col)}
++					{#if col.key === 'document_id' || col.key === 'user_id'}
++						<span class="hc-admin-correction-value-cell">{truncateId(String(row[col.key]))}</span>
++					{:else if col.key === 'upload_date'}
++						{formatDate(String(row.upload_date))}
++					{:else if col.key === 'status'}
++						{#if row.status === 'failed'}
++							<span class="hc-badge hc-badge-danger">Failed</span>
++						{:else if row.status === 'partial'}
++							<span class="hc-badge hc-badge-warning">Partial</span>
++						{:else}
++							<span class="hc-badge hc-badge-default">{row.status}</span>
++						{/if}
++					{:else if col.key === 'value_count'}
++						<span class="hc-admin-queue-count-cell">{row.value_count}</span>
++					{:else if col.key === 'low_confidence_count'}
++						{@const count = row.low_confidence_count as number}
++						<span
++							class="hc-admin-queue-count-cell {count > 0 ? 'hc-admin-queue-count-concerning' : ''}"
++						>
++							{count}
++						</span>
++					{:else if col.key === 'flagged_count'}
++						{@const count = row.flagged_count as number}
++						<span
++							class="hc-admin-queue-count-cell {count > 0 ? 'hc-admin-queue-count-action' : ''}"
++						>
++							{count}
++						</span>
++					{:else if col.key === 'flag_reason'}
++						{@const flagged = (row.flagged_count as number) > 0}
++						<span class={flagged ? 'hc-admin-queue-count-action' : ''}>{row.flag_reason}</span>
++					{:else}
++						{row[col.key] ?? ''}
++					{/if}
++				{/snippet}
++			</DataTable>
++			<p class="hc-admin-queue-footer-count">
+ 				Showing {data.items.length} document{data.items.length !== 1 ? 's' : ''} requiring review
+ 			</p>
+ 		{/if}
+diff --git a/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/+page.svelte b/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/+page.svelte
+index ef154f7..f847e49 100644
+--- a/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/+page.svelte
+@@ -115,80 +115,85 @@
+ 	}
+ </script>
+ 
+-<main class="p-8">
+-	<div class="mb-6">
++<main class="hc-admin-correction-page">
++	<div class="hc-admin-correction-back-row">
+ 		<button
++			type="button"
++			class="btn-standard"
+ 			onclick={() => goto('/admin/documents')}
+-			class="mb-4 flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
++			aria-label="Back to extraction error queue"
+ 		>
+-			<svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+-			</svg>
+-			Back to Error Queue
++			← Back to Error Queue
+ 		</button>
+-		<h1 class="text-2xl font-semibold">Document Correction</h1>
+-		<p class="mt-1 text-sm text-muted-foreground">
++	</div>
++
++	<header class="hc-admin-correction-header">
++		<h1 class="hc-admin-correction-title">Document Correction</h1>
++		<p class="hc-admin-correction-subtitle">
+ 			Review and correct extracted health values
+ 		</p>
+-	</div>
++	</header>
+ 
+ 	{#if detailQuery.isPending}
+-		<div class="rounded-lg border border-border p-8" role="status" aria-label="Loading document">
+-			<div class="animate-pulse space-y-4">
+-				<div class="h-4 w-1/3 rounded bg-muted"></div>
+-				<div class="h-4 w-1/4 rounded bg-muted"></div>
+-				<div class="h-4 w-1/2 rounded bg-muted"></div>
+-			</div>
++		<div
++			class="hc-admin-correction-skeleton"
++			role="status"
++			aria-label="Loading document"
++		>
++			{#each Array(3) as _}
++				<div class="hc-admin-correction-skeleton-row"></div>
++			{/each}
+ 		</div>
+ 	{:else if detailQuery.isError}
+-		<div role="alert" class="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-sm text-destructive">
+-			<p class="font-semibold">Unable to load document details.</p>
+-			<p class="mt-1 text-muted-foreground">The document may not exist or you may not have access.</p>
++		<div class="hc-state hc-state-error" role="alert">
++			<p class="hc-state-title">Unable to load document details.</p>
++			<p>The document may not exist or you may not have access.</p>
+ 		</div>
+ 	{:else if detailQuery.data}
+ 		{@const doc = detailQuery.data}
+-		<div class="mb-6 rounded-lg border border-border bg-card p-6">
+-			<dl class="grid grid-cols-4 gap-x-8 gap-y-2 text-sm">
++		<fieldset class="hc-fieldset">
++			<legend>Document</legend>
++			<dl class="hc-admin-correction-meta-grid">
+ 				<div>
+-					<dt class="text-muted-foreground">Filename</dt>
+-					<dd class="mt-0.5 font-medium">{doc.filename}</dd>
++					<dt>Filename</dt>
++					<dd>{doc.filename}</dd>
+ 				</div>
+ 				<div>
+-					<dt class="text-muted-foreground">Status</dt>
+-					<dd class="mt-0.5">
++					<dt>Status</dt>
++					<dd>
+ 						{#if doc.status === 'failed'}
+-							<span class="inline-flex items-center rounded-md bg-action/10 px-2 py-0.5 text-xs font-medium text-action">Failed</span>
++							<span class="hc-badge hc-badge-danger">Failed</span>
+ 						{:else if doc.status === 'partial'}
+-							<span class="inline-flex items-center rounded-md bg-concerning/10 px-2 py-0.5 text-xs font-medium text-concerning">Partial</span>
++							<span class="hc-badge hc-badge-warning">Partial</span>
+ 						{:else}
+-							<span class="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{doc.status}</span>
++							<span class="hc-badge hc-badge-default">{doc.status}</span>
+ 						{/if}
+ 					</dd>
+ 				</div>
+ 				<div>
+-					<dt class="text-muted-foreground">User ID</dt>
+-					<dd class="mt-0.5 font-mono text-xs">{doc.user_id}</dd>
++					<dt>User ID</dt>
++					<dd class="hc-admin-correction-meta-mono">{doc.user_id}</dd>
+ 				</div>
+ 				<div>
+-					<dt class="text-muted-foreground">Upload Date</dt>
+-					<dd class="mt-0.5 text-muted-foreground">{formatDate(doc.upload_date)}</dd>
++					<dt>Upload Date</dt>
++					<dd>{formatDate(doc.upload_date)}</dd>
+ 				</div>
+ 			</dl>
+-		</div>
++		</fieldset>
+ 
+-		<div class="rounded-lg border border-border overflow-hidden">
+-			<table class="w-full">
+-				<thead class="border-b border-border bg-muted/50">
++		<div class="hc-admin-correction-table">
++			<table>
++				<thead>
+ 					<tr>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Biomarker</th>
+-						<th class="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Value</th>
+-						<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Confidence</th>
+-						<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Flagged</th>
+-						<th class="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Reference Range</th>
+-						<th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Correction</th>
++						<th>Biomarker</th>
++						<th style="text-align: right;">Value</th>
++						<th style="text-align: center;">Confidence</th>
++						<th style="text-align: center;">Flagged</th>
++						<th style="text-align: center;">Reference Range</th>
++						<th>Correction</th>
+ 					</tr>
+ 				</thead>
+-				<tbody class="divide-y divide-border">
++				<tbody>
+ 					{#each doc.values as value (value.id)}
+ 						{@const state = correctionStates[value.id]}
+ 						{@const isValid = state ? isFormValid(state) : false}
+@@ -198,74 +203,74 @@
+ 						{@const isHighlighted = highlightValueId === value.id}
+ 						<tr
+ 							id="hv-row-{value.id}"
+-							class="transition-colors {isHighlighted ? 'bg-accent/10 ring-1 ring-accent/30' : 'hover:bg-muted/20'}"
++							class={isHighlighted ? 'hc-admin-correction-row-highlight' : undefined}
+ 						>
+-							<td class="px-4 py-4">
+-								<p class="font-medium text-sm">{value.biomarker_name}</p>
+-								<p class="text-xs text-muted-foreground">{value.canonical_biomarker_name}</p>
++							<td>
++								<p class="hc-admin-correction-biomarker-name">{value.biomarker_name}</p>
++								<p class="hc-admin-correction-biomarker-canonical">{value.canonical_biomarker_name}</p>
+ 							</td>
+-							<td class="px-4 py-4 text-right">
+-								<span class="font-mono text-sm tabular-nums">
+-									{value.value} {value.unit ?? ''}
+-								</span>
++							<td class="hc-admin-correction-value-cell">
++								{value.value} {value.unit ?? ''}
+ 							</td>
+-							<td class="px-4 py-4 text-center">
++							<td style="text-align: center;">
+ 								{#if value.confidence < 0.7}
+-									<span class="inline-flex items-center rounded-md bg-concerning/10 px-2 py-0.5 text-xs font-medium text-concerning">
++									<span class="hc-badge hc-badge-warning">
+ 										{(value.confidence * 100).toFixed(0)}%
+ 									</span>
+ 								{:else}
+-									<span class="text-xs text-muted-foreground">{(value.confidence * 100).toFixed(0)}%</span>
++									<span class="hc-admin-correction-confidence-ok">
++										{(value.confidence * 100).toFixed(0)}%
++									</span>
+ 								{/if}
+ 							</td>
+-							<td class="px-4 py-4 text-center">
++							<td style="text-align: center;">
+ 								{#if value.is_flagged}
+-									<span class="inline-flex items-center rounded-md bg-action/10 px-2 py-0.5 text-xs font-medium text-action">
+-										User-flagged
+-									</span>
++									<span class="hc-badge hc-badge-danger">User-flagged</span>
+ 								{:else}
+-									<span class="text-xs text-muted-foreground">—</span>
++									<span class="hc-admin-correction-no-flag">—</span>
+ 								{/if}
+ 							</td>
+-							<td class="px-4 py-4 text-center text-xs text-muted-foreground">
++							<td class="hc-admin-correction-range-cell">
+ 								{#if value.reference_range_low != null && value.reference_range_high != null}
+-									{value.reference_range_low}–{value.reference_range_high} {value.unit ?? ''}
++									{value.reference_range_low}–{value.reference_range_high}
++									{value.unit ?? ''}
+ 								{:else}
+ 									—
+ 								{/if}
+ 							</td>
+-							<td class="px-4 py-4">
++							<td>
+ 								{#if success}
+-									<div class="flex items-center gap-2 text-sm text-optimal">
+-										<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+-										</svg>
+-										Corrected
++									<div class="hc-admin-correction-success">
++										<span aria-hidden="true">✓</span>
++										<span>Corrected</span>
+ 									</div>
+ 								{:else if state}
+-									<div class="flex flex-col gap-2">
+-										<div class="flex gap-2">
++									<div class="hc-admin-correction-form">
++										<div class="hc-admin-correction-form-row">
+ 											<input
+ 												type="number"
+ 												step="any"
++												class="hc-input hc-admin-correction-input-value"
+ 												placeholder="New value"
++												aria-label={`New value for ${value.biomarker_name}`}
+ 												bind:value={state.newValue}
+-												class="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+ 											/>
+ 											<input
+ 												type="text"
++												class="hc-input hc-admin-correction-input-reason"
+ 												placeholder="Reason (required)"
++												aria-label={`Correction reason for ${value.biomarker_name}`}
+ 												bind:value={state.reason}
+-												class="w-48 rounded-md border border-border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+ 											/>
+ 										</div>
+ 										{#if error}
+-											<p class="text-xs text-destructive">{error}</p>
++											<p class="hc-admin-correction-field-error" role="alert">{error}</p>
+ 										{/if}
+ 										<button
++											type="button"
++											class="btn-primary"
+ 											onclick={() => handleSubmit(value.id)}
+ 											disabled={!isValid || isSubmitting}
+-											class="w-fit rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ 										>
+ 											{isSubmitting ? 'Saving…' : 'Submit Correction'}
+ 										</button>
+diff --git a/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/page.test.ts b/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/page.test.ts
+index 8750c01..c359b4c 100644
+--- a/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/page.test.ts
++++ b/healthcabinet/frontend/src/routes/(admin)/admin/documents/[document_id]/page.test.ts
+@@ -1,4 +1,5 @@
+-import { waitFor } from '@testing-library/svelte';
++import axe from 'axe-core';
++import { fireEvent, waitFor } from '@testing-library/svelte';
+ import { describe, expect, test, vi, beforeEach } from 'vitest';
+ import { QueryClient } from '@tanstack/query-core';
+ import { render } from '@testing-library/svelte';
+@@ -105,6 +106,41 @@ describe('Admin document correction page', () => {
+ 			role: 'admin',
+ 			tier: 'paid'
+ 		};
++		mockPageData.url = new URL(
++			'http://test/admin/documents/00000000-0000-0000-0000-000000000001'
++		);
++	});
++
++	test('page container uses hc-admin-correction-page class', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		const { container } = renderPage();
++		await waitFor(() => {
++			expect(container.querySelector('.hc-admin-correction-page')).toBeInTheDocument();
++		});
++	});
++
++	test('back button uses btn-standard with plain text (no svg icon)', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		const { container, getByRole } = renderPage();
++		await waitFor(() => {
++			expect(container.querySelector('.hc-admin-correction-back-row')).toBeInTheDocument();
++		});
++		const backBtn = getByRole('button', { name: /back to extraction error queue/i });
++		expect(backBtn).toHaveClass('btn-standard');
++		// No svg icons inside the back button
++		expect(backBtn.querySelector('svg')).toBeNull();
++	});
++
++	test('metadata wrapped in hc-fieldset with Document legend', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const legend = container.querySelector('.hc-fieldset > legend');
++		expect(legend?.textContent).toContain('Document');
++		expect(container.querySelector('.hc-admin-correction-meta-grid')).toBeInTheDocument();
+ 	});
+ 
+ 	test('renders document metadata and health values', async () => {
+@@ -123,61 +159,61 @@ describe('Admin document correction page', () => {
+ 		// Check health values
+ 		expect(getByText('Cholesterol')).toBeInTheDocument();
+ 		expect(getByText('HDL Cholesterol')).toBeInTheDocument();
+-		expect(getByText('5.4 mmol/L')).toBeInTheDocument();
+ 	});
+ 
+ 	test('shows loading skeleton while fetching', () => {
+ 		mockGetDocumentForCorrection.mockReturnValue(new Promise(() => {}));
+ 
+-		const { getByRole } = renderPage();
++		const { container, getByRole } = renderPage();
+ 
+ 		expect(getByRole('status', { name: /loading/i })).toBeInTheDocument();
++		expect(container.querySelector('.hc-admin-correction-skeleton')).toBeInTheDocument();
+ 	});
+ 
+-	test('shows error state on fetch failure', async () => {
++	test('shows error state on fetch failure with hc-state-error', async () => {
+ 		mockGetDocumentForCorrection.mockRejectedValue(new Error('Network error'));
+ 
+-		const { getByRole, queryByRole } = renderPage();
++		const { container, getByRole, queryByRole } = renderPage();
+ 
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+ 		expect(getByRole('alert')).toBeInTheDocument();
++		expect(container.querySelector('.hc-state.hc-state-error')).toBeInTheDocument();
+ 	});
+ 
+-	test('shows low confidence badge for low confidence values', async () => {
++	test('low confidence values use hc-badge-warning with percentage text', async () => {
+ 		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
+-
+-		const { getByText, queryByRole } = renderPage();
+-
++		const { container, queryByRole } = renderPage();
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+-		// Cholesterol has confidence 0.45 (<0.7) should show as 45%
+-		expect(getByText('45%')).toBeInTheDocument();
++		// Cholesterol confidence 0.45 < 0.7 → warning badge with "45%"
++		const warningBadges = container.querySelectorAll('.hc-badge.hc-badge-warning');
++		const confidenceBadge = Array.from(warningBadges).find((el) =>
++			el.textContent?.includes('45%')
++		);
++		expect(confidenceBadge).toBeTruthy();
+ 	});
+ 
+-	test('shows flagged badge for user-flagged values', async () => {
++	test('flagged values use hc-badge-danger with User-flagged text', async () => {
+ 		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
+-
+-		const { getByText, queryByRole } = renderPage();
+-
++		const { container, queryByRole } = renderPage();
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+-		expect(getByText('User-flagged')).toBeInTheDocument();
++		const flaggedBadge = container.querySelector('.hc-badge.hc-badge-danger');
++		expect(flaggedBadge?.textContent).toContain('User-flagged');
+ 	});
+ 
+-	test('highlights row when health_value_id query param is present', async () => {
+-		// Update the mock URL to include health_value_id
++	test('highlights target row with hc-admin-correction-row-highlight when health_value_id query param matches', async () => {
+ 		const targetValueId = '00000000-0000-0000-0000-000000000101';
+ 		mockPageData.url = new URL(
+ 			`http://test/admin/documents/00000000-0000-0000-0000-000000000001?health_value_id=${targetValueId}`
+ 		);
+-
+ 		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
+ 
+ 		const { queryByRole } = renderPage();
+@@ -186,36 +222,148 @@ describe('Admin document correction page', () => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+-		// Check that the target row has highlight styling
+ 		const highlightedRow = document.getElementById(`hv-row-${targetValueId}`);
+ 		expect(highlightedRow).toBeTruthy();
+-		expect(highlightedRow?.className).toContain('bg-accent/10');
++		expect(highlightedRow?.className).toContain('hc-admin-correction-row-highlight');
++	});
+ 
+-		// Reset URL for other tests
+-		mockPageData.url = new URL(
+-			'http://test/admin/documents/00000000-0000-0000-0000-000000000001'
++	test('correction inputs use hc-input class and have aria-labels', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		// 2 values → 2 rows → 2 new-value inputs + 2 reason inputs = 4 inputs total
++		const valueInputs = container.querySelectorAll('.hc-admin-correction-input-value.hc-input');
++		const reasonInputs = container.querySelectorAll('.hc-admin-correction-input-reason.hc-input');
++		expect(valueInputs.length).toBe(2);
++		expect(reasonInputs.length).toBe(2);
++
++		// Verify aria-labels
++		const firstValueInput = valueInputs[0] as HTMLInputElement;
++		const firstReasonInput = reasonInputs[0] as HTMLInputElement;
++		expect(firstValueInput.getAttribute('aria-label')).toMatch(/new value for/i);
++		expect(firstReasonInput.getAttribute('aria-label')).toMatch(/correction reason for/i);
++	});
++
++	test('submit buttons use btn-primary and are disabled when reason is empty', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		const { queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const submitButtons = Array.from(document.querySelectorAll('button')).filter((btn) =>
++			btn.textContent?.includes('Submit Correction')
+ 		);
++		expect(submitButtons.length).toBe(2);
++		submitButtons.forEach((btn) => {
++			expect(btn).toHaveClass('btn-primary');
++			expect(btn).toBeDisabled();
++		});
+ 	});
+ 
+-	test('reason field is required - submit buttons disabled when reason is empty', async () => {
++	test('submit button enables when value + reason valid, submits via submitCorrection', async () => {
+ 		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		mockSubmitCorrection.mockResolvedValue({
++			health_value_id: '00000000-0000-0000-0000-000000000100',
++			new_value: 5.0,
++			reason: 'OCR misread',
++			corrected_at: '2026-04-15T12:00:00Z'
++		});
+ 
+-		const { queryByRole } = renderPage();
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const valueInputs = container.querySelectorAll<HTMLInputElement>(
++			'.hc-admin-correction-input-value'
++		);
++		const reasonInputs = container.querySelectorAll<HTMLInputElement>(
++			'.hc-admin-correction-input-reason'
++		);
++		await fireEvent.input(valueInputs[0], { target: { value: '5.0' } });
++		await fireEvent.input(reasonInputs[0], { target: { value: 'OCR misread' } });
++
++		const submitButtons = Array.from(document.querySelectorAll('button')).filter((btn) =>
++			btn.textContent?.includes('Submit Correction')
++		) as HTMLButtonElement[];
++
++		await waitFor(() => {
++			expect(submitButtons[0]).not.toBeDisabled();
++		});
++
++		await fireEvent.click(submitButtons[0]);
++
++		await waitFor(() => {
++			expect(mockSubmitCorrection).toHaveBeenCalledWith(
++				'00000000-0000-0000-0000-000000000001',
++				'00000000-0000-0000-0000-000000000100',
++				{ new_value: 5.0, reason: 'OCR misread' }
++			);
++		});
++
++		// After success, the correction column should show .hc-admin-correction-success
++		await waitFor(() => {
++			expect(container.querySelector('.hc-admin-correction-success')).toBeInTheDocument();
++		});
++	});
++
++	test('submit error renders in hc-admin-correction-field-error with role=alert', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		mockSubmitCorrection.mockRejectedValue(new Error('Backend exploded'));
+ 
++		const { container, queryByRole } = renderPage();
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+-		// Find submit buttons - should be disabled when reason is empty
+-		const submitButtons = document.querySelectorAll('button');
+-		const correctionButtons = Array.from(submitButtons).filter(
+-			(btn) => btn.textContent?.includes('Submit Correction')
++		const valueInputs = container.querySelectorAll<HTMLInputElement>(
++			'.hc-admin-correction-input-value'
++		);
++		const reasonInputs = container.querySelectorAll<HTMLInputElement>(
++			'.hc-admin-correction-input-reason'
+ 		);
++		await fireEvent.input(valueInputs[0], { target: { value: '5.0' } });
++		await fireEvent.input(reasonInputs[0], { target: { value: 'Fix' } });
+ 
+-		// Buttons should exist but be disabled initially (reason is empty)
+-		expect(correctionButtons.length).toBe(2); // One per health value row
+-		correctionButtons.forEach((btn) => {
+-			expect(btn).toBeDisabled();
++		const submitButtons = Array.from(document.querySelectorAll('button')).filter((btn) =>
++			btn.textContent?.includes('Submit Correction')
++		) as HTMLButtonElement[];
++
++		await waitFor(() => {
++			expect(submitButtons[0]).not.toBeDisabled();
+ 		});
++
++		await fireEvent.click(submitButtons[0]);
++
++		await waitFor(() => {
++			const errorEl = container.querySelector('.hc-admin-correction-field-error');
++			expect(errorEl).toBeInTheDocument();
++			expect(errorEl).toHaveAttribute('role', 'alert');
++			expect(errorEl?.textContent).toContain('Backend exploded');
++		});
++	});
++
++	test('axe accessibility audit passes', async () => {
++		mockGetDocumentForCorrection.mockResolvedValue(mockDocumentDetail);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const results = await axe.run(container);
++		expect(results.violations).toEqual([]);
++	});
++
++	test('no shadcn-svelte primitive imports exist in page source', async () => {
++		// 98.css primitives under $lib/components/ui/ (confirm-dialog, data-table, etc.) are allowed.
++		const pageSource = await import('./+page.svelte?raw');
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/button['/]/);
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/input['/]/);
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/label['/]/);
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/textarea['/]/);
+ 	});
+ });
+diff --git a/healthcabinet/frontend/src/routes/(admin)/admin/documents/page.test.ts b/healthcabinet/frontend/src/routes/(admin)/admin/documents/page.test.ts
+index edaf9a5..654cbfe 100644
+--- a/healthcabinet/frontend/src/routes/(admin)/admin/documents/page.test.ts
++++ b/healthcabinet/frontend/src/routes/(admin)/admin/documents/page.test.ts
+@@ -1,4 +1,5 @@
+-import { waitFor } from '@testing-library/svelte';
++import axe from 'axe-core';
++import { fireEvent, waitFor } from '@testing-library/svelte';
+ import { describe, expect, test, vi, beforeEach } from 'vitest';
+ import { QueryClient } from '@tanstack/query-core';
+ import { render } from '@testing-library/svelte';
+@@ -83,83 +84,150 @@ describe('Admin error queue page', () => {
+ 		};
+ 	});
+ 
++	test('page container uses hc-admin-queue-page class', async () => {
++		mockGetErrorQueue.mockResolvedValue(mockQueueData);
++		const { container } = renderPage();
++		await waitFor(() => {
++			expect(container.querySelector('.hc-admin-queue-page')).toBeInTheDocument();
++		});
++	});
++
+ 	test('shows loading skeleton while fetching', () => {
+ 		mockGetErrorQueue.mockReturnValue(new Promise(() => {}));
+ 
+-		const { getByRole } = renderPage();
++		const { container, getByRole } = renderPage();
+ 
+ 		expect(getByRole('status', { name: /loading/i })).toBeInTheDocument();
++		expect(container.querySelector('.hc-admin-queue-skeleton')).toBeInTheDocument();
++	});
++
++	test('refresh button uses btn-standard and invalidates query on click', async () => {
++		mockGetErrorQueue.mockResolvedValue(mockQueueData);
++		const { getByRole, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const refreshBtn = getByRole('button', { name: /refresh queue/i });
++		expect(refreshBtn).toHaveClass('btn-standard');
++		expect(mockGetErrorQueue).toHaveBeenCalledTimes(1);
++
++		await fireEvent.click(refreshBtn);
++		await waitFor(() => {
++			expect(mockGetErrorQueue).toHaveBeenCalledTimes(2);
++		});
+ 	});
+ 
+-	test('renders table with correct columns and values', async () => {
++	test('renders DataTable with correct columns and values', async () => {
+ 		mockGetErrorQueue.mockResolvedValue(mockQueueData);
+ 
+-		const { getByText, queryByRole } = renderPage();
++		const { container, getByText, queryByRole } = renderPage();
+ 
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+-		// Check column headers
++		// DataTable wrapper
++		expect(container.querySelector('.hc-data-table')).toBeInTheDocument();
++
++		// Check column headers (sortable buttons for many columns)
+ 		expect(getByText('Document ID')).toBeInTheDocument();
+ 		expect(getByText('User ID')).toBeInTheDocument();
+ 		expect(getByText('Filename')).toBeInTheDocument();
+ 		expect(getByText('Upload Date')).toBeInTheDocument();
+-			expect(getByText('Status')).toBeInTheDocument();
+-			expect(getByText('Values')).toBeInTheDocument();
+-			expect(getByText('Low Conf.')).toBeInTheDocument();
+-			expect(getByText('Flagged')).toBeInTheDocument();
+-			expect(getByText('Flag Reason')).toBeInTheDocument();
+-
+-			// Check row data
+-			expect(getByText('blood_test.pdf')).toBeInTheDocument();
+-			expect(getByText('lipid_panel.pdf')).toBeInTheDocument();
+-			expect(getByText('Failed')).toBeInTheDocument();
+-			expect(getByText('Partial')).toBeInTheDocument();
+-			expect(getByText('User-flagged')).toBeInTheDocument();
++		expect(getByText('Status')).toBeInTheDocument();
++		expect(getByText('Values')).toBeInTheDocument();
++		expect(getByText('Low Conf.')).toBeInTheDocument();
++		expect(getByText('Flagged')).toBeInTheDocument();
++		expect(getByText('Flag Reason')).toBeInTheDocument();
++
++		// Row data rendered
++		expect(getByText('blood_test.pdf')).toBeInTheDocument();
++		expect(getByText('lipid_panel.pdf')).toBeInTheDocument();
++	});
++
++	test('status badges use hc-badge-danger and hc-badge-warning', async () => {
++		mockGetErrorQueue.mockResolvedValue(mockQueueData);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
++		const dangerBadge = container.querySelector('.hc-badge.hc-badge-danger');
++		const warningBadge = container.querySelector('.hc-badge.hc-badge-warning');
++		expect(dangerBadge).toBeInTheDocument();
++		expect(dangerBadge?.textContent).toContain('Failed');
++		expect(warningBadge).toBeInTheDocument();
++		expect(warningBadge?.textContent).toContain('Partial');
++	});
++
++	test('low_confidence and flagged count cells apply concerning/action classes when > 0', async () => {
++		mockGetErrorQueue.mockResolvedValue(mockQueueData);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		// First row has 3 low_confidence → concerning, 1 flagged → action
++		expect(container.querySelector('.hc-admin-queue-count-concerning')).toBeInTheDocument();
++		expect(container.querySelector('.hc-admin-queue-count-action')).toBeInTheDocument();
++	});
++
++	test('row click navigates to correction detail via goto', async () => {
++		mockGetErrorQueue.mockResolvedValue(mockQueueData);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const firstRow = container.querySelector('.hc-data-table tbody tr') as HTMLElement;
++		expect(firstRow).toBeInTheDocument();
++		await fireEvent.click(firstRow);
++
++		expect(vi.mocked(goto)).toHaveBeenCalledWith(
++			'/admin/documents/00000000-0000-0000-0000-000000000001'
++		);
++	});
++
+ 	test('shows error state on fetch failure', async () => {
+ 		mockGetErrorQueue.mockRejectedValue(new Error('Network error'));
+ 
+-		const { getByRole, queryByRole } = renderPage();
++		const { container, getByRole, queryByRole } = renderPage();
+ 
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+ 		expect(getByRole('alert')).toBeInTheDocument();
+-		expect(getByRole('button', { name: /try again/i })).toBeInTheDocument();
++		expect(container.querySelector('.hc-state.hc-state-error')).toBeInTheDocument();
++		const retryBtn = getByRole('button', { name: /try again|retry/i });
++		expect(retryBtn).toHaveClass('btn-standard');
+ 	});
+ 
+-	test('shows empty state when queue is empty', async () => {
++	test('shows empty state when queue is empty with hc-state-empty', async () => {
+ 		mockGetErrorQueue.mockResolvedValue({ items: [], total: 0 });
+ 
+-		const { getByText, queryByRole } = renderPage();
++		const { container, getByText, queryByRole } = renderPage();
+ 
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+ 		expect(getByText('No documents requiring review')).toBeInTheDocument();
++		expect(container.querySelector('.hc-state.hc-state-empty')).toBeInTheDocument();
++		expect(container.querySelector('.hc-admin-queue-empty-panel')).toBeInTheDocument();
+ 	});
+ 
+-	test('shows correct counts in table cells', async () => {
++	test('footer count message uses hc-admin-queue-footer-count', async () => {
+ 		mockGetErrorQueue.mockResolvedValue(mockQueueData);
+-
+-		const { getByText, queryByRole } = renderPage();
+-
++		const { container, queryByRole } = renderPage();
+ 		await waitFor(() => {
+ 			expect(queryByRole('status', { name: /loading/i })).toBeNull();
+ 		});
+ 
+-		// Check aggregate counts
+-		const valueCells = document.querySelectorAll('tbody td.text-center');
+-		// First row: 12 values, 3 low conf, 1 flagged
+-		// Second row: 8 values, 2 low conf, 0 flagged
+-		expect(getByText('12')).toBeInTheDocument();
+-		expect(getByText('3')).toBeInTheDocument();
+-		expect(getByText('1')).toBeInTheDocument();
++		const footer = container.querySelector('.hc-admin-queue-footer-count');
++		expect(footer).toBeInTheDocument();
++		expect(footer?.textContent).toContain('Showing 2 documents requiring review');
+ 	});
+ 
+ 	test('redirects non-admin users away from the admin area', async () => {
+@@ -179,4 +247,25 @@ describe('Admin error queue page', () => {
+ 
+ 		expect(queryByTestId('admin-layout-child')).toBeNull();
+ 	});
++
++	test('axe accessibility audit passes', async () => {
++		mockGetErrorQueue.mockResolvedValue(mockQueueData);
++		const { container, queryByRole } = renderPage();
++		await waitFor(() => {
++			expect(queryByRole('status', { name: /loading/i })).toBeNull();
++		});
++
++		const results = await axe.run(container);
++		expect(results.violations).toEqual([]);
++	});
++
++	test('no shadcn-svelte primitive imports exist in page source', async () => {
++		// 98.css primitives (data-table, metric-card, etc.) under $lib/components/ui/ are allowed.
++		// This guard only blocks the shadcn legacy components.
++		const pageSource = await import('./+page.svelte?raw');
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/button['/]/);
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/input['/]/);
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/label['/]/);
++		expect(pageSource.default).not.toMatch(/from '\$lib\/components\/ui\/textarea['/]/);
++	});
+ });

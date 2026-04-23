@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthCabinet — Page Mockups (Win98 Clinical)</title>
+<link rel="stylesheet" href="https://unpkg.com/98.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --base-silver: #E4EAF0;
+    --raised: #EEF2F8;
+    --sunken-bg: #FFFFFF;
+    --text-primary: #1A2030;
+    --text-secondary: #5A6A80;
+    --text-disabled: #8898A8;
+    --alt-row: #EEF2F8;
+    --accent: #3366FF;
+    --accent-light: #6690FF;
+    --accent-hover: rgba(51, 102, 255, 0.12);
+    --status-optimal: #2E8B57;
+    --status-borderline: #DAA520;
+    --status-concerning: #E07020;
+    --status-action: #CC3333;
+  }
+
+  * {
+    font-family: 'DM Sans', sans-serif !important;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 15px;
+    color: var(--text-primary);
+    background: var(--base-silver);
+  }
+
+  /* ── App Shell ── */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 12px;
+    background: var(--raised);
+    border-bottom: 2px solid;
+    border-bottom-color: #A0B0C0;
+    box-shadow: inset 0 1px 0 #fff;
+  }
+  .app-header .brand {
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .app-header .brand .icon {
+    color: var(--accent);
+    font-size: 18px;
+  }
+  .app-header .user-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .app-header .user-area button {
+    font-size: 13px;
+    min-width: auto;
+    padding: 2px 10px;
+  }
+
+  /* ── Main body ── */
+  .app-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  /* ── Left Nav ── */
+  .left-nav {
+    width: 200px;
+    min-width: 200px;
+    overflow-y: auto;
+    background: var(--sunken-bg);
+    border: 2px solid;
+    border-color: #A0B0C0 #D0D8E4 #D0D8E4 #A0B0C0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--raised);
+    border-bottom: 2px solid;
+    border-bottom-color: #A0B0C0;
+    box-shadow: inset 0 1px 0 #fff;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.3px;
+    user-select: none;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+    gap: 8px;
+    white-space: nowrap;
+    border-left: 3px solid transparent;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .nav-item:hover {
+    background: #E8E8E8;
+  }
+  .nav-item.active {
+    background: #F0F4FF;
+    color: var(--accent);
+    font-weight: 700;
+    border-left-color: var(--accent);
+  }
+  .nav-item.active:hover {
+    background: #F0F4FF;
+  }
+  .nav-separator {
+    height: 0;
+    border-top: 1px solid #A0B0C0;
+    border-bottom: 1px solid #D0D8E4;
+    margin: 6px 12px;
+  }
+  .nav-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 8px 14px 2px;
+    user-select: none;
+  }
+
+  /* ── Content ── */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--sunken-bg);
+    border: 2px solid;
+    border-color: #A0B0C0 #D0D8E4 #D0D8E4 #A0B0C0;
+    padding: 10px;
+  }
+
+  .content-view {
+    display: none;
+  }
+  .content-view.active {
+    display: block;
+  }
+
+  /* ── Status Bar ── */
+  .app-status-bar {
+    min-height: 24px;
+    padding: 0;
+  }
+  .app-status-bar .status-bar-field {
+    font-size: 13px;
+    padding: 2px 8px;
+  }
+  .app-status-bar .status-bar-field:first-child {
+    flex: 1;
+  }
+
+  /* ── Raised panel wrapper ── */
+  .raised-panel {
+    border: 2px solid;
+    border-color: #D0D8E4 #A0B0C0 #A0B0C0 #D0D8E4;
+    background: var(--raised);
+    padding: 8px 12px;
+  }
+
+  /* ── Sunken panel wrapper ── */
+  .sunken-panel {
+    border: 2px solid;
+    border-color: #A0B0C0 #D0D8E4 #D0D8E4 #A0B0C0;
+    background: var(--sunken-bg);
+    overflow: auto;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border: 2px outset var(--accent-light) !important;
+    font-weight: 600 !important;
+  }
+  .btn-primary:hover {
+    background: #2244CC !important;
+  }
+  .btn-primary:disabled, .btn-primary.disabled {
+    background: #A0A0A0 !important;
+    border-color: #888 !important;
+    color: #D0D0D0 !important;
+    cursor: not-allowed;
+  }
+
+  .signout-btn {
+    background: #D4D0C8 !important;
+    border: 2px outset #fff !important;
+    font-weight: 600 !important;
+    padding: 4px 12px !important;
+    font-size: 14px !important;
+    color: #CC3333 !important;
+    cursor: pointer;
+  }
+  .signout-btn:hover {
+    background: #CC3333 !important;
+    color: #fff !important;
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #E0E0E0;
+  }
+  .page-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 2px;
+  }
+  .page-header .page-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* ── Forms ── */
+  .field-row-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .field-row-stacked label {
+    font-weight: 500;
+    font-size: 14px;
+  }
+  .inline-fields {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .inline-fields .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .inline-fields .field-group label {
+    font-weight: 500;
+    font-size: 14px;
+  }
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+    margin-top: 6px;
+  }
+  .checkbox-grid label {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 2px;
+    transition: background 0.1s;
+  }
+  .checkbox-grid label:has(input:checked) {
+    background: #F0F4FF;
+  }
+
+  input[type="text"], input[type="number"], input[type="email"], input[type="password"], select, textarea {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 14px;
+  }
+
+  /* ── Tables ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .data-table thead th {
+    background: var(--raised);
+    font-weight: 700;
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 2px solid #A0B0C0;
+    border-right: 1px solid #A0B0C0;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 #fff, inset -1px 0 0 #404040;
+  }
+  .data-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #D0D8E4;
+    font-size: 15px;
+    height: 32px;
+    vertical-align: middle;
+  }
+  .data-table tbody tr:nth-child(even) {
+    background: var(--alt-row);
+  }
+  .data-table tbody tr:nth-child(odd) {
+    background: var(--sunken-bg);
+  }
+  .status-optimal { color: var(--status-optimal); font-weight: 700; font-size: 15px; }
+  .status-borderline { color: var(--status-borderline); font-weight: 700; font-size: 15px; }
+  .status-concerning { color: var(--status-concerning); font-weight: 700; font-size: 15px; }
+  .status-action { color: var(--status-action); font-weight: 700; font-size: 15px; }
+
+  /* ═══════════════════════════════════════════
+     FULLSCREEN PAGES (Landing, Login, Register, Onboarding)
+     ═══════════════════════════════════════════ */
+
+  .fullscreen-page {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--base-silver);
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  .fullscreen-page.active {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Landing Page ── */
+  .landing-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 24px;
+    background: var(--raised);
+    border-bottom: 2px solid;
+    border-bottom-color: #A0B0C0;
+    box-shadow: inset 0 1px 0 #fff;
+  }
+  .landing-topbar .brand {
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .landing-topbar .brand .icon {
+    color: var(--accent);
+    font-size: 22px;
+  }
+  .landing-topbar .topbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .landing-topbar .topbar-actions button {
+    font-size: 14px !important;
+    padding: 6px 16px !important;
+  }
+
+  .hero-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  .hero-heading {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 16px;
+  }
+  .hero-heading .highlight {
+    color: var(--accent);
+  }
+  .hero-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 550px;
+    line-height: 1.6;
+    margin: 0 0 24px;
+  }
+  .hero-cta {
+    padding: 12px 32px !important;
+    font-size: 16px !important;
+  }
+  .trust-signals {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--raised);
+    border: 2px solid;
+    border-color: #D0D8E4 #A0B0C0 #A0B0C0 #D0D8E4;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .preview-section {
+    padding: 20px 40px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-frame {
+    width: 640px;
+    max-width: 100%;
+    border: 2px solid;
+    border-color: #A0B0C0 #D0D8E4 #D0D8E4 #A0B0C0;
+    background: var(--sunken-bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .preview-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.85) 80%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 20px;
+  }
+  .preview-overlay-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(255,255,255,0.9);
+    padding: 8px 20px;
+    border: 2px solid;
+    border-color: #D0D8E4 #A0B0C0 #A0B0C0 #D0D8E4;
+  }
+  .preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .preview-table thead th {
+    background: var(--raised);
+    font-weight: 700;
+    text-align: left;
+    padding: 5px 8px;
+    border-bottom: 2px solid #A0B0C0;
+    border-right: 1px solid #A0B0C0;
+    font-size: 12px;
+    box-shadow: inset 0 1px 0 #fff, inset -1px 0 0 #404040;
+  }
+  .preview-table tbody td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #D0D8E4;
+  }
+  .preview-table tbody tr:nth-child(even) {
+    background: var(--alt-row);
+  }
+
+  /* ── Auth Dialog Pages (Login, Register) ── */
+  .auth-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .auth-dialog {
+    width: 100%;
+    padding: 0;
+    border: 2px solid;
+    border-color: #D0D8E4 #A0B0C0 #A0B0C0 #D0D8E4;
+    background: var(--raised);
+  }
+  .auth-dialog.login-dialog {
+    max-width: 420px;
+  }
+  .auth-dialog.register-dialog {
+    max-width: 460px;
+  }
+  .auth-dialog-header {
+    padding: 10px 16px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .auth-dialog-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 12px 20px 0;
+  }
+  .auth-dialog-body {
+    padding: 16px 20px 20px;
+  }
+  .auth-dialog-body .field-row-stacked {
+    margin-bottom: 12px;
+  }
+  .auth-dialog-body input[type="email"],
+  .auth-dialog-body input[type="password"],
+  .auth-dialog-body input[type="text"] {
+    width: 100%;
+  }
+  .auth-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: #FFF0F0;
+    border: 2px solid;
+    border-color: #A0B0C0 #D0D8E4 #D0D8E4 #A0B0C0;
+    color: var(--status-action);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .auth-link {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 12px;
+    color: var(--text-secondary);
+  }
+  .auth-link a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .auth-trust {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-disabled);
+    padding: 12px 20px;
+    border-top: 1px solid #B8C4D0;
+  }
+  .helper-text {
+    font-size: 13px;
+    color: var(--text-disabled);
+    margin-top: 2px;
+  }
+  .gdpr-section {
+    border-top: 1px solid #B8C4D0;
+    padding-top: 12px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+  }
+  .gdpr-section .consent-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .gdpr-section .consent-row input[type="checkbox"] {
+    margin-top: 3px;
+  }
+  .gdpr-section .consent-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .gdpr-section .consent-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .gdpr-section .consent-link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  /* ── Onboarding Wizard ── */
+  .onboarding-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .wizard-dialog {
+    width: 100%;
+    max-width: 600px;
+    border: 2px solid;
+    border-color: #D0D8E4 #A0B0C0 #A0B0C0 #D0D8E4;
+    background: var(--raised);
+  }
+  .wizard-header {
+    padding: 10px 16px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* Step indicator */
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 20px 20px 6px;
+  }
+  .step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    border: 3px solid #A0A0A0;
+    background: var(--sunken-bg);
+    color: var(--text-disabled);
+    flex-shrink: 0;
+  }
+  .step-circle.current {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+  .step-circle.done {
+    border-color: var(--status-optimal);
+    background: var(--status-optimal);
+    color: #fff;
+  }
+  .step-line {
+    width: 60px;
+    height: 3px;
+    background: #A0A0A0;
+    flex-shrink: 0;
+  }
+  .step-line.done {
+    background: var(--status-optimal);
+  }
+  .step-label {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 6px 20px 0;
+    font-weight: 600;
+  }
+
+  .wizard-body {
+    padding: 16px 24px 8px;
+  }
+  .wizard-body .section-label {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--accent);
+    margin: 10px 0 4px;
+  }
+  .wizard-body .section-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+  .wizard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px 16px;
+    border-top: 1px solid #B8C4D0;
+    margin-top: 8px;
+  }
+  .wizard-footer .spacer {
+    flex: 1;
+  }
+
+  .success-banner {
+    max-width: 600px;
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px 20px;
+    background: #F0FFF0;
+    border: 2px solid;
+    border-color: #D0D8E4 #A0B0C0 #A0B0C0 #D0D8E4;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--status-optimal);
+    text-align: center;
+  }
+
+  /* ── Placeholder pages ── */
+  .placeholder-panel {
+    max-width: 560px;
+    margin: 40px auto;
+    padding: 24px 28px;
+    text-align: center;
+  }
+  .placeholder-panel .placeholder-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+  }
+  .placeholder-panel .placeholder-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .placeholder-panel .placeholder-note {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .placeholder-panel .placeholder-desc {
+    font-size: 13px;
+    color: var(--text-disabled);
+    line-height: 1.5;
+  }
+
+  /* ── Back to nav link (for fullscreen pages) ── */
+  .back-to-nav {
+    position: fixed;
+    top: 8px;
+    right: 16px;
+    z-index: 1100;
+    font-size: 13px !important;
+    padding: 4px 12px !important;
+  }
+</style>
+</head>
+<body>
+<div class="app-shell" id="app-shell">
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="app-header">
+    <div class="brand"><span class="icon">⚕</span> HealthCabinet</div>
+    <div class="user-area">
+      sofia.k@example.com
+      <button class="signout-btn">🚪 Sign Out</button>
+    </div>
+  </div>
+
+  <!-- ═══ BODY ═══ -->
+  <div class="app-body">
+
+    <!-- Left Nav -->
+    <div class="left-nav">
+      <div class="nav-header">⚕ Navigation</div>
+      <div class="nav-section-label">Public</div>
+      <div class="nav-item" data-view="landing" data-fullscreen="true" onclick="switchView(this)">🏠 Landing Page</div>
+      <div class="nav-item" data-view="login" data-fullscreen="true" onclick="switchView(this)">🔑 Login</div>
+      <div class="nav-item" data-view="register" data-fullscreen="true" onclick="switchView(this)">📝 Register</div>
+      <div class="nav-separator"></div>
+      <div class="nav-section-label">Onboarding</div>
+      <div class="nav-item" data-view="onboarding1" data-fullscreen="true" onclick="switchView(this)">📋 Step 1: Basic Info</div>
+      <div class="nav-item" data-view="onboarding2" data-fullscreen="true" onclick="switchView(this)">📋 Step 2: Conditions</div>
+      <div class="nav-item" data-view="onboarding3" data-fullscreen="true" onclick="switchView(this)">📋 Step 3: Family History</div>
+      <div class="nav-separator"></div>
+      <div class="nav-section-label">App Pages</div>
+      <div class="nav-item active" data-view="dashboard" onclick="switchView(this)">📊 Dashboard</div>
+      <div class="nav-item" data-view="documents" onclick="switchView(this)">📁 Documents</div>
+      <div class="nav-item" data-view="import" onclick="switchView(this)">📂 Import Document</div>
+      <div class="nav-item" data-view="profile" onclick="switchView(this)">👤 Medical Profile</div>
+      <div class="nav-item" data-view="settings" onclick="switchView(this)">⚙ Settings</div>
+      <div class="nav-separator"></div>
+      <div class="nav-section-label">Admin</div>
+      <div class="nav-item" data-view="admin" onclick="switchView(this)">🔧 Admin Console</div>
+    </div>
+
+    <!-- Content Area (for app pages) -->
+    <div class="content-area">
+
+      <!-- ────── DASHBOARD (placeholder) ────── -->
+      <div id="view-dashboard" class="content-view active">
+        <div class="raised-panel placeholder-panel">
+          <div class="placeholder-icon">📊</div>
+          <div class="placeholder-title">Dashboard</div>
+          <div class="placeholder-note">This page is fully mocked up in <strong>ux-design-directions-v2.html</strong> — open that file to see the complete interactive mockup.</div>
+          <div class="placeholder-desc">Contains: Patient summary bar, biomarker data table with expandable history rows, trend sparklines, status indicators (Optimal/Borderline/Concerning/Action), AI interpretation chat panel, and empty state for new users.</div>
+        </div>
+      </div>
+
+      <!-- ────── DOCUMENTS (placeholder) ────── -->
+      <div id="view-documents" class="content-view">
+        <div class="raised-panel placeholder-panel">
+          <div class="placeholder-icon">📁</div>
+          <div class="placeholder-title">Documents</div>
+          <div class="placeholder-note">This page is fully mocked up in <strong>ux-design-directions-v2.html</strong> — open that file to see the complete interactive mockup.</div>
+          <div class="placeholder-desc">Contains: Document list table with type/status/date columns, row selection with detail panel, extracted biomarker values preview, document actions (view, reprocess, delete), and processing status indicators.</div>
+        </div>
+      </div>
+
+      <!-- ────── IMPORT (placeholder) ────── -->
+      <div id="view-import" class="content-view">
+        <div class="raised-panel placeholder-panel">
+          <div class="placeholder-icon">📂</div>
+          <div class="placeholder-title">Import Document</div>
+          <div class="placeholder-note">This page is fully mocked up in <strong>ux-design-directions-v2.html</strong> — open that file to see the complete interactive mockup.</div>
+          <div class="placeholder-desc">Contains: Drag-and-drop upload zone, file format badges (PDF/JPG/PNG), multi-stage processing pipeline with progress bar, AI extraction results with confidence scores, and success/error states.</div>
+        </div>
+      </div>
+
+      <!-- ────── MEDICAL PROFILE (placeholder) ────── -->
+      <div id="view-profile" class="content-view">
+        <div class="raised-panel placeholder-panel">
+          <div class="placeholder-icon">👤</div>
+          <div class="placeholder-title">Medical Profile</div>
+          <div class="placeholder-note">This page is fully mocked up in <strong>ux-design-directions-v2.html</strong> — open that file to see the complete interactive mockup.</div>
+          <div class="placeholder-desc">Contains: Demographics fieldset (age, sex, height, weight), health conditions checkbox grid, current medications text area, family history checkboxes, and save/cancel actions.</div>
+        </div>
+      </div>
+
+      <!-- ────── SETTINGS (placeholder) ────── -->
+      <div id="view-settings" class="content-view">
+        <div class="raised-panel placeholder-panel">
+          <div class="placeholder-icon">⚙</div>
+          <div class="placeholder-title">Settings</div>
+          <div class="placeholder-note">This page is fully mocked up in <strong>ux-design-directions-v2.html</strong> — open that file to see the complete interactive mockup.</div>
+          <div class="placeholder-desc">Contains: Account settings (email, password change), notification preferences, data management (export all data, delete account), and subscription tier display.</div>
+        </div>
+      </div>
+
+      <!-- ────── ADMIN (placeholder) ────── -->
+      <div id="view-admin" class="content-view">
+        <div class="raised-panel placeholder-panel">
+          <div class="placeholder-icon">🔧</div>
+          <div class="placeholder-title">Admin Console</div>
+          <div class="placeholder-note">This page is fully mocked up in <strong>ux-design-directions-v2.html</strong> — open that file to see the complete interactive mockup.</div>
+          <div class="placeholder-desc">Contains: Admin tabs (Users, Errors, System), user management table, flagged processing errors with mismatch highlighting, error detail panel with correction form, and system health overview.</div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /app-body -->
+
+  <!-- ═══ STATUS BAR ═══ -->
+  <div class="status-bar app-status-bar">
+    <p class="status-bar-field">Page Mockups — Developer Reference</p>
+    <p class="status-bar-field">12 Pages</p>
+    <p class="status-bar-field">v2.0</p>
+  </div>
+
+</div><!-- /app-shell -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FULLSCREEN PAGES
+     ═══════════════════════════════════════════════════════ -->
+
+<!-- ────── LANDING PAGE ────── -->
+<div id="fullscreen-landing" class="fullscreen-page">
+  <button class="back-to-nav" onclick="closeFullscreen()">← Back to Nav</button>
+
+  <!-- Top navigation bar -->
+  <div class="landing-topbar">
+    <div class="brand"><span class="icon">⚕</span> HealthCabinet</div>
+    <div class="topbar-actions">
+      <button onclick="openFullscreen('login')">Sign In</button>
+      <button class="btn-primary" onclick="openFullscreen('register')">Get Started</button>
+    </div>
+  </div>
+
+  <!-- Hero section -->
+  <div class="hero-section">
+    <h1 class="hero-heading">
+      Your health data,<br>
+      <span class="highlight">finally understood.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Upload lab results. Get AI-powered interpretation in plain language. Track trends across time.
+    </p>
+    <button class="btn-primary hero-cta" onclick="openFullscreen('register')">Create Free Account →</button>
+    <div class="trust-signals">
+      <div class="trust-badge">🔒 AES-256 Encrypted</div>
+      <div class="trust-badge">🇪🇺 EU Data Residency</div>
+      <div class="trust-badge">🛡️ GDPR Compliant</div>
+    </div>
+  </div>
+
+  <!-- Preview section -->
+  <div class="preview-section">
+    <div class="preview-frame">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>Biomarker</th>
+            <th>Value</th>
+            <th>Range</th>
+            <th>Status</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:700">TSH</td>
+            <td>3.8 mIU/L</td>
+            <td>0.4 – 4.0</td>
+            <td class="status-optimal">Optimal</td>
+            <td style="color:var(--text-secondary)">→</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700">Vitamin D</td>
+            <td>22 ng/mL</td>
+            <td>30 – 100</td>
+            <td class="status-concerning">Low</td>
+            <td style="color:var(--status-action)">↓</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700">Hemoglobin</td>
+            <td>11.8 g/dL</td>
+            <td>12.0 – 15.5</td>
+            <td class="status-borderline">Borderline</td>
+            <td style="color:var(--status-borderline)">↓</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700">Ferritin</td>
+            <td>45 ng/mL</td>
+            <td>12 – 150</td>
+            <td class="status-optimal">Optimal</td>
+            <td style="color:var(--status-optimal)">↑</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="preview-overlay">
+        <div class="preview-overlay-text">See your health clearly</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ────── LOGIN PAGE ────── -->
+<div id="fullscreen-login" class="fullscreen-page">
+  <button class="back-to-nav" onclick="closeFullscreen()">← Back to Nav</button>
+
+  <div class="auth-page">
+    <div class="auth-dialog login-dialog">
+      <div class="auth-dialog-header">🔑 Sign In</div>
+      <div class="auth-dialog-subtitle">Access your HealthCabinet account</div>
+      <div class="auth-dialog-body">
+
+        <!-- Error state example -->
+        <div class="auth-error">
+          <span>⚠</span> Invalid email or password
+        </div>
+
+        <div class="field-row-stacked">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" style="width:100%">
+        </div>
+        <div class="field-row-stacked">
+          <label for="login-pass">Password</label>
+          <input type="password" id="login-pass" placeholder="Enter your password" style="width:100%">
+        </div>
+
+        <button class="btn-primary" style="width:100%; padding:8px 0 !important; font-size:15px !important; margin-top:8px;">Sign In</button>
+
+        <div class="auth-link">
+          Don't have an account? <a onclick="openFullscreen('register')">Register</a>
+        </div>
+      </div>
+      <div class="auth-trust">🔒 Your data is encrypted and stored in the EU</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ────── REGISTER PAGE ────── -->
+<div id="fullscreen-register" class="fullscreen-page">
+  <button class="back-to-nav" onclick="closeFullscreen()">← Back to Nav</button>
+
+  <div class="auth-page">
+    <div class="auth-dialog register-dialog">
+      <div class="auth-dialog-header">📝 Create Your Account</div>
+      <div class="auth-dialog-subtitle">Securely store, understand, and track your health data</div>
+      <div class="auth-dialog-body">
+
+        <div class="field-row-stacked">
+          <label for="reg-email">Email address</label>
+          <input type="email" id="reg-email" placeholder="you@example.com" style="width:100%">
+        </div>
+        <div class="field-row-stacked">
+          <label for="reg-pass">Password</label>
+          <input type="password" id="reg-pass" placeholder="Choose a password" style="width:100%">
+          <div class="helper-text">Minimum 8 characters</div>
+        </div>
+        <div class="field-row-stacked">
+          <label for="reg-pass2">Confirm Password</label>
+          <input type="password" id="reg-pass2" placeholder="Repeat your password" style="width:100%">
+        </div>
+
+        <!-- GDPR Consent -->
+        <div class="gdpr-section">
+          <div class="consent-row">
+            <input type="checkbox" id="gdpr-consent">
+            <div>
+              <label class="consent-label" for="gdpr-consent">I consent to health data processing</label>
+              <div class="consent-desc">
+                Your data is encrypted with AES-256 and stored exclusively in EU data centers. You can export or delete all data at any time.
+              </div>
+              <a class="consent-link">Read our Privacy Policy</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active button -->
+        <button class="btn-primary" style="width:100%; padding:8px 0 !important; font-size:15px !important;" onclick="void(0)">Create Account</button>
+
+        <!-- Disabled button example -->
+        <div style="margin-top:8px; font-size:12px; color:var(--text-disabled); text-align:center;">
+          <em>When consent is unchecked, button appears as:</em>
+        </div>
+        <button class="btn-primary disabled" style="width:100%; padding:8px 0 !important; font-size:15px !important; margin-top:4px;" disabled>Create Account</button>
+
+        <div class="auth-link">
+          Already have an account? <a onclick="openFullscreen('login')">Sign in</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust signals below dialog -->
+    <div class="trust-signals" style="margin-top:16px;">
+      <div class="trust-badge">🔒 AES-256</div>
+      <div class="trust-badge">🇪🇺 EU Data</div>
+      <div class="trust-badge">🛡️ GDPR</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ────── ONBOARDING STEP 1: Basic Information ────── -->
+<div id="fullscreen-onboarding1" class="fullscreen-page">
+  <button class="back-to-nav" onclick="closeFullscreen()">← Back to Nav</button>
+
+  <div class="onboarding-page">
+    <div class="wizard-dialog">
+      <div class="wizard-header">📋 Onboarding</div>
+
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step-circle current">1</div>
+        <div class="step-line"></div>
+        <div class="step-circle">2</div>
+        <div class="step-line"></div>
+        <div class="step-circle">3</div>
+      </div>
+      <div class="step-label">Step 1 of 3 — Basic Information</div>
+
+      <div class="wizard-body">
+        <div class="inline-fields">
+          <div class="field-group">
+            <label for="ob-age">Age</label>
+            <input type="number" id="ob-age" value="34" style="width:100px">
+          </div>
+          <div class="field-group">
+            <label for="ob-sex">Sex</label>
+            <select id="ob-sex" style="width:180px">
+              <option>Female</option>
+              <option>Male</option>
+              <option>Other</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+        <div class="inline-fields">
+          <div class="field-group">
+            <label for="ob-height">Height (cm)</label>
+            <input type="number" id="ob-height" value="165" style="width:100px">
+          </div>
+          <div class="field-group">
+            <label for="ob-weight">Weight (kg)</label>
+            <input type="number" id="ob-weight" value="62" style="width:100px">
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-footer">
+        <div class="spacer"></div>
+        <button class="btn-primary" onclick="openFullscreen('onboarding2')">Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ────── ONBOARDING STEP 2: Health Conditions ────── -->
+<div id="fullscreen-onboarding2" class="fullscreen-page">
+  <button class="back-to-nav" onclick="closeFullscreen()">← Back to Nav</button>
+
+  <div class="onboarding-page">
+    <div class="wizard-dialog">
+      <div class="wizard-header">📋 Onboarding</div>
+
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step-circle done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-circle current">2</div>
+        <div class="step-line"></div>
+        <div class="step-circle">3</div>
+      </div>
+      <div class="step-label">Step 2 of 3 — Health Conditions</div>
+
+      <div class="wizard-body">
+        <div class="section-label">Known Conditions</div>
+        <div class="section-desc">Select any conditions you have been diagnosed with:</div>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" checked> Hashimoto's</label>
+          <label><input type="checkbox"> Type 2 Diabetes</label>
+          <label><input type="checkbox"> Hypertension</label>
+          <label><input type="checkbox"> Hypothyroidism</label>
+          <label><input type="checkbox"> PCOS</label>
+          <label><input type="checkbox"> High Cholesterol</label>
+          <label><input type="checkbox" checked> Anemia</label>
+          <label><input type="checkbox"> Vitamin D Deficiency</label>
+        </div>
+
+        <div class="section-label" style="margin-top:18px">Current Medications</div>
+        <div class="field-row-stacked" style="margin-top:6px">
+          <input type="text" placeholder="e.g. Levothyroxine 50mcg, Metformin 500mg" style="width:100%">
+        </div>
+      </div>
+
+      <div class="wizard-footer">
+        <button onclick="openFullscreen('onboarding1')">← Back</button>
+        <button class="btn-primary" onclick="openFullscreen('onboarding3')">Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ────── ONBOARDING STEP 3: Family History ────── -->
+<div id="fullscreen-onboarding3" class="fullscreen-page">
+  <button class="back-to-nav" onclick="closeFullscreen()">← Back to Nav</button>
+
+  <div class="onboarding-page">
+    <div class="wizard-dialog">
+      <div class="wizard-header">📋 Onboarding</div>
+
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step-circle done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-circle done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-circle current">3</div>
+      </div>
+      <div class="step-label">Step 3 of 3 — Family History</div>
+
+      <div class="wizard-body">
+        <div class="section-desc">Select any conditions present in your immediate family:</div>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" checked> Heart Disease</label>
+          <label><input type="checkbox"> Diabetes</label>
+          <label><input type="checkbox" checked> Thyroid Disease</label>
+          <label><input type="checkbox"> Cancer</label>
+          <label><input type="checkbox"> High Blood Pressure</label>
+          <label><input type="checkbox"> Autoimmune Disease</label>
+        </div>
+      </div>
+
+      <div class="wizard-footer">
+        <button onclick="openFullscreen('onboarding2')">← Back</button>
+        <button class="btn-primary">Complete Profile →</button>
+      </div>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-banner">
+      ✅ Profile Complete — Redirecting to your dashboard...
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════ -->
+<script>
+function switchView(navItem) {
+  var viewId = navItem.getAttribute('data-view');
+  var isFullscreen = navItem.getAttribute('data-fullscreen') === 'true';
+
+  // Update active nav item
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  navItem.classList.add('active');
+
+  if (isFullscreen) {
+    openFullscreen(viewId);
+  } else {
+    // Close any open fullscreen page
+    closeFullscreen();
+
+    // Switch content view
+    document.querySelectorAll('.content-view').forEach(function(v) { v.classList.remove('active'); });
+    var target = document.getElementById('view-' + viewId);
+    if (target) target.classList.add('active');
+  }
+}
+
+function openFullscreen(viewId) {
+  // Close all fullscreen pages first
+  document.querySelectorAll('.fullscreen-page').forEach(function(p) { p.classList.remove('active'); });
+
+  // Open requested one
+  var page = document.getElementById('fullscreen-' + viewId);
+  if (page) page.classList.add('active');
+}
+
+function closeFullscreen() {
+  document.querySelectorAll('.fullscreen-page').forEach(function(p) { p.classList.remove('active'); });
+}
+</script>
+</body>
+</html>

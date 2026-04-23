@@ -1,0 +1,52 @@
+{
+	"name": "healthcabinet-frontend",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"test:unit": "vitest run",
+		"test:unit:watch": "vitest",
+		"test:e2e": "playwright test"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.0.0",
+		"@playwright/test": "^1.49.0",
+		"@sveltejs/adapter-auto": "^3.0.0",
+		"@sveltejs/kit": "^2.53.4",
+		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@tailwindcss/vite": "^4.0.0",
+		"@testing-library/jest-dom": "^6.6.3",
+		"@testing-library/svelte": "^5.2.6",
+		"@types/marked": "^5.0.2",
+		"@types/node": "^22.0.0",
+		"axe-core": "^4.11.1",
+		"eslint": "^9.0.0",
+		"eslint-config-prettier": "^9.0.0",
+		"eslint-plugin-svelte": "^2.36.0",
+		"globals": "^15.0.0",
+		"jsdom": "^28.1.0",
+		"prettier": "^3.4.2",
+		"prettier-plugin-svelte": "^3.3.2",
+		"prettier-plugin-tailwindcss": "^0.6.9",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
+		"tailwindcss": "^4.0.0",
+		"typescript": "^5.0.0",
+		"typescript-eslint": "^8.0.0",
+		"vite": "^6.0.0",
+		"vitest": "^2.1.8"
+	},
+	"dependencies": {
+		"@sveltejs/adapter-node": "^5.5.4",
+		"@tanstack/svelte-query": "6.1.0",
+		"98.css": "^0.1.21",
+		"marked": "^18.0.0"
+	},
+	"type": "module"
+}

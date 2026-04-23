@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthCabinet — UX Design Directions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --surface-base: #0F1117;
+    --surface-card: #1A1D27;
+    --surface-elevated: #22263A;
+    --border-subtle: #2E3247;
+    --text-primary: #F0F2F8;
+    --text-secondary: #8B92A8;
+    --text-muted: #4E5568;
+    --accent: #4F6EF7;
+    --status-optimal: #2DD4A0;
+    --status-borderline: #F5C842;
+    --status-concerning: #F08430;
+    --status-action: #E05252;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #080A10;
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(8,10,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 32px;
+    display: flex; align-items: center; gap: 8px;
+    height: 56px;
+  }
+  .nav-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-right: 16px; }
+  .nav-btn {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border-subtle);
+    background: transparent; color: var(--text-secondary); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .nav-btn:hover { background: var(--surface-elevated); color: var(--text-primary); }
+  .nav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* DIRECTIONS CONTAINER */
+  .container { padding-top: 56px; }
+  .direction { display: none; min-height: calc(100vh - 56px); }
+  .direction.active { display: flex; }
+
+  /* DIRECTION LABEL */
+  .direction-label {
+    position: fixed; bottom: 24px; right: 24px; z-index: 50;
+    background: var(--surface-elevated); border: 1px solid var(--border-subtle);
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 11px; color: var(--text-secondary);
+  }
+  .direction-label strong { color: var(--text-primary); }
+
+  /* ===================== */
+  /* DIRECTION 1: Dashboard Precision */
+  /* ===================== */
+  .d1 { flex-direction: row; }
+  .d1-sidebar {
+    width: 240px; min-height: 100%; background: var(--surface-card);
+    border-right: 1px solid var(--border-subtle);
+    padding: 24px 0; flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+  .d1-logo { padding: 0 20px 24px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .d1-logo span { color: var(--accent); }
+  .d1-nav-item {
+    padding: 9px 20px; display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text-secondary); cursor: pointer;
+    transition: all 0.12s; border-left: 2px solid transparent;
+  }
+  .d1-nav-item:hover { color: var(--text-primary); background: var(--surface-elevated); }
+  .d1-nav-item.active { color: var(--text-primary); background: var(--surface-elevated); border-left-color: var(--accent); }
+  .d1-nav-icon { width: 16px; height: 16px; opacity: 0.7; }
+  .d1-section-label { padding: 16px 20px 6px; font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .d1-spacer { flex: 1; }
+  .d1-user { padding: 12px 20px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--border-subtle); }
+  .d1-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+  .d1-user-name { font-size: 12px; color: var(--text-secondary); }
+
+  .d1-main { flex: 1; background: var(--surface-base); overflow-y: auto; }
+  .d1-topbar {
+    padding: 20px 32px; border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .d1-page-title { font-size: 18px; font-weight: 600; }
+  .d1-topbar-actions { display: flex; gap: 8px; }
+  .btn-primary {
+    padding: 7px 16px; background: var(--accent); color: #fff; border: none;
+    border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .btn-secondary {
+    padding: 7px 16px; background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  .d1-content { padding: 28px 32px; }
+  .d1-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface-card); border: 1px solid var(--border-subtle);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--text-primary); }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .stat-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-top: 6px; }
+  .badge-optimal { background: rgba(45,212,160,0.12); color: var(--status-optimal); }
+  .badge-borderline { background: rgba(245,200,66,0.12); color: var(--status-borderline); }
+  .badge-concerning { background: rgba(240,132,48,0.12); color: var(--status-concerning); }
+  .badge-action { background: rgba(224,82,82,0.12); color: var(--status-action); }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .section-link { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+  .biomarker-table { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; }
+  .table-row {
+    display: grid; grid-template-columns: 1fr 80px 120px 100px 80px;
+    padding: 12px 20px; align-items: center;
+    border-bottom: 1px solid var(--border-subtle); font-size: 13px;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-header { background: var(--surface-elevated); font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .table-header .table-row { padding: 10px 20px; }
+  .biomarker-name { font-weight: 500; color: var(--text-primary); }
+  .biomarker-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .value-num { font-size: 15px; font-weight: 700; }
+  .value-unit { font-size: 11px; color: var(--text-muted); }
+  .sparkline { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
+  .spark-bar { width: 6px; border-radius: 2px; background: var(--border-subtle); }
+  .trend-up .spark-bar:last-child { background: var(--status-concerning); }
+  .trend-stable .spark-bar { background: var(--status-optimal); opacity: 0.6; }
+  .trend-up .spark-bar { background: rgba(240,132,48,0.3); }
+  .trend-up .spark-bar:nth-child(4), .trend-up .spark-bar:nth-child(5) { background: rgba(240,132,48,0.6); }
+
+  /* ===================== */
+  /* DIRECTION 2: Upload Focus */
+  /* ===================== */
+  .d2 { flex-direction: column; background: var(--surface-base); }
+  .d2-header {
+    display: flex; align-items: center; padding: 0 32px; height: 60px;
+    border-bottom: 1px solid var(--border-subtle); background: var(--surface-card);
+    justify-content: space-between;
+  }
+  .d2-logo { font-size: 16px; font-weight: 700; }
+  .d2-logo span { color: var(--accent); }
+  .d2-tabs { display: flex; gap: 0; }
+  .d2-tab {
+    padding: 6px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; transition: all 0.12s;
+  }
+  .d2-tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+  .d2-body { flex: 1; display: flex; gap: 0; }
+  .d2-panel { flex: 1; padding: 32px; }
+  .d2-sidebar-right { width: 340px; border-left: 1px solid var(--border-subtle); padding: 24px; background: var(--surface-card); }
+
+  .upload-zone {
+    border: 2px dashed var(--border-subtle); border-radius: 14px;
+    padding: 48px 32px; text-align: center; cursor: pointer;
+    transition: all 0.2s; margin-bottom: 24px;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(79,110,247,0.04); }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .upload-sub { font-size: 13px; color: var(--text-secondary); }
+  .upload-sub-note { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  .processing-pipeline { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .pipeline-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
+  .pipeline-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .pipeline-step + .pipeline-step { border-top: 1px solid var(--border-subtle); }
+  .pipeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-done { background: var(--status-optimal); }
+  .dot-active { background: var(--accent); animation: pulse 1.5s ease-in-out infinite; }
+  .dot-pending { background: var(--border-subtle); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .pipeline-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .pipeline-time { font-size: 11px; color: var(--text-muted); }
+  .pipeline-done { font-size: 11px; color: var(--status-optimal); }
+
+  .recent-docs { }
+  .recent-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .doc-card {
+    background: var(--surface-elevated); border-radius: 8px; padding: 12px 14px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+  }
+  .doc-icon { font-size: 20px; }
+  .doc-name { font-size: 13px; font-weight: 500; }
+  .doc-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .doc-status { margin-left: auto; }
+
+  /* ===================== */
+  /* DIRECTION 3: Onboarding / Profile */
+  /* ===================== */
+  .d3 { align-items: center; justify-content: center; background: var(--surface-base); padding: 40px; }
+  .onboarding-container { width: 100%; max-width: 640px; }
+  .onboard-progress { display: flex; align-items: center; gap: 8px; margin-bottom: 40px; }
+  .onboard-step {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+  }
+  .step-done { background: var(--status-optimal); color: #000; }
+  .step-active { background: var(--accent); color: #fff; }
+  .step-pending { background: var(--surface-elevated); color: var(--text-muted); border: 1px solid var(--border-subtle); }
+  .step-line { flex: 1; height: 1px; background: var(--border-subtle); }
+  .step-line.done { background: var(--status-optimal); opacity: 0.4; }
+
+  .onboard-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 36px; }
+  .onboard-eyebrow { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .onboard-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .onboard-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.5; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .form-input {
+    background: var(--surface-elevated); border: 1px solid var(--border-subtle);
+    border-radius: 7px; padding: 10px 14px; font-size: 14px; color: var(--text-primary);
+    outline: none; transition: border-color 0.12s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-muted); }
+
+  .condition-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .chip {
+    padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer;
+    transition: all 0.12s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.selected { background: rgba(79,110,247,0.15); border-color: var(--accent); color: var(--accent); }
+
+  .baseline-preview { background: var(--surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px; margin-top: 20px; }
+  .baseline-title { font-size: 12px; font-weight: 600; color: var(--status-optimal); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .baseline-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; color: var(--text-secondary); }
+  .baseline-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  .onboard-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
+  .onboard-back { font-size: 13px; color: var(--text-muted); cursor: pointer; }
+
+  /* ===================== */
+  /* DIRECTION 4: AI Doctor */
+  /* ===================== */
+  .d4 { flex-direction: row; }
+  .d4-main { flex: 1; display: flex; flex-direction: column; background: var(--surface-base); }
+  .d4-topbar {
+    padding: 16px 28px; border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; gap: 16px; background: var(--surface-card);
+  }
+  .d4-back { font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+  .d4-doc-name { font-size: 15px; font-weight: 600; }
+  .d4-doc-date { font-size: 12px; color: var(--text-muted); }
+  .d4-content { flex: 1; padding: 28px; overflow-y: auto; }
+
+  .result-summary {
+    background: linear-gradient(135deg, rgba(79,110,247,0.08), rgba(45,212,160,0.04));
+    border: 1px solid rgba(79,110,247,0.2); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;
+  }
+  .result-summary-title { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+  .result-summary-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+  .values-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+  .value-card {
+    background: var(--surface-card); border: 1px solid var(--border-subtle);
+    border-radius: 10px; padding: 16px 18px;
+  }
+  .value-card-name { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .value-card-num { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .value-card-unit { font-size: 11px; color: var(--text-muted); }
+  .value-card-note { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4; }
+  .value-optimal { color: var(--status-optimal); }
+  .value-borderline { color: var(--status-borderline); }
+  .value-concerning { color: var(--status-concerning); }
+
+  .ai-block {
+    background: var(--surface-card); border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 20px 20px 20px 22px; margin-bottom: 12px;
+  }
+  .ai-block-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ai-icon { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .ai-label { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ai-text { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
+  .ai-disclaimer { font-size: 11px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+  .d4-right { width: 300px; border-left: 1px solid var(--border-subtle); background: var(--surface-card); padding: 20px; }
+  .d4-right-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
+  .trend-mini { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle); }
+  .trend-mini-name { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .trend-mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 36px; margin-bottom: 4px; }
+  .trend-mini-bar { flex: 1; border-radius: 3px 3px 0 0; }
+  .trend-mini-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
+  .upgrade-cta { background: linear-gradient(135deg, rgba(79,110,247,0.12), rgba(79,110,247,0.06)); border: 1px solid rgba(79,110,247,0.25); border-radius: 10px; padding: 16px; text-align: center; }
+  .upgrade-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .upgrade-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; }
+
+  /* ===================== */
+  /* DIRECTION 5: Empty State / First Upload */
+  /* ===================== */
+  .d5 { background: var(--surface-base); flex-direction: column; }
+  .d5-nav {
+    display: flex; align-items: center; padding: 0 28px; height: 56px;
+    border-bottom: 1px solid var(--border-subtle); background: var(--surface-card);
+    justify-content: space-between;
+  }
+  .d5-logo { font-size: 15px; font-weight: 700; }
+  .d5-logo span { color: var(--accent); }
+  .d5-content { flex: 1; display: flex; gap: 0; }
+  .d5-left { width: 200px; padding: 20px 0; border-right: 1px solid var(--border-subtle); background: var(--surface-card); }
+  .d5-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 18px; font-size: 13px; color: var(--text-muted); cursor: pointer;
+    border-left: 2px solid transparent;
+  }
+  .d5-nav-item.active { color: var(--text-primary); border-left-color: var(--accent); background: rgba(255,255,255,0.03); }
+
+  .d5-main { flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .empty-state { max-width: 480px; text-align: center; }
+  .empty-hero { margin-bottom: 28px; }
+  .empty-chart-preview {
+    background: var(--surface-card); border: 1px solid var(--border-subtle);
+    border-radius: 14px; padding: 24px; margin-bottom: 12px; position: relative; overflow: hidden;
+  }
+  .chart-blur { filter: blur(4px); opacity: 0.4; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; justify-content: center; }
+  .chart-bar { width: 24px; border-radius: 4px 4px 0 0; background: var(--accent); opacity: 0.5; }
+  .chart-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(15,17,23,0.4); border-radius: 14px;
+  }
+  .chart-overlay-text { font-size: 13px; font-weight: 600; color: var(--text-primary); background: var(--surface-elevated); padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border-subtle); }
+  .empty-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .empty-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; }
+  .empty-steps { display: flex; gap: 24px; margin-bottom: 32px; }
+  .empty-step { text-align: center; flex: 1; }
+  .empty-step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-elevated); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--accent); margin: 0 auto 8px; }
+  .empty-step-text { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+  /* ===================== */
+  /* DIRECTION 6: Error Recovery */
+  /* ===================== */
+  .d6 { background: var(--surface-base); flex-direction: row; }
+  .d6-sidebar { width: 240px; background: var(--surface-card); border-right: 1px solid var(--border-subtle); padding: 20px 0; }
+  .d6-main { flex: 1; padding: 32px; }
+  .error-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; max-width: 680px; overflow: hidden; }
+  .error-header { padding: 20px 24px; background: rgba(240,132,48,0.06); border-bottom: 1px solid rgba(240,132,48,0.15); display: flex; align-items: flex-start; gap: 14px; }
+  .error-icon { font-size: 22px; }
+  .error-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .error-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .error-body { padding: 20px 24px; }
+  .partial-values { margin-bottom: 20px; }
+  .partial-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .partial-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+  .partial-row:last-child { border-bottom: none; }
+  .partial-name { flex: 1; color: var(--text-secondary); }
+  .partial-val { font-weight: 600; }
+  .partial-conf { font-size: 11px; color: var(--status-optimal); }
+  .partial-unread { color: var(--text-muted); font-style: italic; }
+
+  .tips-section { background: var(--surface-elevated); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+  .tips-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+  .tip-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 7px; line-height: 1.4; }
+  .tip-num { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  .error-actions { display: flex; gap: 10px; }
+
+  /* Misc shared */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .pill-paid { background: rgba(245,200,66,0.12); color: var(--status-borderline); }
+  .divider { height: 1px; background: var(--border-subtle); margin: 20px 0; }
+
+  .tier-banner {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    background: rgba(79,110,247,0.06); border: 1px solid rgba(79,110,247,0.15);
+    border-radius: 8px; margin-bottom: 20px;
+  }
+  .tier-text { font-size: 13px; color: var(--text-secondary); flex: 1; }
+  .tier-text strong { color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-title">HealthCabinet — Design Directions</span>
+  <button class="nav-btn active" onclick="show(1, this)">1. Dashboard</button>
+  <button class="nav-btn" onclick="show(2, this)">2. Upload Flow</button>
+  <button class="nav-btn" onclick="show(3, this)">3. Onboarding</button>
+  <button class="nav-btn" onclick="show(4, this)">4. AI Results</button>
+  <button class="nav-btn" onclick="show(5, this)">5. Empty State</button>
+  <button class="nav-btn" onclick="show(6, this)">6. Error Recovery</button>
+</nav>
+
+<div class="container">
+
+  <!-- DIRECTION 1: Main Dashboard -->
+  <div class="direction d1 active" id="dir-1">
+    <aside class="d1-sidebar">
+      <div class="d1-logo">Health<span>Cabinet</span></div>
+      <div class="d1-nav-item active">
+        <svg class="d1-nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="d1-nav-item">
+        <svg class="d1-nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 3v6h8V5H4z"/></svg>
+        Documents
+      </div>
+      <div class="d1-nav-item">
+        <svg class="d1-nav-icon" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6"/></svg>
+        Profile
+      </div>
+      <div class="d1-section-label">Health</div>
+      <div class="d1-nav-item">
+        <svg class="d1-nav-icon" viewBox="0 0 16 16" fill="currentColor"><polyline points="1,10 5,6 9,8 15,2"/></svg>
+        Trends
+      </div>
+      <div class="d1-nav-item">
+        <svg class="d1-nav-icon" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        History
+      </div>
+      <div class="d1-spacer"></div>
+      <div class="d1-user">
+        <div class="d1-avatar">S</div>
+        <div class="d1-user-name">Sofia K.</div>
+        <div class="pill pill-paid" style="margin-left:auto">Pro</div>
+      </div>
+    </aside>
+
+    <main class="d1-main">
+      <div class="d1-topbar">
+        <div class="d1-page-title">Dashboard</div>
+        <div class="d1-topbar-actions">
+          <button class="btn-secondary">Export</button>
+          <button class="btn-primary">+ Upload</button>
+        </div>
+      </div>
+      <div class="d1-content">
+        <div class="d1-grid">
+          <div class="stat-card">
+            <div class="stat-label">TSH</div>
+            <div class="stat-value" style="color:var(--status-concerning)">4.8</div>
+            <div class="stat-sub">mIU/L · Target: 0.5–2.5</div>
+            <div class="stat-badge badge-concerning">Concerning</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Free T4</div>
+            <div class="stat-value" style="color:var(--status-borderline)">11.2</div>
+            <div class="stat-sub">pmol/L · Ref: 12–22</div>
+            <div class="stat-badge badge-borderline">Borderline</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ferritin</div>
+            <div class="stat-value" style="color:var(--status-optimal)">68</div>
+            <div class="stat-sub">ng/mL · Ref: 12–150</div>
+            <div class="stat-badge badge-optimal">Optimal</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">All Biomarkers</div>
+          <div class="section-link">View all →</div>
+        </div>
+        <div class="biomarker-table">
+          <div class="table-header">
+            <div class="table-row">
+              <div>Biomarker</div><div>Value</div><div>Status</div><div>Trend</div><div>Last test</div>
+            </div>
+          </div>
+          <div class="table-row">
+            <div><div class="biomarker-name">TSH</div><div class="biomarker-sub">Thyroid stimulating hormone</div></div>
+            <div><div class="value-num value-concerning">4.8</div><div class="value-unit">mIU/L</div></div>
+            <div><span class="badge badge-concerning">Concerning</span></div>
+            <div><div class="sparkline trend-up"><div class="spark-bar" style="height:8px"></div><div class="spark-bar" style="height:10px"></div><div class="spark-bar" style="height:12px"></div><div class="spark-bar" style="height:16px"></div><div class="spark-bar" style="height:20px"></div></div></div>
+            <div style="font-size:12px;color:var(--text-muted)">Mar 6</div>
+          </div>
+          <div class="table-row">
+            <div><div class="biomarker-name">Free T4</div><div class="biomarker-sub">Thyroxine</div></div>
+            <div><div class="value-num value-borderline">11.2</div><div class="value-unit">pmol/L</div></div>
+            <div><span class="badge badge-borderline">Borderline</span></div>
+            <div><div class="sparkline trend-stable"><div class="spark-bar" style="height:14px"></div><div class="spark-bar" style="height:13px"></div><div class="spark-bar" style="height:14px"></div><div class="spark-bar" style="height:12px"></div><div class="spark-bar" style="height:13px"></div></div></div>
+            <div style="font-size:12px;color:var(--text-muted)">Mar 6</div>
+          </div>
+          <div class="table-row">
+            <div><div class="biomarker-name">Ferritin</div><div class="biomarker-sub">Iron storage protein</div></div>
+            <div><div class="value-num value-optimal">68</div><div class="value-unit">ng/mL</div></div>
+            <div><span class="badge badge-optimal">Optimal</span></div>
+            <div><div class="sparkline trend-stable"><div class="spark-bar" style="height:16px"></div><div class="spark-bar" style="height:17px"></div><div class="spark-bar" style="height:16px"></div><div class="spark-bar" style="height:17px"></div><div class="spark-bar" style="height:16px"></div></div></div>
+            <div style="font-size:12px;color:var(--text-muted)">Mar 6</div>
+          </div>
+          <div class="table-row">
+            <div><div class="biomarker-name">LDL Cholesterol</div><div class="biomarker-sub">Low-density lipoprotein</div></div>
+            <div><div class="value-num" style="color:var(--text-primary)">3.4</div><div class="value-unit">mmol/L</div></div>
+            <div><span class="badge badge-optimal">Optimal</span></div>
+            <div><div class="sparkline trend-stable"><div class="spark-bar" style="height:15px"></div><div class="spark-bar" style="height:15px"></div><div class="spark-bar" style="height:14px"></div><div class="spark-bar" style="height:15px"></div><div class="spark-bar" style="height:14px"></div></div></div>
+            <div style="font-size:12px;color:var(--text-muted)">Jan 12</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <div class="direction-label"><strong>Direction 1:</strong> Dashboard Precision — data-rich main view</div>
+  </div>
+
+  <!-- DIRECTION 2: Upload Focus -->
+  <div class="direction d2" id="dir-2">
+    <div class="d2-header">
+      <div class="d2-logo">Health<span>Cabinet</span></div>
+      <div class="d2-tabs">
+        <div class="d2-tab">Dashboard</div>
+        <div class="d2-tab active">Documents</div>
+        <div class="d2-tab">Trends</div>
+        <div class="d2-tab">Profile</div>
+      </div>
+      <div class="pill pill-paid">Pro</div>
+    </div>
+    <div class="d2-body">
+      <div class="d2-panel">
+        <div class="upload-zone">
+          <div class="upload-icon">📄</div>
+          <div class="upload-title">Drop your lab result here</div>
+          <div class="upload-sub">PDF or photo — any lab, any format, any language</div>
+          <div class="upload-sub-note">or click to browse files</div>
+        </div>
+
+        <div class="processing-pipeline">
+          <div class="pipeline-title">Processing — CBC Panel · Mar 6</div>
+          <div class="pipeline-step">
+            <div class="pipeline-dot dot-done"></div>
+            <div class="pipeline-name">Uploading</div>
+            <div class="pipeline-done">Done</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-dot dot-done"></div>
+            <div class="pipeline-name">Reading document</div>
+            <div class="pipeline-done">Done</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-dot dot-active"></div>
+            <div class="pipeline-name">Extracting values</div>
+            <div class="pipeline-time">~20s remaining</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-dot dot-pending"></div>
+            <div class="pipeline-name">Generating insights</div>
+            <div class="pipeline-time" style="color:var(--text-muted)">Waiting</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d2-sidebar-right">
+        <div class="recent-title">Recent documents</div>
+        <div class="doc-card">
+          <div class="doc-icon">🩸</div>
+          <div><div class="doc-name">CBC Panel</div><div class="doc-meta">Jan 12, 2026 · 14 values</div></div>
+          <div class="doc-status"><span class="badge badge-optimal">Done</span></div>
+        </div>
+        <div class="doc-card">
+          <div class="doc-icon">🫀</div>
+          <div><div class="doc-name">Lipid Panel</div><div class="doc-meta">Oct 3, 2025 · 6 values</div></div>
+          <div class="doc-status"><span class="badge badge-optimal">Done</span></div>
+        </div>
+        <div class="doc-card">
+          <div class="doc-icon">🦋</div>
+          <div><div class="doc-name">Thyroid Panel</div><div class="doc-meta">Jul 18, 2025 · 5 values</div></div>
+          <div class="doc-status"><span class="badge badge-borderline">Partial</span></div>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;color:var(--text-secondary)">3 documents · 25 biomarkers tracked</div>
+      </div>
+    </div>
+    <div class="direction-label"><strong>Direction 2:</strong> Upload-Centric — document-first view with live pipeline</div>
+  </div>
+
+  <!-- DIRECTION 3: Onboarding -->
+  <div class="direction d3" id="dir-3">
+    <div class="onboarding-container">
+      <div class="onboard-progress">
+        <div class="onboard-step step-done">✓</div>
+        <div class="step-line done"></div>
+        <div class="onboard-step step-done">✓</div>
+        <div class="step-line done"></div>
+        <div class="onboard-step step-active">3</div>
+        <div class="step-line"></div>
+        <div class="onboard-step step-pending">4</div>
+      </div>
+
+      <div class="onboard-card">
+        <div class="onboard-eyebrow">Step 3 of 4 — Health Profile</div>
+        <div class="onboard-title">Any diagnosed conditions?</div>
+        <div class="onboard-sub">This helps us personalize your dashboard and reference ranges before your first upload.</div>
+
+        <div class="form-group full" style="margin-bottom:20px">
+          <div class="form-label">Select all that apply</div>
+          <div class="condition-chips">
+            <div class="chip selected">Hashimoto's thyroiditis</div>
+            <div class="chip">Type 2 diabetes</div>
+            <div class="chip">Hypertension</div>
+            <div class="chip">PCOS</div>
+            <div class="chip">Cardiovascular disease</div>
+            <div class="chip">Autoimmune disorder</div>
+            <div class="chip">None</div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <div class="form-label">Current medications</div>
+            <input class="form-input" placeholder="e.g. Levothyroxine 50mcg" value="Levothyroxine 50mcg">
+          </div>
+          <div class="form-group">
+            <div class="form-label">Family history (optional)</div>
+            <input class="form-input" placeholder="e.g. diabetes, heart disease">
+          </div>
+        </div>
+
+        <div class="baseline-preview">
+          <div class="baseline-title">✦ Your personalized dashboard is ready</div>
+          <div class="baseline-item"><div class="baseline-dot"></div>5 thyroid biomarkers added to your tracking list</div>
+          <div class="baseline-item"><div class="baseline-dot"></div>Reference ranges adjusted for Hashimoto's profile</div>
+          <div class="baseline-item"><div class="baseline-dot"></div>Levothyroxine interaction notes enabled</div>
+        </div>
+
+        <div class="onboard-actions">
+          <div class="onboard-back">← Back</div>
+          <button class="btn-primary">Continue →</button>
+        </div>
+      </div>
+    </div>
+    <div class="direction-label"><strong>Direction 3:</strong> Onboarding as Value — baseline preview on profile step</div>
+  </div>
+
+  <!-- DIRECTION 4: AI Results Detail -->
+  <div class="direction d4" id="dir-4">
+    <div class="d4-main">
+      <div class="d4-topbar">
+        <div class="d4-back">← Documents</div>
+        <div style="flex:1">
+          <div class="d4-doc-name">Thyroid Panel · Mar 6, 2026</div>
+          <div class="d4-doc-date">Kyiv Diagnostic Lab · 5 values extracted</div>
+        </div>
+        <span class="badge badge-concerning">2 values need attention</span>
+      </div>
+      <div class="d4-content">
+        <div class="result-summary">
+          <div class="result-summary-title">AI Summary</div>
+          <div class="result-summary-text">Your TSH continues to rise across your last three panels — now at 4.8 mIU/L, above the optimal range for someone on thyroid medication. Your Free T4 is also slightly below range. This pattern is worth discussing with your endocrinologist, as it may suggest your current dose needs adjusting.</div>
+        </div>
+
+        <div class="values-grid">
+          <div class="value-card">
+            <div class="value-card-name">TSH</div>
+            <div class="value-card-num value-concerning">4.8 <span style="font-size:14px;font-weight:400">mIU/L</span></div>
+            <span class="badge badge-concerning">Concerning</span>
+            <div class="value-card-note">Above optimal range for thyroid medication users (0.5–2.5 mIU/L). Rising across 3 panels.</div>
+          </div>
+          <div class="value-card">
+            <div class="value-card-name">Free T4</div>
+            <div class="value-card-num value-borderline">11.2 <span style="font-size:14px;font-weight:400">pmol/L</span></div>
+            <span class="badge badge-borderline">Borderline</span>
+            <div class="value-card-note">Slightly below reference range (12–22 pmol/L). Often correlates with elevated TSH in hypothyroidism.</div>
+          </div>
+          <div class="value-card">
+            <div class="value-card-name">Free T3</div>
+            <div class="value-card-num value-optimal">4.6 <span style="font-size:14px;font-weight:400">pmol/L</span></div>
+            <span class="badge badge-optimal">Optimal</span>
+            <div class="value-card-note">Within normal range (3.5–6.5 pmol/L). Conversion from T4 appears adequate.</div>
+          </div>
+          <div class="value-card">
+            <div class="value-card-name">Anti-TPO</div>
+            <div class="value-card-num value-concerning">380 <span style="font-size:14px;font-weight:400">IU/mL</span></div>
+            <span class="badge badge-concerning">Concerning</span>
+            <div class="value-card-note">Elevated antibody level consistent with Hashimoto's autoimmune activity. Ref: &lt;35 IU/mL.</div>
+          </div>
+        </div>
+
+        <div class="ai-block">
+          <div class="ai-block-header">
+            <div class="ai-icon">AI</div>
+            <div class="ai-label">Pattern detected across 3 uploads</div>
+          </div>
+          <div class="ai-text">Your TSH has increased in each of your last three results: 3.1 → 3.9 → 4.8 mIU/L. This steady upward trend, combined with a slight drop in Free T4, is a pattern that sometimes indicates the current medication dose is no longer fully compensating. It doesn't mean anything is acutely wrong — but it's a specific data point worth bringing to your next appointment.</div>
+          <div class="ai-disclaimer">This is informational only and not medical advice. Always discuss results with your doctor.</div>
+        </div>
+
+        <div class="tier-banner">
+          <div class="tier-text">Have questions about this result? <strong>Ask your AI doctor</strong> — follow-up questions, dose implications, what to bring to your appointment.</div>
+          <button class="btn-primary" style="white-space:nowrap">Ask AI Doctor</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="d4-right">
+      <div class="d4-right-title">Trends</div>
+      <div class="trend-mini">
+        <div class="trend-mini-name" style="font-size:13px;font-weight:600">TSH <span style="font-weight:400;color:var(--status-concerning)">↑ Rising</span></div>
+        <div class="trend-mini-chart">
+          <div class="trend-mini-bar" style="height:30%;background:var(--status-optimal);opacity:0.6"></div>
+          <div class="trend-mini-bar" style="height:50%;background:var(--status-borderline);opacity:0.7"></div>
+          <div class="trend-mini-bar" style="height:70%;background:var(--status-concerning);opacity:0.8"></div>
+          <div class="trend-mini-bar" style="height:90%;background:var(--status-concerning)"></div>
+        </div>
+        <div class="trend-mini-labels"><span>Jul 25</span><span>Oct 25</span><span>Jan 26</span><span>Mar 26</span></div>
+      </div>
+      <div class="trend-mini">
+        <div class="trend-mini-name" style="font-size:13px;font-weight:600">Free T4 <span style="font-weight:400;color:var(--status-borderline)">↓ Slight decline</span></div>
+        <div class="trend-mini-chart">
+          <div class="trend-mini-bar" style="height:80%;background:var(--status-optimal);opacity:0.7"></div>
+          <div class="trend-mini-bar" style="height:70%;background:var(--status-optimal);opacity:0.6"></div>
+          <div class="trend-mini-bar" style="height:55%;background:var(--status-borderline);opacity:0.7"></div>
+          <div class="trend-mini-bar" style="height:45%;background:var(--status-borderline)"></div>
+        </div>
+        <div class="trend-mini-labels"><span>Jul 25</span><span>Oct 25</span><span>Jan 26</span><span>Mar 26</span></div>
+      </div>
+    </div>
+    <div class="direction-label"><strong>Direction 4:</strong> Results + AI — interpretation-first detail view</div>
+  </div>
+
+  <!-- DIRECTION 5: Empty State -->
+  <div class="direction d5" id="dir-5">
+    <div class="d5-nav">
+      <div class="d5-logo">Health<span>Cabinet</span></div>
+      <div style="display:flex;gap:4px">
+        <button class="btn-secondary" style="font-size:12px;padding:5px 12px">Profile</button>
+        <button class="btn-primary" style="font-size:12px;padding:5px 12px">+ Upload</button>
+      </div>
+    </div>
+    <div class="d5-content">
+      <div class="d5-left">
+        <div class="d5-nav-item active">Dashboard</div>
+        <div class="d5-nav-item">Documents</div>
+        <div class="d5-nav-item">Trends</div>
+        <div class="d5-nav-item">Profile</div>
+      </div>
+      <div class="d5-main">
+        <div class="empty-state">
+          <div class="empty-hero">
+            <div class="empty-chart-preview">
+              <div class="chart-blur">
+                <div class="chart-bars">
+                  <div class="chart-bar" style="height:30px"></div>
+                  <div class="chart-bar" style="height:45px"></div>
+                  <div class="chart-bar" style="height:60px"></div>
+                  <div class="chart-bar" style="height:50px"></div>
+                  <div class="chart-bar" style="height:70px"></div>
+                </div>
+              </div>
+              <div class="chart-overlay"><div class="chart-overlay-text">Upload your first result to unlock</div></div>
+            </div>
+          </div>
+          <div class="empty-title">Your health intelligence starts here</div>
+          <div class="empty-sub">Upload any lab result — PDF or photo, any lab, any format. We'll extract every value and explain what it means for you.</div>
+          <div class="empty-steps">
+            <div class="empty-step">
+              <div class="empty-step-num">1</div>
+              <div class="empty-step-text">Drop or upload a lab result</div>
+            </div>
+            <div class="empty-step">
+              <div class="empty-step-num">2</div>
+              <div class="empty-step-text">We extract and interpret every value</div>
+            </div>
+            <div class="empty-step">
+              <div class="empty-step-num">3</div>
+              <div class="empty-step-text">Build your personal health timeline</div>
+            </div>
+          </div>
+          <button class="btn-primary" style="font-size:14px;padding:10px 28px">Upload your first lab result</button>
+        </div>
+      </div>
+    </div>
+    <div class="direction-label"><strong>Direction 5:</strong> Empty State — first-run guidance with preview</div>
+  </div>
+
+  <!-- DIRECTION 6: Error Recovery -->
+  <div class="direction d6" id="dir-6">
+    <div class="d6-sidebar">
+      <div style="padding:20px;font-size:15px;font-weight:700;color:var(--text-primary)">Health<span style="color:var(--accent)">Cabinet</span></div>
+      <div class="d5-nav-item active" style="border-left:2px solid var(--accent);padding:9px 18px;font-size:13px;color:var(--text-primary)">Documents</div>
+      <div class="d5-nav-item" style="padding:9px 18px;font-size:13px;color:var(--text-muted)">Dashboard</div>
+      <div class="d5-nav-item" style="padding:9px 18px;font-size:13px;color:var(--text-muted)">Trends</div>
+    </div>
+    <div class="d6-main">
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px">CBC Panel · Mar 6, 2026</div>
+      <div class="error-card">
+        <div class="error-header">
+          <div class="error-icon">⚠️</div>
+          <div>
+            <div class="error-title">We could only partially read this document</div>
+            <div class="error-sub">We extracted 8 of 14 values. The image quality was too low in some areas to read accurately. Here's what we could read — you can re-upload a clearer photo to get the full result.</div>
+          </div>
+        </div>
+        <div class="error-body">
+          <div class="partial-values">
+            <div class="partial-title">Values extracted (8 of 14)</div>
+            <div class="partial-row">
+              <div class="partial-name">Hemoglobin</div>
+              <div class="partial-val value-optimal">13.8</div>
+              <div class="value-unit" style="margin-left:4px">g/dL</div>
+              <div class="partial-conf" style="margin-left:auto">High confidence</div>
+            </div>
+            <div class="partial-row">
+              <div class="partial-name">WBC</div>
+              <div class="partial-val value-optimal">6.2</div>
+              <div class="value-unit" style="margin-left:4px">×10⁹/L</div>
+              <div class="partial-conf" style="margin-left:auto">High confidence</div>
+            </div>
+            <div class="partial-row">
+              <div class="partial-name">Platelets</div>
+              <div class="partial-val value-borderline">148</div>
+              <div class="value-unit" style="margin-left:4px">×10⁹/L</div>
+              <div class="partial-conf" style="margin-left:auto;color:var(--status-borderline)">Low confidence</div>
+            </div>
+            <div class="partial-row">
+              <div class="partial-name partial-unread">MCV, MCH, MCHC + 5 others</div>
+              <div style="margin-left:auto;font-size:12px;color:var(--text-muted)">Could not read</div>
+            </div>
+          </div>
+
+          <div class="tips-section">
+            <div class="tips-title">For a better result on re-upload:</div>
+            <div class="tip-item"><div class="tip-num">1</div>Place the document on a flat, dark surface</div>
+            <div class="tip-item"><div class="tip-num">2</div>Use good overhead lighting — avoid shadows across the page</div>
+            <div class="tip-item"><div class="tip-num">3</div>Hold the camera parallel to the page, not at an angle</div>
+          </div>
+
+          <div class="error-actions">
+            <button class="btn-primary">Re-upload this document</button>
+            <button class="btn-secondary">Keep partial results</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="direction-label"><strong>Direction 6:</strong> Error Recovery — graceful partial failure with guidance</div>
+  </div>
+
+</div>
+
+<script>
+function show(n, btn) {
+  document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dir-' + n).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

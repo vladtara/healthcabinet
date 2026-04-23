@@ -1,0 +1,30 @@
+# Generated output
+
+# all
+.ruff_cache
+.mypy_cache
+.playwright-mcp
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# MCP
+.playwright-mcp/*
+
+node_modules/*

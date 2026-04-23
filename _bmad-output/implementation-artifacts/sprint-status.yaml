@@ -1,0 +1,180 @@
+# generated: 2026-04-02
+# project: set-bmad
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+#
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Finished
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-02
+last_updated: 2026-04-23  # Story 15-7 review patches applied: invalidation fix + single-file drop guard + targeted frontend unit/E2E verification green (66 unit, 3 targeted Playwright).
+project: set-bmad
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Foundation & User Authentication
+  epic-1: done
+  1-1-monorepo-scaffold-infrastructure-baseline: done
+  1-2-user-registration-with-gdpr-consent: done
+  1-3-user-login-authenticated-session: done
+  1-4-medical-profile-setup: done
+  epic-1-retrospective: done
+
+  # Epic 2: Health Document Upload & Processing
+  epic-2: done
+  2-1-document-upload-minio-storage: done
+  2-2-real-time-processing-pipeline-status: done
+  2-3-universal-value-extraction-confidence-scoring: done
+  2-4-document-cabinet-individual-management: done
+  2-5-re-upload-flow-partial-extraction-recovery: done
+  2-6-value-flagging: done
+  epic-2-retrospective: done
+
+  # Epic 3: Health Dashboard & Baseline Intelligence
+  epic-3: done
+  3-0-registration-onboarding-ui-refinement: done
+  3-1-profile-based-baseline-test-recommendations: done
+  3-2-health-values-dashboard-with-context-indicators: done
+  3-3-biomarker-trend-visualization: done
+  epic-3-retrospective: done
+
+  # Epic 4: AI Health Interpretation
+  epic-4: done
+  4-1-plain-language-ai-interpretation-per-upload: done
+  4-2-ai-reasoning-trail: done
+  4-3-follow-up-qa: done
+  4-4-cross-upload-pattern-detection: done
+  epic-4-retrospective: done
+
+  # Epic 5: Admin Operations
+  epic-5: done
+  5-1-admin-platform-metrics-dashboard: done
+  5-2-extraction-error-queue-manual-value-correction: done
+  5-3-user-account-management-flag-response: done
+  epic-5-retrospective: done
+
+  # Epic 6: Data Rights & GDPR Compliance
+  epic-6: in-progress
+  6-1-full-data-export: done
+  6-2-account-data-deletion: done  # audit-log erasure marker (original/new/value_name); 5 new tests incl. AC5 login-rejection; Review Round 2 applied 9 patches; backend 363/363
+  6-3-consent-history-view: done   # Review Round 1 patched 2026-04-18: AC3 exact-count + freshness, SemVer-wide regex, writable-shape $app/stores mock, goto-not-called assertion, route file-check limitation documented, Task 6.4 honestly deferred; backend 369/369, frontend 586/586
+  epic-6-retrospective: optional
+
+  # ===== Frontend Redesign Track (98.css Migration) =====
+  # Replaces old Epic 7 (5 stories). See frontend-redesign-epics.md for full initiative.
+  # Stories are candidates — create via create-story workflow when ready for dev.
+
+  # Epic 7: Design System Foundation (98.css Migration)
+  epic-7: done
+  7-1-98css-design-system-foundation: done
+  7-2-base-layout-components: done
+  7-3-ui-primitive-migration: done
+  7-4-reusable-state-components: done
+  7-5-data-display-primitives: done
+
+  # Epic 8: Public & Authentication Surface
+  epic-8: done
+  8-1-landing-page-redesign: done
+  8-2-login-page-98css-alignment: done
+  8-3-register-page-98css-consistency: done
+  8-4-public-auth-accessibility-pass: done
+
+  # Epic 9: Authenticated Shell & Navigation
+  epic-9: done
+  9-1-appshell-98css-window-chrome: done
+  9-2-remove-mobile-tablet-responsive-code: done
+  9-3-admin-shell-variant: done
+  9-4-global-feedback-surfaces: done
+  epic-9-retrospective: done
+
+  # Epic 10: Dashboard Redesign
+  epic-10: done
+  10-1-empty-state-dashboard-redesign: done
+  10-2-active-dashboard-header-patient-summary-bar: done
+  10-3-biomarker-table-redesign: done
+  10-4-trend-reveal-experience: done
+  10-5-ai-clinical-note-chat-window-integration: done
+  epic-10-retrospective: optional
+
+  # Epic 11: Documents Cabinet & Upload Workflow
+  epic-11: done
+  11-1-document-list-98css-file-explorer: done
+  11-2-document-detail-panel-redesign: done
+  11-3-import-dialog-98css-window-chrome: done
+  11-4-processing-pipeline-progress-bar: done
+  11-5-re-upload-partial-extraction-flow-polish: done
+  epic-11-retrospective: done
+
+  # Epic 12: Settings & Data Rights Experience
+  epic-12: done
+  12-1-medical-profile-page-redesign: done
+  12-2-consent-history-timeline: done
+  12-3-data-export-ux: done
+  12-4-account-data-deletion-ux: done
+  12-5-unsaved-changes-save-recovery-patterns: done
+  epic-12-retrospective: done
+
+  # Epic 13: Admin Experience & Frontend Hardening
+  epic-13: done
+  13-1-admin-overview-redesign: done
+  13-2-extraction-error-queue-correction-ux: done
+  13-3-user-management-detail-redesign: done
+  13-4-admin-shell-navigation-consistency: done
+  13-5-frontend-hardening-accessibility-qa-performance: done
+  epic-13-retrospective: done
+
+  # ===== Pre-GA Cleanup Sprint =====
+  # Source: Epic 13 retrospective action items + accumulated deferred work.
+  # Must complete before resuming Epic 6 (GDPR stories 6-2, 6-3).
+
+  # Epic 14: Pre-GA Cleanup Sprint
+  epic-14: in-progress
+  14-1-sse-fetch-based-auth-and-lifecycle: done              # SSE token security (4th deferral) + auto-reconnect race fix. Full-stack: frontend fetch-based SSE + backend dual-auth support.
+  14-2-minio-orphan-cleanup-on-account-deletion: done            # Atomic S3 deletion inside DB transaction for GDPR Article 17 compliance. Backend only.
+  14-3-admin-self-deletion-policy-adr: done                # ADR + migration. Code review: 1 patch applied.
+  14-4-test-baseline-verification-and-broken-test-fix: done     # COMPLETE — 363 backend / 578 frontend passed
+  14-5-desktop-qa-and-tailwind-remnant-sweep: done            # Visual verification at 1024/1440/2560px + document remaining 9 Tailwind component files.
+  epic-14-retrospective: done
+
+  # ===== Flow Stabilization & Dashboard Intelligence =====
+  # Source: scope plan "Fix Plan: Uploads, EN/UA, Recognition, Dashboard AI, Session, Chat UX" (2026-04-18).
+
+  # Epic 15: Flow Stabilization & Dashboard Intelligence
+  epic-15: in-progress
+  15-1-auth-bootstrap-restore-guard: done         # 2026-04-19: 2 review rounds, all HIGHs resolved. 629/629 frontend green.
+  15-2-document-intelligence-and-year-confirmation-contract: done  # 2026-04-19: 2 review rounds, all HIGHs resolved. 427/427 backend green.
+  15-3-dashboard-filter-and-aggregate-ai-context: done
+  15-4-sequential-multi-upload-queue: done
+  15-5-ai-chat-scroll-and-overflow-hardening: done
+  15-6-core-en-ua-localization: done
+  15-7-regression-gate-for-stabilized-flows: done
+  epic-15-retrospective: optional

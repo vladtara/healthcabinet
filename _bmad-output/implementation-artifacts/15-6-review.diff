@@ -1,0 +1,3807 @@
+diff --git a/healthcabinet/frontend/src/app.css b/healthcabinet/frontend/src/app.css
+index 64543fa..413dd09 100644
+--- a/healthcabinet/frontend/src/app.css
++++ b/healthcabinet/frontend/src/app.css
+@@ -5092,3 +5092,46 @@ input[type='radio'].hc-radio + label::before {
+ 	color: var(--status-action);
+ 	background: color-mix(in srgb, var(--status-action) 15%, transparent);
+ }
++
++/* ── Locale Toggle (Story 15.6) ── */
++
++.hc-locale-toggle {
++	display: inline-flex;
++	gap: 2px;
++	border: 1px solid #A0B0C0;
++	padding: 1px;
++	background: var(--surface-raised, #EEF2F8);
++}
++
++.hc-locale-toggle-btn {
++	all: unset;
++	padding: 2px 8px;
++	font-size: 12px;
++	font-weight: 600;
++	line-height: 1.4;
++	color: var(--text-secondary, #333);
++	cursor: pointer;
++}
++
++.hc-locale-toggle-btn[aria-pressed='true'] {
++	background: var(--accent, #4F6EF7);
++	color: #fff;
++}
++
++.hc-locale-toggle-btn:focus-visible {
++	outline: 2px solid var(--accent, #4F6EF7);
++	outline-offset: 1px;
++}
++
++.hc-auth-locale-corner {
++	position: absolute;
++	top: 12px;
++	right: 12px;
++	z-index: 5;
++}
++
++.hc-landing-locale {
++	display: inline-flex;
++	align-items: center;
++	margin-right: 8px;
++}
+diff --git a/healthcabinet/frontend/src/lib/components/AppShell.svelte b/healthcabinet/frontend/src/lib/components/AppShell.svelte
+index 7fa8443..1271311 100644
+--- a/healthcabinet/frontend/src/lib/components/AppShell.svelte
++++ b/healthcabinet/frontend/src/lib/components/AppShell.svelte
+@@ -3,31 +3,29 @@
+ 	import { page } from '$app/stores';
+ 	import { authStore } from '$lib/stores/auth.svelte';
+ 	import { statusBarStore } from '$lib/stores/status-bar.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
+ 	import { StatusBar, StatusBarField } from '$lib/components/ui/status-bar';
+ 	import { ToastContainer } from '$lib/components/ui/toast';
++	import { LocaleToggle } from '$lib/components/ui/locale-toggle';
+ 
+ 	interface Props {
+ 		children: import('svelte').Snippet;
+ 	}
+ 	let { children }: Props = $props();
+ 
+-	const navItems = [
+-		{ href: '/dashboard', icon: '📊', label: 'Dashboard' },
+-		{ href: '/documents', icon: '📁', label: 'Documents' },
+-		{ href: '/settings', icon: '⚙', label: 'Settings' }
+-	];
++	const copy = $derived(t(localeStore.locale).appShell);
++
++	const navItems = $derived([
++		{ href: '/dashboard', icon: '📊', label: copy.navDashboard },
++		{ href: '/documents', icon: '📁', label: copy.navDocuments },
++		{ href: '/settings', icon: '⚙', label: copy.navSettings }
++	]);
+ 
+ 	function isActive(href: string): boolean {
+ 		return $page.url.pathname === href || $page.url.pathname.startsWith(href + '/');
+ 	}
+ 
+-	function activePageName(): string {
+-		for (const item of navItems) {
+-			if (isActive(item.href)) return item.label;
+-		}
+-		return 'HealthCabinet';
+-	}
+-
+ 	async function handleSignOut() {
+ 		try {
+ 			await authStore.logout();
+@@ -39,30 +37,32 @@
+ </script>
+ 
+ <div class="hc-app-shell">
+-	<a href="#main-content" class="hc-skip-link">Skip to main content</a>
++	<a href="#main-content" class="hc-skip-link">{copy.skipToContent}</a>
+ 	<!-- Header -->
+ 	<header class="hc-app-header">
+ 		<div class="hc-app-header-brand">
+ 			<span class="hc-app-header-icon" aria-hidden="true">⚕</span>
+-			<span>HealthCabinet</span>
++			<span>{copy.brand}</span>
+ 		</div>
+ 		<div class="hc-app-header-user">
++			<LocaleToggle />
+ 			{#if authStore.user?.email}
+ 				<span>{authStore.user.email}</span>
+ 			{/if}
+-			<button type="button" class="btn-standard" onclick={handleSignOut}>🚪 Sign Out</button>
++			<button type="button" class="btn-standard" onclick={handleSignOut}>🚪 {copy.signOut}</button>
+ 		</div>
+ 	</header>
+ 
+ 	<!-- Body -->
+ 	<div class="hc-app-body">
+ 		<!-- Left Nav -->
+-		<nav class="hc-app-left-nav" aria-label="Main navigation">
++		<nav class="hc-app-left-nav" aria-label={copy.mainNavAria}>
+ 			<div class="hc-app-nav-header">
+-				<span aria-hidden="true">⚕</span> Navigation
++				<span aria-hidden="true">⚕</span>
++				{copy.navHeader}
+ 			</div>
+ 
+-			<div class="hc-app-nav-section-label">App Pages</div>
++			<div class="hc-app-nav-section-label">{copy.navSectionApp}</div>
+ 			{#each navItems as item}
+ 				<a
+ 					href={item.href}
+@@ -76,14 +76,14 @@
+ 
+ 			{#if authStore.user?.role === 'admin'}
+ 				<div class="hc-app-nav-separator"></div>
+-				<div class="hc-app-nav-section-label">Admin</div>
++				<div class="hc-app-nav-section-label">{copy.navSectionAdmin}</div>
+ 				<a
+ 					href="/admin"
+ 					class="hc-app-nav-item {isActive('/admin') ? 'active' : ''}"
+ 					aria-current={isActive('/admin') ? 'page' : undefined}
+ 				>
+ 					<span aria-hidden="true">🔧</span>
+-					Admin Console
++					{copy.navAdminConsole}
+ 				</a>
+ 			{/if}
+ 		</nav>
+@@ -96,7 +96,9 @@
+ 
+ 	<!-- Status Bar -->
+ 	<StatusBar class="hc-app-status-bar">
+-		<StatusBarField class="hc-app-status-page">{statusBarStore.status}</StatusBarField>
++		<StatusBarField class="hc-app-status-page">
++			{statusBarStore.status === 'Ready' ? copy.statusReady : statusBarStore.status}
++		</StatusBarField>
+ 		{#each statusBarStore.fields as field}
+ 			<StatusBarField>{field}</StatusBarField>
+ 		{/each}
+diff --git a/healthcabinet/frontend/src/lib/components/AppShell.test.ts b/healthcabinet/frontend/src/lib/components/AppShell.test.ts
+index c840684..55e3168 100644
+--- a/healthcabinet/frontend/src/lib/components/AppShell.test.ts
++++ b/healthcabinet/frontend/src/lib/components/AppShell.test.ts
+@@ -1,7 +1,8 @@
+ import axe from 'axe-core';
+-import { describe, expect, test, vi, beforeEach } from 'vitest';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+ import { renderComponent } from '$lib/test-utils/render';
+ import AppShell from './AppShell.svelte';
++import { localeStore } from '$lib/stores/locale.svelte';
+ 
+ vi.mock('$lib/stores/auth.svelte', () => ({
+ 	authStore: {
+@@ -37,6 +38,12 @@ vi.mock('$lib/api/client.svelte', () => ({
+ describe('AppShell', () => {
+ 	beforeEach(() => {
+ 		vi.clearAllMocks();
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++	afterEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
+ 	});
+ 
+ 	test('renders header with HealthCabinet brand', () => {
+@@ -86,4 +93,28 @@ describe('AppShell', () => {
+ 		const results = await axe.run(container);
+ 		expect(results.violations).toHaveLength(0);
+ 	});
++
++	// ── Story 15.6 — localization ──────────────────────────────────────────────
++
++	test('renders a LocaleToggle in the header', () => {
++		const { container } = renderComponent(AppShell);
++		expect(container.querySelector('[data-testid="locale-toggle"]')).toBeInTheDocument();
++	});
++
++	test('switching to uk rerenders nav labels in Ukrainian', async () => {
++		const { container } = renderComponent(AppShell);
++		// Default locale (en) shows English labels.
++		const nav = container.querySelector('.hc-app-left-nav')!;
++		expect(nav.textContent).toContain('Dashboard');
++		expect(nav.textContent).toContain('Documents');
++
++		// Flip the locale and let Svelte rerender.
++		localeStore.setLocale('uk');
++		await new Promise((r) => setTimeout(r, 0));
++
++		expect(nav.textContent).toContain('Панель');
++		expect(nav.textContent).toContain('Документи');
++		// Sign Out translates to "Вийти".
++		expect(container.querySelector('.hc-app-header-user')!.textContent).toContain('Вийти');
++	});
+ });
+diff --git a/healthcabinet/frontend/src/lib/components/health/AIChatWindow.svelte b/healthcabinet/frontend/src/lib/components/health/AIChatWindow.svelte
+index 47c37c4..0a88afb 100644
+--- a/healthcabinet/frontend/src/lib/components/health/AIChatWindow.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/AIChatWindow.svelte
+@@ -2,9 +2,14 @@
+ 	import { tick } from 'svelte';
+ 	import { streamAiChat, streamDashboardChat } from '$lib/api/ai';
+ 	import type { DashboardFilter } from '$lib/stores/dashboard-filter.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++	import { formatTime } from '$lib/i18n/format';
+ 	import { marked } from 'marked';
+ 	import { isNearBottom } from './ai-chat-scroll';
+ 
++	const copy = $derived(t(localeStore.locale).aiChat);
++
+ 	marked.setOptions({ breaks: true, gfm: true });
+ 
+ 	interface ChatMessage {
+@@ -59,7 +64,7 @@
+ 	let activeController: AbortController | null = null;
+ 
+ 	function nowTime(): string {
+-		return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
++		return formatTime(new Date(), localeStore.locale);
+ 	}
+ 
+ 	// Reset state when the bound identity flips (document switch OR filter change).
+@@ -153,14 +158,13 @@
+ 
+ 			if (!response.ok) {
+ 				const err = await response.json().catch(() => ({ status: response.status }));
+-				errorMessage =
+-					(err as { detail?: string }).detail ?? 'Unable to get a response. Please try again.';
++				errorMessage = (err as { detail?: string }).detail ?? copy.errorGeneric;
+ 				return;
+ 			}
+ 
+ 			reader = response.body?.getReader() ?? undefined;
+ 			if (!reader) {
+-				errorMessage = 'Streaming not supported in this environment.';
++				errorMessage = copy.errorStreaming;
+ 				return;
+ 			}
+ 
+@@ -185,7 +189,7 @@
+ 				reader?.cancel().catch(() => {});
+ 				return;
+ 			}
+-			errorMessage = 'A network error occurred. Please try again.';
++			errorMessage = copy.errorNetwork;
+ 		} finally {
+ 			isStreaming = false;
+ 			if (activeController?.signal === signal) {
+@@ -202,11 +206,11 @@
+ >
+ 	<div class="hc-ai-chat-titlebar">
+ 		<span class="hc-ai-chat-titlebar-icon" aria-hidden="true">🩺</span>
+-		<span class="hc-ai-chat-titlebar-title">Dr. Health — AI Assistant</span>
++		<span class="hc-ai-chat-titlebar-title">{copy.title}</span>
+ 		<div class="hc-ai-chat-titlebar-btns">
+ 			<button
+ 				class="hc-ai-chat-tb-btn"
+-				aria-label={minimized ? 'Restore chat window' : 'Minimize chat window'}
++				aria-label={minimized ? copy.restore : copy.minimize}
+ 				onclick={() => {
+ 					minimized = !minimized;
+ 					maximized = false;
+@@ -215,7 +219,7 @@
+ 			<button
+ 				class="hc-ai-chat-tb-btn"
+ 				aria-expanded={maximized}
+-				aria-label={maximized ? 'Restore chat window' : 'Maximize chat window'}
++				aria-label={maximized ? copy.restore : copy.maximize}
+ 				onclick={() => {
+ 					maximized = !maximized;
+ 					minimized = false;
+@@ -229,12 +233,12 @@
+ 			class="hc-ai-chat-messages"
+ 			role="log"
+ 			aria-live="polite"
+-			aria-label="Chat messages"
++			aria-label={copy.messagesLabel}
+ 			bind:this={messagesEl}
+ 			onscroll={handleMessagesScroll}
+ 		>
+ 			<div class="hc-ai-chat-msg-system">
+-				Dr. Health is online. Ask anything about your health data.
++				{copy.systemGreeting}
+ 			</div>
+ 			{#each messages as msg}
+ 				<div
+@@ -244,7 +248,7 @@
+ 				>
+ 					<div class="hc-ai-chat-msg-header">
+ 						<span class="hc-ai-chat-msg-avatar">{msg.role === 'user' ? '👤' : '🩺'}</span>
+-						{msg.role === 'user' ? 'You' : 'Dr. Health'}
++						{msg.role === 'user' ? copy.senderUser : copy.senderAi}
+ 						<span class="hc-ai-chat-msg-time">{msg.time}</span>
+ 					</div>
+ 					<div class="hc-ai-chat-msg-text">
+@@ -263,9 +267,9 @@
+ 
+ 		<div class="hc-ai-chat-inputbar">
+ 			<div class="hc-ai-chat-toolbar">
+-				<button type="button" title="Bold" onclick={() => execFormat('bold')}><b>B</b></button>
+-				<button type="button" title="Italic" onclick={() => execFormat('italic')}><i>I</i></button>
+-				<button type="button" title="Underline" onclick={() => execFormat('underline')}
++				<button type="button" title={copy.toolbarBold} onclick={() => execFormat('bold')}><b>B</b></button>
++				<button type="button" title={copy.toolbarItalic} onclick={() => execFormat('italic')}><i>I</i></button>
++				<button type="button" title={copy.toolbarUnderline} onclick={() => execFormat('underline')}
+ 					><u>U</u></button
+ 				>
+ 			</div>
+@@ -275,10 +279,10 @@
+ 					class="hc-ai-chat-editor"
+ 					contenteditable="true"
+ 					role="textbox"
+-					aria-label="Ask about your health data"
++					aria-label={copy.editorLabel}
+ 					aria-multiline="true"
+ 					tabindex="0"
+-					data-placeholder="Type your question here…"
++					data-placeholder={copy.editorPlaceholder}
+ 					bind:this={editorEl}
+ 					oninput={() => {
+ 						question = editorEl?.innerText?.trim() ?? '';
+@@ -296,16 +300,16 @@
+ 					disabled={isStreaming || !question.trim() || !canSubmit}
+ 					onclick={handleSubmit}
+ 				>
+-					{isStreaming ? '…' : 'Send ▶'}
++					{isStreaming ? copy.sendingIndicator : copy.send}
+ 				</button>
+ 			</div>
+ 			{#if showNoContextHint}
+ 				<div class="hc-ai-chat-hint" data-testid="dashboard-chat-no-context-hint">
+-					Chat is available once this filter has at least one interpreted document
++					{copy.hintNoContext}
+ 				</div>
+ 			{:else}
+ 				<div class="hc-ai-chat-hint">
+-					Tip: Ask about specific biomarkers, trends, or what to discuss with your doctor
++					{copy.hintTip}
+ 				</div>
+ 			{/if}
+ 		</div>
+@@ -320,5 +324,5 @@
+ 		{/if}
+ 	</div>
+ 
+-	<div class="hc-ai-chat-disclaimer">For reference only — not a medical diagnosis</div>
++	<div class="hc-ai-chat-disclaimer">{copy.disclaimer}</div>
+ </div>
+diff --git a/healthcabinet/frontend/src/lib/components/health/AIClinicalNote.svelte b/healthcabinet/frontend/src/lib/components/health/AIClinicalNote.svelte
+index d8e64b0..26c73ac 100644
+--- a/healthcabinet/frontend/src/lib/components/health/AIClinicalNote.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/AIClinicalNote.svelte
+@@ -9,6 +9,10 @@
+ 	} from '$lib/api/ai';
+ 	import type { ApiError } from '$lib/api/client.svelte';
+ 	import type { DashboardFilter } from '$lib/stores/dashboard-filter.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).aiClinicalNote);
+ 
+ 	marked.setOptions({ breaks: true, gfm: true });
+ 
+@@ -81,13 +85,13 @@
+ 	function statusLabel(status: string): string {
+ 		switch (status) {
+ 			case 'normal':
+-				return 'Normal';
++				return copy.statusNormal;
+ 			case 'high':
+-				return 'High';
++				return copy.statusHigh;
+ 			case 'low':
+-				return 'Low';
++				return copy.statusLow;
+ 			default:
+-				return 'Unknown';
++				return copy.statusUnknown;
+ 		}
+ 	}
+ 
+@@ -107,14 +111,14 @@
+ 
+ {#if props.mode === 'document' && props.documentId == null}
+ 	<div class="hc-ai-note">
+-		<p class="hc-ai-note-empty">Upload a document to receive AI interpretation</p>
++		<p class="hc-ai-note-empty">{copy.empty}</p>
+ 	</div>
+ {:else if props.mode === 'dashboard' && props.hasContext === false}
+ 	<div class="hc-ai-note">
+-		<p class="hc-ai-note-empty">No AI interpretation for this filter yet</p>
++		<p class="hc-ai-note-empty">{copy.emptyDashboard}</p>
+ 	</div>
+ {:else if interpretationQuery.isPending}
+-	<div class="hc-ai-note" aria-busy="true" aria-label="Loading AI interpretation">
++	<div class="hc-ai-note" aria-busy="true" aria-label={copy.loadingAria}>
+ 		<div class="animate-pulse">
+ 			<div class="mb-2 h-4 w-2/5 rounded bg-muted"></div>
+ 			<div class="mb-1 h-3 w-full rounded bg-muted"></div>
+@@ -125,22 +129,22 @@
+ {:else if interpretationQuery.isError && isSoftEmpty(interpretationQuery.error)}
+ 	<div class="hc-ai-note">
+ 		{#if props.mode === 'dashboard'}
+-			<p class="hc-ai-note-empty">No AI interpretation for this filter yet</p>
++			<p class="hc-ai-note-empty">{copy.emptyDashboard}</p>
+ 		{:else}
+-			<p class="hc-ai-note-empty">AI interpretation is being generated…</p>
++			<p class="hc-ai-note-empty">{copy.generating}</p>
+ 		{/if}
+ 	</div>
+ {:else if interpretationQuery.isError && isHardError(interpretationQuery.error)}
+ 	<div class="hc-ai-note">
+-		<p class="hc-ai-note-header">ℹ AI Clinical Note</p>
+-		<p class="text-xs text-muted-foreground">Unable to load AI interpretation.</p>
++		<p class="hc-ai-note-header">{copy.header}</p>
++		<p class="text-xs text-muted-foreground">{copy.errorUnable}</p>
+ 	</div>
+ {:else if interpretationQuery.data}
+ 	{@const data = interpretationQuery.data as
+ 		| AiInterpretationResponse
+ 		| DashboardInterpretationResponse}
+-	<section class="hc-ai-note" aria-label="AI health interpretation">
+-		<p class="hc-ai-note-header">ℹ AI Clinical Note</p>
++	<section class="hc-ai-note" aria-label={copy.aria}>
++		<p class="hc-ai-note-header">{copy.header}</p>
+ 		<div class="hc-ai-note-body">{@html marked(data.interpretation)}</div>
+ 
+ 		{#if documentReasoning}
+@@ -152,7 +156,7 @@
+ 					showReasoning = !showReasoning;
+ 				}}
+ 			>
+-				{showReasoning ? 'Hide reasoning' : 'Show reasoning'}
++				{showReasoning ? copy.reasoningHide : copy.reasoningShow}
+ 			</button>
+ 
+ 			{#if showReasoning}
+@@ -160,13 +164,13 @@
+ 				<div id="ai-note-reasoning" class="hc-ai-note-reasoning">
+ 					{#if reasoning.values_referenced.length > 0}
+ 						<table>
+-							<caption class="sr-only">Biomarker values used in this interpretation</caption>
++							<caption class="sr-only">{copy.reasoningTableCaption}</caption>
+ 							<thead>
+ 								<tr>
+-									<th>Biomarker</th>
+-									<th>Value</th>
+-									<th>Reference</th>
+-									<th>Status</th>
++									<th>{copy.biomarkerHeader}</th>
++									<th>{copy.valueHeader}</th>
++									<th>{copy.referenceHeader}</th>
++									<th>{copy.statusHeader}</th>
+ 								</tr>
+ 							</thead>
+ 							<tbody>
+@@ -198,7 +202,7 @@
+ 		{/if}
+ 
+ 		<p class="hc-ai-note-disclaimer">
+-			AI-generated · for educational purposes only · not a medical diagnosis
++			{copy.disclaimer}
+ 		</p>
+ 	</section>
+ {/if}
+diff --git a/healthcabinet/frontend/src/lib/components/health/DocumentUploadZone.svelte b/healthcabinet/frontend/src/lib/components/health/DocumentUploadZone.svelte
+index 8f1780b..f12802d 100644
+--- a/healthcabinet/frontend/src/lib/components/health/DocumentUploadZone.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/DocumentUploadZone.svelte
+@@ -1,6 +1,10 @@
+ <script lang="ts">
+ 	import { uploadDocument, reuploadDocument } from '$lib/api/documents';
+ 	import type { Document } from '$lib/types/api';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
+ 
+ 	const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+ 	const ACCEPTED_TYPES = ['image/', 'application/pdf'];
+@@ -44,13 +48,13 @@
+ 
+ 	async function startUpload(selectedFile: File): Promise<void> {
+ 		if (!isAcceptedType(selectedFile)) {
+-			errorMessage = 'Unsupported file type — please upload a PDF or image.';
++			errorMessage = copy.errorUnsupportedType;
+ 			uploadState = 'error';
+ 			return;
+ 		}
+ 
+ 		if (selectedFile.size > MAX_FILE_SIZE) {
+-			errorMessage = 'File too large — maximum size is 20 MB';
++			errorMessage = copy.errorTooLarge;
+ 			uploadState = 'error';
+ 			return;
+ 		}
+@@ -67,7 +71,7 @@
+ 			onSuccess?.(doc);
+ 		} catch {
+ 			uploadState = 'error';
+-			errorMessage = 'Upload failed. Please try again.';
++			errorMessage = copy.errorUploadFailed;
+ 		}
+ 	}
+ 
+@@ -151,15 +155,13 @@
+ 	ondragleave={onDragLeave}
+ 	ondrop={onDrop}
+ 	onkeydown={onKeyDown}
+-	aria-label={multiple
+-		? 'Upload health documents. Press Enter or Space to open file picker. Multiple files supported.'
+-		: 'Upload health document. Press Enter or Space to open file picker.'}
++	aria-label={multiple ? copy.zoneAriaMulti : copy.zoneAriaSingle}
+ 	aria-busy={isUploading}
+ >
+ 	<!-- Accessibility: announces drag state and upload state to screen readers -->
+ 	<div aria-live="polite" class="sr-only">
+-		{#if isDragging}Drop file to upload{/if}
+-		{#if isSuccess}Upload complete — processing starting…{/if}
++		{#if isDragging}{copy.zoneDropToUpload}{/if}
++		{#if isSuccess}{copy.zoneUploadComplete}{/if}
+ 		{#if isError && errorMessage}{errorMessage}{/if}
+ 	</div>
+ 
+@@ -167,11 +169,11 @@
+ 		<div class="hc-upload-zone-content">
+ 			<div class="hc-upload-zone-spinner" aria-hidden="true"></div>
+ 			<p class="hc-upload-zone-filename">{file?.name}</p>
+-			<p class="hc-upload-zone-hint">Uploading…</p>
++			<p class="hc-upload-zone-hint">{copy.zoneUploading}</p>
+ 		</div>
+ 	{:else if isSuccess}
+ 		<div class="hc-upload-zone-content">
+-			<p class="hc-upload-zone-success-text">Upload complete — processing starting…</p>
++			<p class="hc-upload-zone-success-text">{copy.zoneUploadComplete}</p>
+ 		</div>
+ 	{:else if isError}
+ 		<div class="hc-upload-zone-content">
+@@ -181,9 +183,9 @@
+ 		<div class="hc-upload-zone-content">
+ 			<div class="hc-upload-zone-icon" aria-hidden="true">📄</div>
+ 			<p class="hc-upload-zone-text">
+-				{multiple ? 'Drag and drop your lab documents here' : 'Drag and drop your lab document here'}
++				{multiple ? copy.zoneDragMulti : copy.zoneDragSingle}
+ 			</p>
+-			<p class="hc-upload-zone-divider">— or —</p>
++			<p class="hc-upload-zone-divider">{copy.zoneDivider}</p>
+ 		</div>
+ 	{/if}
+ </div>
+@@ -191,12 +193,12 @@
+ <!-- Interactive elements outside role="button" to avoid nested-interactive axe violation. -->
+ {#if !isUploading && !isSuccess && !isError}
+ 	<div class="hc-upload-zone-below">
+-		<button type="button" class="hc-upload-zone-browse" onclick={handleBrowseClick}>Browse Files...</button>
++		<button type="button" class="hc-upload-zone-browse" onclick={handleBrowseClick}>{copy.zoneBrowse}</button>
+ 		<div class="hc-upload-zone-formats">
+ 			<span class="hc-upload-zone-badge">📄 PDF</span>
+ 			<span class="hc-upload-zone-badge">🖼️ JPG</span>
+ 			<span class="hc-upload-zone-badge">🖼️ PNG</span>
+-			<span class="hc-upload-zone-maxsize">Maximum: 20 MB</span>
++			<span class="hc-upload-zone-maxsize">{copy.zoneMaxSize}</span>
+ 		</div>
+ 	</div>
+ {/if}
+@@ -219,6 +221,6 @@
+ 		class="hc-upload-zone-retry"
+ 		onclick={retry}
+ 	>
+-		Retry upload
++		{copy.zoneRetry}
+ 	</button>
+ {/if}
+diff --git a/healthcabinet/frontend/src/lib/components/health/PartialExtractionCard.svelte b/healthcabinet/frontend/src/lib/components/health/PartialExtractionCard.svelte
+index c387553..1cf3191 100644
+--- a/healthcabinet/frontend/src/lib/components/health/PartialExtractionCard.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/PartialExtractionCard.svelte
+@@ -1,4 +1,9 @@
+ <script lang="ts">
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
++
+ 	interface Props {
+ 		status: 'partial' | 'failed';
+ 		documentId: string;
+@@ -9,36 +14,34 @@
+ 
+ 	let { status, documentId, onReupload, onKeepPartial, isKeepingPartial = false }: Props = $props();
+ 
+-	const photoTips = [
+-		{ icon: '💡', label: 'Good lighting', detail: 'Use bright, even light — avoid dim rooms' },
+-		{ icon: '📄', label: 'Flat surface', detail: 'Lay the document flat on a desk or table' },
+-		{ icon: '🌑', label: 'No shadows', detail: 'Avoid casting shadows across the text' }
+-	];
++	const photoTips = $derived([
++		{ icon: '💡', label: copy.tipLightingLabel, detail: copy.tipLightingDetail },
++		{ icon: '📄', label: copy.tipFlatLabel, detail: copy.tipFlatDetail },
++		{ icon: '🌑', label: copy.tipNoShadowsLabel, detail: copy.tipNoShadowsDetail }
++	]);
+ </script>
+ 
+ <div
+ 	class="hc-recovery-card {status === 'partial' ? 'hc-recovery-card-partial' : 'hc-recovery-card-failed'}"
+ 	role="region"
+-	aria-label={status === 'partial' ? 'Partial extraction recovery' : 'Extraction failed recovery'}
++	aria-label={status === 'partial' ? copy.recoveryAriaPartial : copy.recoveryAriaFailed}
+ >
+ 	<div>
+ 		{#if status === 'partial'}
+-			<h3 class="hc-recovery-heading">⚠ We couldn't read everything clearly</h3>
++			<h3 class="hc-recovery-heading">{copy.recoveryPartialHeading}</h3>
+ 			<p class="hc-recovery-desc">
+-				Some values were extracted but others fell below the confidence threshold. Re-uploading a
+-				clearer photo often resolves this.
++				{copy.recoveryPartialDesc}
+ 			</p>
+ 		{:else}
+-			<h3 class="hc-recovery-heading">✕ Extraction failed</h3>
++			<h3 class="hc-recovery-heading">{copy.recoveryFailedHeading}</h3>
+ 			<p class="hc-recovery-desc">
+-				We couldn't extract any health values from this document. Try re-uploading a clearer photo
+-				using the tips below.
++				{copy.recoveryFailedDesc}
+ 			</p>
+ 		{/if}
+ 	</div>
+ 
+-	<div class="hc-recovery-tips" aria-label="Photo tips for better extraction">
+-		<p class="hc-recovery-tips-header">Tips for a better photo</p>
++	<div class="hc-recovery-tips" aria-label={copy.recoveryTipsAria}>
++		<p class="hc-recovery-tips-header">{copy.recoveryTipsHeader}</p>
+ 		<ul class="hc-recovery-tips-list" role="list">
+ 			{#each photoTips as tip (tip.label)}
+ 				<li class="hc-recovery-tip">
+@@ -58,7 +61,7 @@
+ 			class="hc-recovery-btn-primary"
+ 			onclick={() => onReupload(documentId)}
+ 		>
+-			Re-upload document
++			{copy.recoveryReupload}
+ 		</button>
+ 
+ 		{#if status === 'partial' && onKeepPartial}
+@@ -68,7 +71,7 @@
+ 				onclick={() => onKeepPartial?.(documentId)}
+ 				disabled={isKeepingPartial}
+ 			>
+-				{isKeepingPartial ? 'Saving…' : 'Keep partial results'}
++				{isKeepingPartial ? copy.recoveryKeepPartialSaving : copy.recoveryKeepPartial}
+ 			</button>
+ 		{/if}
+ 	</div>
+diff --git a/healthcabinet/frontend/src/lib/components/health/ProcessingPipeline.svelte b/healthcabinet/frontend/src/lib/components/health/ProcessingPipeline.svelte
+index bfa78bf..6160f38 100644
+--- a/healthcabinet/frontend/src/lib/components/health/ProcessingPipeline.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/ProcessingPipeline.svelte
+@@ -1,5 +1,9 @@
+ <script lang="ts">
+ 	import { streamDocumentStatus, type DocumentStatusEvent } from '$lib/api/documents';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
+ 
+ 	interface Stage {
+ 		id: string;
+@@ -18,13 +22,13 @@
+ 
+ 	let { documentId, onComplete, onFailed, onAuthError }: Props = $props();
+ 
+-	const STAGE_ORDER = [
+-		{ id: 'document.upload_started', label: 'Uploading' },
+-		{ id: 'document.reading', label: 'Reading document' },
+-		{ id: 'document.extracting', label: 'Extracting values' },
+-		{ id: 'document.generating', label: 'Generating insights' },
+-		{ id: 'document.completed', label: 'Complete' }
+-	];
++	const STAGE_ORDER = $derived([
++		{ id: 'document.upload_started', label: copy.pipelineStageUploading },
++		{ id: 'document.reading', label: copy.pipelineStageReading },
++		{ id: 'document.extracting', label: copy.pipelineStageExtracting },
++		{ id: 'document.generating', label: copy.pipelineStageGenerating },
++		{ id: 'document.completed', label: copy.pipelineStageComplete }
++	]);
+ 
+ 	const TERMINAL_EVENTS = new Set(['document.completed', 'document.failed', 'document.partial']);
+ 
+@@ -33,12 +37,12 @@
+ 	}
+ 
+ 	let stages = $state<Stage[]>(createInitialStages());
+-	let statusAnnouncement = $state<string>('Processing…');
++	let statusAnnouncement = $state<string>(copy.pipelineStatusProcessing);
+ 	let consecutiveErrors = $state(0);
+ 
+ 	function resetPipeline(): void {
+ 		stages = createInitialStages();
+-		statusAnnouncement = 'Processing…';
++		statusAnnouncement = copy.pipelineStatusProcessing;
+ 		consecutiveErrors = 0;
+ 		lastProgressedIdx = -1;
+ 	}
+@@ -62,8 +66,8 @@
+ 			});
+ 			statusAnnouncement =
+ 				eventName === 'document.partial'
+-					? event.message || 'Partial extraction — some values need review.'
+-					: event.message || 'Processing failed. Please try again.';
++					? event.message || copy.pipelineStatusPartialFallback
++					: event.message || copy.pipelineStatusFailedFallback;
+ 			return;
+ 		}
+ 		lastProgressedIdx = idx;
+@@ -73,7 +77,7 @@
+ 			if (i === idx) return { ...s, status: 'active' };
+ 			return { ...s, status: 'pending' };
+ 		});
+-		statusAnnouncement = event.message || STAGE_ORDER[idx]?.label || 'Processing…';
++		statusAnnouncement = event.message || STAGE_ORDER[idx]?.label || copy.pipelineStatusProcessing;
+ 	}
+ 
+ 	function setFailureState(message: string): void {
+@@ -88,12 +92,12 @@
+ 	function handleStreamError(): boolean {
+ 		consecutiveErrors += 1;
+ 		if (consecutiveErrors < 3) return false;
+-		setFailureState('Processing status connection lost. Please try again.');
++		setFailureState(copy.pipelineStatusConnLost);
+ 		return true;
+ 	}
+ 
+ 	function handleAuthError(): void {
+-		setFailureState('Your session expired. Please sign in again.');
++		setFailureState(copy.pipelineStatusSessionExpired);
+ 	}
+ 
+ 	function failPipeline(message: 'auth-error' | 'stream-error'): void {
+@@ -168,7 +172,7 @@
+ 				</span>
+ 				<span class="hc-pipeline-label">{stage.label}</span>
+ 				<span class="hc-pipeline-status-label">
+-					{#if stage.status === 'done'}Complete{:else if stage.status === 'active'}In Progress...{:else if stage.status === 'error'}Failed{:else}Pending{/if}
++					{#if stage.status === 'done'}{copy.pipelineStageStatusComplete}{:else if stage.status === 'active'}{copy.pipelineStageStatusInProgress}{:else if stage.status === 'error'}{copy.pipelineStageStatusFailed}{:else}{copy.pipelineStageStatusPending}{/if}
+ 				</span>
+ 			</li>
+ 		{/each}
+diff --git a/healthcabinet/frontend/src/lib/components/health/UploadBatchSummary.svelte b/healthcabinet/frontend/src/lib/components/health/UploadBatchSummary.svelte
+index 373a0fa..fad9fcf 100644
+--- a/healthcabinet/frontend/src/lib/components/health/UploadBatchSummary.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/UploadBatchSummary.svelte
+@@ -1,5 +1,9 @@
+ <script lang="ts">
+ 	import { countByStatus, type UploadQueueEntry } from '$lib/upload-queue';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
+ 
+ 	interface Props {
+ 		queue: UploadQueueEntry[];
+@@ -15,18 +19,18 @@
+ 	const failedEntries = $derived(queue.filter((e) => e.status === 'failed'));
+ </script>
+ 
+-<section aria-label="Upload batch summary" style="display: flex; flex-direction: column; gap: 14px;">
+-	<h3 style="margin: 0; font-size: 16px;">Batch complete</h3>
++<section aria-label={copy.batchSummaryAria} style="display: flex; flex-direction: column; gap: 14px;">
++	<h3 style="margin: 0; font-size: 16px;">{copy.batchCompleteHeader}</h3>
+ 	<p aria-live="polite" style="margin: 0; display: flex; gap: 16px; font-size: 13px;">
+-		<span>✓ {counts.completed} complete</span>
+-		<span>⚠ {counts.partial} partial</span>
+-		<span>✕ {counts.failed} failed</span>
++		<span>✓ {counts.completed} {copy.queueCompleteLabel}</span>
++		<span>⚠ {counts.partial} {copy.queuePartialLabel}</span>
++		<span>✕ {counts.failed} {copy.queueFailedLabel}</span>
+ 	</p>
+ 
+ 	{#if successfulEntries.length > 0}
+ 		<div>
+ 			<p style="margin: 0 0 6px; font-size: 12px; color: var(--text-muted, #8a8f98); text-transform: uppercase; letter-spacing: 0.04em;">
+-				Uploaded successfully
++				{copy.batchSuccessfulHeader}
+ 			</p>
+ 			<ul role="list" style="list-style: none; padding: 0; margin: 0; border: 1px solid var(--surface-raised, #2a2e38);">
+ 				{#each successfulEntries as entry (entry.id)}
+@@ -41,11 +45,11 @@
+ 								? 'font-size: 11px;'
+ 								: 'padding: 2px 6px; font-size: 11px; border: 1px solid var(--surface-raised, #2a2e38); border-radius: 2px;'}
+ 						>
+-							{entry.status === 'partial' ? 'Partial' : 'Complete'}
++							{entry.status === 'partial' ? copy.batchStatusPartial : copy.batchStatusComplete}
+ 						</span>
+ 						{#if entry.documentId}
+ 							<a href={`/documents/${entry.documentId}`} style="font-size: 12px; text-decoration: underline;">
+-								View result
++								{copy.batchViewResult}
+ 							</a>
+ 						{/if}
+ 					</li>
+@@ -57,7 +61,7 @@
+ 	{#if failedEntries.length > 0}
+ 		<div>
+ 			<p style="margin: 0 0 6px; font-size: 12px; color: var(--text-muted, #8a8f98); text-transform: uppercase; letter-spacing: 0.04em;">
+-				Failed uploads
++				{copy.batchFailedHeader}
+ 			</p>
+ 			<ul role="list" style="list-style: none; padding: 0; margin: 0; border: 1px solid var(--surface-raised, #2a2e38);">
+ 				{#each failedEntries as entry (entry.id)}
+@@ -70,7 +74,7 @@
+ 							class="hc-pipeline-stage-error"
+ 							style="padding: 2px 6px; font-size: 11px; border: 1px solid var(--surface-raised, #2a2e38); border-radius: 2px;"
+ 						>
+-							Failed
++							{copy.batchStatusFailed}
+ 						</span>
+ 						{#if entry.error}
+ 							<span style="grid-column: 1 / -1; font-size: 11px; color: var(--status-action, #e05252);">
+@@ -85,7 +89,7 @@
+ 
+ 	<div style="display: flex; gap: 8px;">
+ 		<button type="button" class="hc-recovery-btn-primary" onclick={() => onStartAnother()}>
+-			Upload another batch
++			{copy.batchUploadAnother}
+ 		</button>
+ 	</div>
+ </section>
+diff --git a/healthcabinet/frontend/src/lib/components/health/UploadQueueEntryRow.svelte b/healthcabinet/frontend/src/lib/components/health/UploadQueueEntryRow.svelte
+index 0d3dcc3..e2d5e4c 100644
+--- a/healthcabinet/frontend/src/lib/components/health/UploadQueueEntryRow.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/UploadQueueEntryRow.svelte
+@@ -1,5 +1,9 @@
+ <script lang="ts">
+ 	import type { UploadQueueEntry, UploadEntryStatus } from '$lib/upload-queue';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
+ 
+ 	interface Props {
+ 		entry: UploadQueueEntry;
+@@ -10,14 +14,14 @@
+ 
+ 	let { entry, isActive, onRetry }: Props = $props();
+ 
+-	const STATUS_LABELS: Record<UploadEntryStatus, string> = {
+-		queued: 'Queued',
+-		uploading: 'Uploading',
+-		processing: 'Processing',
+-		completed: 'Complete',
+-		partial: 'Partial',
+-		failed: 'Failed'
+-	};
++	const STATUS_LABELS = $derived<Record<UploadEntryStatus, string>>({
++		queued: copy.entryStatusQueued,
++		uploading: copy.entryStatusUploading,
++		processing: copy.entryStatusProcessing,
++		completed: copy.entryStatusComplete,
++		partial: copy.entryStatusPartial,
++		failed: copy.entryStatusFailed
++	});
+ 
+ 	function mapStatusToStage(status: UploadEntryStatus): string {
+ 		if (status === 'completed') return 'done';
+@@ -74,7 +78,7 @@
+ 	</span>
+ 	<div style="grid-row: 1; display: flex; gap: 6px;">
+ 		{#if showResultLink && entry.documentId}
+-			<a href={`/documents/${entry.documentId}`} style="text-decoration: underline; font-size: 12px;">View result</a>
++			<a href={`/documents/${entry.documentId}`} style="text-decoration: underline; font-size: 12px;">{copy.entryViewResult}</a>
+ 		{/if}
+ 		{#if showRetryAction}
+ 			<button
+@@ -82,7 +86,7 @@
+ 				onclick={() => onRetry?.(entry.id)}
+ 				style="font-size: 12px;"
+ 			>
+-				Retry this file
++				{copy.entryRetryThisFile}
+ 			</button>
+ 		{/if}
+ 	</div>
+diff --git a/healthcabinet/frontend/src/lib/components/health/UploadQueuePanel.svelte b/healthcabinet/frontend/src/lib/components/health/UploadQueuePanel.svelte
+index f08868d..5d4091c 100644
+--- a/healthcabinet/frontend/src/lib/components/health/UploadQueuePanel.svelte
++++ b/healthcabinet/frontend/src/lib/components/health/UploadQueuePanel.svelte
+@@ -6,6 +6,10 @@
+ 		getActiveEntry,
+ 		type UploadQueueEntry
+ 	} from '$lib/upload-queue';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
+ 
+ 	interface Props {
+ 		queue: UploadQueueEntry[];
+@@ -24,13 +28,12 @@
+ 	const counts = $derived(countByStatus(queue));
+ </script>
+ 
+-<section aria-label="Upload queue" style="display: flex; flex-direction: column; gap: 12px;">
++<section aria-label={copy.queuePanelAria} style="display: flex; flex-direction: column; gap: 12px;">
+ 	<header style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--surface-raised, #2a2e38); font-size: 12px;">
+-		<span style="font-weight: 600;">Upload queue</span>
++		<span style="font-weight: 600;">{copy.queueHeader}</span>
+ 		<span aria-live="polite" style="color: var(--text-muted, #8a8f98);">
+-			{counts.completed} complete · {counts.partial} partial · {counts.failed} failed · {counts.queued +
+-				counts.uploading +
+-				counts.processing} pending
++			{counts.completed} {copy.queueCompleteLabel} · {counts.partial} {copy.queuePartialLabel} · {counts.failed}
++			{copy.queueFailedLabel} · {counts.queued + counts.uploading + counts.processing} {copy.queuePendingLabel}
+ 		</span>
+ 	</header>
+ 
+@@ -46,11 +49,11 @@
+ 
+ 	{#if activeEntry && activeEntry.documentId}
+ 		<div
+-			aria-label="Active file processing"
++			aria-label={copy.queueActiveAria}
+ 			style="padding: 10px; border: 1px solid var(--surface-raised, #2a2e38); background: var(--surface-raised, #1a1d24);"
+ 		>
+ 			<p style="margin: 0 0 8px; font-size: 12px; color: var(--text-muted, #8a8f98);">
+-				Currently processing: {activeEntry.file.name}
++				{copy.queueCurrentlyProcessing} {activeEntry.file.name}
+ 			</p>
+ 			<ProcessingPipeline
+ 				documentId={activeEntry.documentId}
+@@ -62,7 +65,7 @@
+ 	{:else if activeEntry}
+ 		<div style="padding: 10px; border: 1px solid var(--surface-raised, #2a2e38); background: var(--surface-raised, #1a1d24);">
+ 			<p style="margin: 0 0 8px; font-size: 12px; color: var(--text-muted, #8a8f98);">
+-				Uploading {activeEntry.file.name}…
++				{copy.queueUploadingFile} {activeEntry.file.name}…
+ 			</p>
+ 		</div>
+ 	{/if}
+diff --git a/healthcabinet/frontend/src/lib/components/ui/confirm-dialog/confirm-dialog.svelte b/healthcabinet/frontend/src/lib/components/ui/confirm-dialog/confirm-dialog.svelte
+index d6fdbb6..07b5a4b 100644
+--- a/healthcabinet/frontend/src/lib/components/ui/confirm-dialog/confirm-dialog.svelte
++++ b/healthcabinet/frontend/src/lib/components/ui/confirm-dialog/confirm-dialog.svelte
+@@ -1,5 +1,9 @@
+ <script lang="ts">
+ 	import type { Snippet } from 'svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const dialogCopy = $derived(t(localeStore.locale).confirmDialog);
+ 
+ 	type ConfirmVariant = 'destructive' | 'primary' | 'standard';
+ 
+@@ -37,15 +41,19 @@
+ 		title,
+ 		confirmLabel,
+ 		confirmVariant = 'destructive',
+-		cancelLabel = 'Cancel',
++		cancelLabel,
+ 		canConfirm = true,
+ 		loading = false,
+-		loadingLabel = 'Working...',
++		loadingLabel,
+ 		ariaLabel,
+ 		onConfirm,
+ 		children
+ 	}: Props = $props();
+ 
++	// Locale-aware defaults when caller does not override.
++	const resolvedCancelLabel = $derived(cancelLabel ?? dialogCopy.cancel);
++	const resolvedLoadingLabel = $derived(loadingLabel ?? dialogCopy.working);
++
+ 	let panelEl = $state<HTMLDivElement | undefined>();
+ 	let previouslyFocused: HTMLElement | null = null;
+ 	let wasOpen = false;
+@@ -157,7 +165,7 @@
+ 			</div>
+ 			<div class="hc-dialog-actions">
+ 				<button type="button" class="btn-standard" onclick={close} disabled={loading}>
+-					{cancelLabel}
++					{resolvedCancelLabel}
+ 				</button>
+ 				<button
+ 					type="button"
+@@ -165,7 +173,7 @@
+ 					onclick={handleConfirm}
+ 					disabled={!canConfirm || loading || confirmInFlight}
+ 				>
+-					{loading ? loadingLabel : confirmLabel}
++					{loading ? resolvedLoadingLabel : confirmLabel}
+ 				</button>
+ 			</div>
+ 		</div>
+diff --git a/healthcabinet/frontend/src/lib/components/ui/toast/Toast.svelte b/healthcabinet/frontend/src/lib/components/ui/toast/Toast.svelte
+index 1cad41b..904592c 100644
+--- a/healthcabinet/frontend/src/lib/components/ui/toast/Toast.svelte
++++ b/healthcabinet/frontend/src/lib/components/ui/toast/Toast.svelte
+@@ -1,5 +1,9 @@
+ <script lang="ts">
+ 	import type { ToastType } from '$lib/stores/feedback.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).toast);
+ 
+ 	interface Props {
+ 		type: ToastType;
+@@ -24,7 +28,7 @@
+ 		<button
+ 			class="hc-toast-dismiss"
+ 			onclick={onDismiss}
+-			aria-label="Dismiss notification"
++			aria-label={copy.dismiss}
+ 		>×</button>
+ 	{/if}
+ </div>
+diff --git a/healthcabinet/frontend/src/lib/stores/status-bar.svelte.ts b/healthcabinet/frontend/src/lib/stores/status-bar.svelte.ts
+index a0493da..92b44aa 100644
+--- a/healthcabinet/frontend/src/lib/stores/status-bar.svelte.ts
++++ b/healthcabinet/frontend/src/lib/stores/status-bar.svelte.ts
+@@ -1,6 +1,10 @@
+ /** Reactive store for the AppShell status bar — updated by page components. */
+ 
+-let _status = $state('Ready');
++import { localeStore } from './locale.svelte';
++import { t } from '$lib/i18n/messages';
++
++let _defaultStatus = $derived(t(localeStore.locale).appShell.statusReady);
++let _status = $state<string>(_defaultStatus);
+ let _fields = $state<string[]>([]);
+ 
+ export const statusBarStore = {
+@@ -11,7 +15,7 @@ export const statusBarStore = {
+ 		_fields = fields;
+ 	},
+ 	reset() {
+-		_status = 'Ready';
++		_status = _defaultStatus;
+ 		_fields = [];
+ 	}
+ };
+diff --git a/healthcabinet/frontend/src/lib/upload-queue.ts b/healthcabinet/frontend/src/lib/upload-queue.ts
+index 145a1f4..05c6360 100644
+--- a/healthcabinet/frontend/src/lib/upload-queue.ts
++++ b/healthcabinet/frontend/src/lib/upload-queue.ts
+@@ -94,6 +94,8 @@ interface ProcessQueueOptions {
+ 	queryClient: QueryClientLike;
+ 	getQueue: () => UploadQueueEntry[];
+ 	setQueue: QueueMutator;
++	/** Optional locale-aware fallback message when a non-Error rejection is caught. */
++	uploadFailedMessage?: string;
+ }
+ 
+ function updateEntry(
+@@ -132,7 +134,8 @@ export function processNextInQueue(options: ProcessQueueOptions): void {
+ 			// Upload succeeded — promote to `processing` so the UI pipeline picks up.
+ 			updateEntry(setQueue, entryId, { documentId: doc.id, status: 'processing' });
+ 		} catch (error) {
+-			const message = error instanceof Error ? error.message : 'Upload failed';
++			const message =
++				error instanceof Error ? error.message : options.uploadFailedMessage ?? 'Upload failed';
+ 			updateEntry(setQueue, entryId, { status: 'failed', error: message });
+ 			// Start the next file once the current one failed at upload-time.
+ 			processNextInQueue({ queryClient, getQueue, setQueue });
+@@ -152,11 +155,12 @@ export function applyTerminalStatus(
+ 	setQueue: QueueMutator,
+ 	entryId: string,
+ 	status: 'completed' | 'partial' | 'failed',
+-	errorMessage?: string
++	errorMessage?: string,
++	defaultFailureMessage: string = 'Processing failed'
+ ): void {
+ 	updateEntry(setQueue, entryId, {
+ 		status,
+-		error: status === 'failed' ? errorMessage || 'Processing failed' : undefined
++		error: status === 'failed' ? errorMessage || defaultFailureMessage : undefined
+ 	});
+ 
+ 	if (status === 'completed' || status === 'partial') {
+@@ -189,16 +193,36 @@ export interface FileValidationResult {
+ 	rejected: { file: File; reason: string }[];
+ }
+ 
+-export function validateFilesForQueue(files: File[]): FileValidationResult {
++export interface ValidationMessages {
++	unsupportedType: string;
++	tooLarge: string;
++}
++
++const DEFAULT_VALIDATION_MESSAGES: ValidationMessages = {
++	unsupportedType: 'Unsupported file type — please upload a PDF or image.',
++	tooLarge: 'File too large — maximum size is 20 MB.'
++};
++
++/**
++ * Validate selected files for the upload queue. Callers may pass a `messages`
++ * bundle (derived from the current locale) so rejected-file reasons render in
++ * the user's language. When omitted, English defaults apply — this keeps the
++ * helper pure and independently importable outside component context, per the
++ * Story 15.6 guardrail.
++ */
++export function validateFilesForQueue(
++	files: File[],
++	messages: ValidationMessages = DEFAULT_VALIDATION_MESSAGES
++): FileValidationResult {
+ 	const accepted: File[] = [];
+ 	const rejected: { file: File; reason: string }[] = [];
+ 	for (const file of files) {
+ 		if (!ACCEPTED_FILE_TYPES.some((t) => file.type.startsWith(t))) {
+-			rejected.push({ file, reason: 'Unsupported file type — please upload a PDF or image.' });
++			rejected.push({ file, reason: messages.unsupportedType });
+ 			continue;
+ 		}
+ 		if (file.size > MAX_FILE_SIZE) {
+-			rejected.push({ file, reason: 'File too large — maximum size is 20 MB.' });
++			rejected.push({ file, reason: messages.tooLarge });
+ 			continue;
+ 		}
+ 		accepted.push(file);
+diff --git a/healthcabinet/frontend/src/routes/(app)/dashboard/+page.svelte b/healthcabinet/frontend/src/routes/(app)/dashboard/+page.svelte
+index 7f09503..73207fc 100644
+--- a/healthcabinet/frontend/src/routes/(app)/dashboard/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(app)/dashboard/+page.svelte
+@@ -18,6 +18,11 @@
+ 		dashboardFilterStore,
+ 		type DashboardFilter
+ 	} from '$lib/stores/dashboard-filter.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++	import { formatDate } from '$lib/i18n/format';
++
++	const copy = $derived(t(localeStore.locale).dashboard);
+ 
+ 	const queryClient = useQueryClient();
+ 	const FILTER_OPTIONS: DashboardFilter[] = ['all', 'analysis', 'document'];
+@@ -54,7 +59,7 @@
+ 	const loading = $derived(valuesQuery.isPending || documentsQuery.isPending || baselineQuery.isPending);
+ 	const error = $derived(
+ 		valuesQuery.isError || documentsQuery.isError || baselineQuery.isError
+-			? 'Unable to load your health data. Please try again.'
++			? copy.loadErrorBody
+ 			: null
+ 	);
+ 
+@@ -131,18 +136,19 @@
+ 	$effect(() => {
+ 		if (!loading && !error) {
+ 			const fields: string[] = [];
+-			fields.push(`${documentCount} Document${documentCount !== 1 ? 's' : ''}`);
+-			fields.push(
+-				`${uniqueBiomarkers.length} Biomarker${uniqueBiomarkers.length !== 1 ? 's' : ''}`
+-			);
++			const docsLabel =
++				documentCount === 1 ? copy.statusFieldDocumentsOne : copy.statusFieldDocumentsMany;
++			fields.push(`${documentCount} ${docsLabel}`);
++			const bmLabel =
++				uniqueBiomarkers.length === 1
++					? copy.statusFieldBiomarkersOne
++					: copy.statusFieldBiomarkersMany;
++			fields.push(`${uniqueBiomarkers.length} ${bmLabel}`);
+ 			if (latestFilteredDocument) {
+-				const date = new Date(latestFilteredDocument.created_at).toLocaleDateString(undefined, {
+-					year: 'numeric',
+-					month: '2-digit',
+-					day: '2-digit'
+-				});
+-				fields.push(`Last Import: ${date}`);
++				const date = formatDate(latestFilteredDocument.created_at, localeStore.locale);
++				fields.push(`${copy.statusFieldLastImport}: ${date}`);
+ 			}
++			// Sentinel 'Ready' stays stable; AppShell renders the localized label.
+ 			statusBarStore.set('Ready', fields);
+ 		}
+ 	});
+@@ -158,19 +164,19 @@
+ 	function filterEmptyCopy(f: DashboardFilter): string {
+ 		switch (f) {
+ 			case 'analysis':
+-				return 'No analyses yet — upload a lab result to populate this view';
++				return copy.emptyAnalysis;
+ 			case 'document':
+-				return 'No plain documents yet — upload one to populate this view';
++				return copy.emptyDocument;
+ 			default:
+-				return 'No documents match this filter yet';
++				return copy.emptyAll;
+ 		}
+ 	}
+ 
+ 	function biomarkerEmptyCopy(f: DashboardFilter): string {
+ 		if (f === 'document') {
+-			return 'Plain documents do not contain extracted biomarker values for this view';
++			return copy.biomarkerEmptyDocument;
+ 		}
+-		return 'No biomarker values are available for this filter yet';
++		return copy.biomarkerEmptyDefault;
+ 	}
+ 
+ 	function onFilterChange(next: DashboardFilter) {
+@@ -189,7 +195,7 @@
+ 	{/if}
+ 
+ 	{#if loading}
+-		<section aria-label="Loading health data" role="status">
++		<section aria-label={copy.loadingAria} role="status">
+ 			<div class="hc-dash-section">
+ 				<div class="hc-dash-section-body">
+ 					{#each [0, 1, 2] as i}
+@@ -201,7 +207,7 @@
+ 					{/each}
+ 				</div>
+ 			</div>
+-			<span class="sr-only">Loading your health data…</span>
++			<span class="sr-only">{copy.loadingText}</span>
+ 		</section>
+ 	{:else if error}
+ 		<div class="hc-dash-section">
+@@ -209,17 +215,17 @@
+ 				<div role="alert">
+ 					<p class="mb-4 text-sm text-destructive">{error}</p>
+ 				</div>
+-				<Button variant="standard" onclick={retry}>Try again</Button>
++				<Button variant="standard" onclick={retry}>{copy.errorRetry}</Button>
+ 			</div>
+ 		</div>
+ 		{:else if hasAnyDocuments}
+ 			<div class="hc-action-bar">
+ 				<fieldset
+ 					class="hc-dash-filter"
+-					aria-label="Dashboard filter"
++					aria-label={copy.filterAria}
+ 					data-testid="dashboard-filter"
+ 				>
+-					<legend class="sr-only">Filter documents</legend>
++					<legend class="sr-only">{copy.filterLegend}</legend>
+ 					{#each FILTER_OPTIONS as opt}
+ 						<label>
+ 							<input
+@@ -230,16 +236,16 @@
+ 							onchange={() => onFilterChange(opt)}
+ 						/>
+ 						<span>
+-							{#if opt === 'all'}All{:else if opt === 'analysis'}Analyses{:else}Documents{/if}
++							{#if opt === 'all'}{copy.filterAll}{:else if opt === 'analysis'}{copy.filterAnalyses}{:else}{copy.filterDocuments}{/if}
+ 						</span>
+ 						</label>
+ 					{/each}
+ 				</fieldset>
+-				<button onclick={() => goto('/documents/upload')}>📂 Import Document</button>
++				<button onclick={() => goto('/documents/upload')}>{copy.importDocument}</button>
+ 			</div>
+ 
+ 			{#if hasFilteredDocuments}
+-				<section aria-label="Biomarker results">
++				<section aria-label={copy.biomarkersAria}>
+ 					<div class="hc-dash-section">
+ 						{#if filterHasValues}
+ 							<BiomarkerTable {values} {timelineByBiomarker} />
+@@ -252,7 +258,7 @@
+ 				</section>
+ 
+ 				<!-- AI Clinical Note -->
+-				<section aria-label="AI interpretation" style="margin-top: 8px;">
++				<section aria-label={copy.interpretationAria} style="margin-top: 8px;">
+ 					<AIClinicalNote
+ 						mode="dashboard"
+ 						documentKind={filter}
+@@ -261,7 +267,7 @@
+ 				</section>
+ 
+ 				<!-- AI Chat Window -->
+-				<section aria-label="AI health assistant" style="margin-top: 8px;">
++				<section aria-label={copy.chatAria} style="margin-top: 8px;">
+ 					<AIChatWindow
+ 						mode="dashboard"
+ 						documentKind={filter}
+@@ -269,7 +275,7 @@
+ 					/>
+ 				</section>
+ 			{:else}
+-				<section aria-label="Filtered results">
++				<section aria-label={copy.filteredResultsAria}>
+ 					<div class="hc-dash-section">
+ 						<div class="hc-dash-section-body" data-testid="dashboard-filter-empty">
+ 							<p class="hc-ai-note-empty">{filterEmptyCopy(filter)}</p>
+@@ -277,38 +283,38 @@
+ 					</div>
+ 				</section>
+ 
+-				<section aria-label="AI interpretation" style="margin-top: 8px;">
++				<section aria-label={copy.interpretationAria} style="margin-top: 8px;">
+ 					<AIClinicalNote mode="dashboard" documentKind={filter} hasContext={false} />
+ 				</section>
+ 
+-				<section aria-label="AI health assistant" style="margin-top: 8px;">
++				<section aria-label={copy.chatAria} style="margin-top: 8px;">
+ 					<AIChatWindow mode="dashboard" documentKind={filter} hasContext={false} />
+ 				</section>
+ 			{/if}
+ 		{:else}
+ 			<!-- First-time empty state: no documents at all -->
+-			<section aria-label="Upload your first document">
++			<section aria-label={copy.firstTimeAria}>
+ 			<div class="hc-empty-center">
+ 				<div class="hc-empty-icon" aria-hidden="true">📋</div>
+-				<div class="hc-empty-title">Upload your first lab result</div>
+-				<div class="hc-empty-sub">Your trends and insights will appear here</div>
+-				<button onclick={() => goto('/documents/upload')}>📤 Upload Health Document</button>
+-				<div class="hc-empty-hint">PDF or photo · Max 20 MB</div>
++				<div class="hc-empty-title">{copy.firstTimeTitle}</div>
++				<div class="hc-empty-sub">{copy.firstTimeSub}</div>
++				<button onclick={() => goto('/documents/upload')}>{copy.firstTimeUpload}</button>
++				<div class="hc-empty-hint">{copy.firstTimeHint}</div>
+ 			</div>
+ 		</section>
+ 
+ 		{#if recommendations.length > 0}
+-			<section aria-label="Baseline screening recommendations">
++			<section aria-label={copy.baselineAria}>
+ 				<div class="hc-dash-section">
+-					<div class="hc-dash-section-header">Recommended Tests</div>
++					<div class="hc-dash-section-header">{copy.recommendedTestsHeader}</div>
+ 					<div class="hc-dash-section-body">
+ 						<div class="hc-data-table" style="overflow: auto;">
+ 							<table class="hc-small-table">
+ 								<thead>
+ 									<tr>
+-										<th>Test</th>
+-										<th>Recommended Frequency</th>
+-										<th>Reason</th>
++										<th>{copy.recommendedTestColumn}</th>
++										<th>{copy.recommendedFrequencyColumn}</th>
++										<th>{copy.recommendedReasonColumn}</th>
+ 									</tr>
+ 								</thead>
+ 								<tbody>
+@@ -322,7 +328,7 @@
+ 								</tbody>
+ 							</table>
+ 						</div>
+-						<p class="hc-ai-disclaimer">Based on your profile. Not a medical diagnosis.</p>
++						<p class="hc-ai-disclaimer">{copy.recommendedDisclaimer}</p>
+ 					</div>
+ 				</div>
+ 			</section>
+diff --git a/healthcabinet/frontend/src/routes/(app)/documents/+page.svelte b/healthcabinet/frontend/src/routes/(app)/documents/+page.svelte
+index 8045c8c..11ac5b4 100644
+--- a/healthcabinet/frontend/src/routes/(app)/documents/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(app)/documents/+page.svelte
+@@ -10,6 +10,11 @@
+ 	} from '$lib/api/documents';
+ 	import type { Document, DocumentDetail } from '$lib/types/api';
+ 	import DocumentDetailPanel from '$lib/components/health/DocumentDetailPanel.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++	import { formatDate as formatDateLocalized } from '$lib/i18n/format';
++
++	const copy = $derived(t(localeStore.locale).documents);
+ 
+ 	const queryClient = useQueryClient();
+ 
+@@ -66,15 +71,15 @@
+ 	function statusBadge(status: Document['status']): { symbol: string; text: string; cssClass: string } {
+ 		switch (status) {
+ 			case 'completed':
+-				return { symbol: '●', text: 'Completed', cssClass: 'hc-doc-status-completed' };
++				return { symbol: '●', text: copy.statusCompleted, cssClass: 'hc-doc-status-completed' };
+ 			case 'processing':
+-				return { symbol: '◉', text: 'Processing', cssClass: 'hc-doc-status-processing' };
++				return { symbol: '◉', text: copy.statusProcessing, cssClass: 'hc-doc-status-processing' };
+ 			case 'partial':
+-				return { symbol: '⚠', text: 'Partial', cssClass: 'hc-doc-status-partial' };
++				return { symbol: '⚠', text: copy.statusPartial, cssClass: 'hc-doc-status-partial' };
+ 			case 'failed':
+-				return { symbol: '✕', text: 'Failed', cssClass: 'hc-doc-status-failed' };
++				return { symbol: '✕', text: copy.statusFailed, cssClass: 'hc-doc-status-failed' };
+ 			case 'pending':
+-				return { symbol: '○', text: 'Pending', cssClass: 'hc-doc-status-pending' };
++				return { symbol: '○', text: copy.statusPending, cssClass: 'hc-doc-status-pending' };
+ 			default:
+ 				return { symbol: '?', text: String(status), cssClass: '' };
+ 		}
+@@ -87,7 +92,7 @@
+ 	}
+ 
+ 	function formatDate(dateStr: string): string {
+-		return new Date(dateStr).toLocaleDateString(undefined, {
++		return formatDateLocalized(dateStr, localeStore.locale, {
+ 			year: 'numeric',
+ 			month: 'short',
+ 			day: 'numeric'
+@@ -189,44 +194,44 @@
+ </script>
+ 
+ <svelte:head>
+-	<title>Documents — HealthCabinet</title>
++	<title>{copy.headTitle}</title>
+ </svelte:head>
+ 
+ <div class="hc-doc-page">
+ 	<div class="hc-dash-section">
+ 		<div class="hc-dash-section-header hc-doc-page-header">
+-			<span>Documents</span>
+-			<a href="/documents/upload">Upload</a>
++			<span>{copy.listTitle}</span>
++			<a href="/documents/upload">{copy.upload}</a>
+ 		</div>
+ 
+ 		<div class="hc-dash-section-body">
+ 			{#if documentsQuery.isLoading}
+ 				<div class="hc-detail-loading">
+-					<p>Loading documents…</p>
++					<p>{copy.loading}</p>
+ 				</div>
+ 			{:else if documentsQuery.isError}
+ 				<div class="hc-detail-error" role="alert">
+-					<p>Failed to load documents. Please try again.</p>
++					<p>{copy.loadError}</p>
+ 				</div>
+ 			{:else if documentsQuery.data && documentsQuery.data.length === 0}
+ 				<div class="hc-empty-center">
+ 					<div class="hc-empty-icon">📋</div>
+-					<p class="hc-detail-meta-filename">No documents yet</p>
+-					<p class="hc-detail-meta-sub">Upload your first health document to get started with AI-powered analysis.</p>
+-					<a href="/documents/upload" class="hc-doc-upload-cta">Upload Health Document</a>
++					<p class="hc-detail-meta-filename">{copy.emptyTitle}</p>
++					<p class="hc-detail-meta-sub">{copy.emptySub}</p>
++					<a href="/documents/upload" class="hc-doc-upload-cta">{copy.emptyUploadCta}</a>
+ 				</div>
+ 			{:else if documentsQuery.data}
+ 				<div class="hc-data-table">
+ 					<table>
+ 						<thead>
+ 							<tr>
+-								<th class="hc-doc-icon-col"><span class="sr-only">Type</span></th>
+-								<th>Document ID</th>
+-								<th>Name</th>
+-								<th>Date</th>
+-								<th>Status</th>
+-								<th>Size</th>
+-								<th><span class="sr-only">Actions</span></th>
++								<th class="hc-doc-icon-col"><span class="sr-only">{copy.headerTypeSr}</span></th>
++								<th>{copy.headerDocumentId}</th>
++								<th>{copy.headerName}</th>
++								<th>{copy.headerDate}</th>
++								<th>{copy.headerStatus}</th>
++								<th>{copy.headerSize}</th>
++								<th><span class="sr-only">{copy.headerActions}</span></th>
+ 							</tr>
+ 						</thead>
+ 						<tbody>
+@@ -254,8 +259,8 @@
+ 									<td class="hc-doc-actions">
+ 										<button
+ 											type="button"
+-											title="View"
+-											aria-label="View {doc.filename}"
++											title={copy.viewDetail}
++											aria-label="{copy.viewFilenameAria} {doc.filename}"
+ 											onclick={(e: MouseEvent) => { e.stopPropagation(); selectedDocumentId = doc.id; }}
+ 										>👁</button>
+ 									</td>
+diff --git a/healthcabinet/frontend/src/routes/(app)/documents/upload/+page.svelte b/healthcabinet/frontend/src/routes/(app)/documents/upload/+page.svelte
+index 7d27f46..891623a 100644
+--- a/healthcabinet/frontend/src/routes/(app)/documents/upload/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(app)/documents/upload/+page.svelte
+@@ -23,6 +23,10 @@
+ 		validateFilesForQueue,
+ 		type UploadQueueEntry
+ 	} from '$lib/upload-queue';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).upload);
+ 
+ 	const queryClient = useQueryClient();
+ 
+@@ -44,15 +48,15 @@
+ 
+ 	const sectionTitle = $derived.by(() => {
+ 		if (isRetryMode) {
+-			if (uploadState === 'success') return '⏳ Processing Document';
+-			if (uploadState === 'done') return '✓ Upload Complete';
+-			if (uploadState === 'partial') return '⚠ Partial Extraction';
+-			if (uploadState === 'failed') return '✕ Upload Failed';
+-			return '📁 Retry Upload';
++			if (uploadState === 'success') return copy.sectionRetryProcessing;
++			if (uploadState === 'done') return copy.sectionRetryDone;
++			if (uploadState === 'partial') return copy.sectionRetryPartial;
++			if (uploadState === 'failed') return copy.sectionRetryFailed;
++			return copy.sectionRetryIdle;
+ 		}
+-		if (queueStatus === 'active') return '⏳ Processing Batch';
+-		if (queueStatus === 'summary') return '✓ Batch Complete';
+-		return '📁 Import Health Documents';
++		if (queueStatus === 'active') return copy.sectionBatchActive;
++		if (queueStatus === 'summary') return copy.sectionBatchSummary;
++		return copy.sectionBatchIdle;
+ 	});
+ 
+ 	function navigateBack(): void {
+@@ -99,7 +103,12 @@
+ 
+ 	function startQueueProcessing(): void {
+ 		if (queueAuthError) return;
+-		processNextInQueue({ queryClient, getQueue: () => queue, setQueue });
++		processNextInQueue({
++			queryClient,
++			getQueue: () => queue,
++			setQueue,
++			uploadFailedMessage: copy.uploadFailedFallback
++		});
+ 	}
+ 
+ 	function onActiveComplete(entryId: string): void {
+@@ -109,7 +118,7 @@
+ 	}
+ 
+ 	function onActiveAuthError(entryId: string): void {
+-		const message = 'Your session expired. Please sign in again to continue this batch.';
++		const message = copy.sessionExpired;
+ 		queueAuthError = message;
+ 		applyTerminalStatus(queryClient, setQueue, entryId, 'failed', message);
+ 	}
+@@ -127,7 +136,7 @@
+ 				setQueue,
+ 				entryId,
+ 				'failed',
+-				reason === 'stream-error' ? 'Processing status connection lost.' : 'Processing failed.'
++				reason === 'stream-error' ? copy.streamConnectionLost : copy.processingFailedFallback
+ 			);
+ 		}
+ 		startQueueProcessing();
+@@ -135,7 +144,11 @@
+ 
+ 	function onFilesSelected(files: File[]): void {
+ 		queueAuthError = null;
+-		const { accepted, rejected } = validateFilesForQueue(files);
++		const zoneCopy = t(localeStore.locale).upload;
++		const { accepted, rejected } = validateFilesForQueue(files, {
++			unsupportedType: zoneCopy.errorUnsupportedType,
++			tooLarge: zoneCopy.errorTooLarge
++		});
+ 		rejectedFiles = rejected.map((r) => ({ name: r.file.name, reason: r.reason }));
+ 
+ 		if (accepted.length === 0) return;
+@@ -161,7 +174,11 @@
+ 		input.onchange = () => {
+ 			const replacement = input.files?.[0];
+ 			if (!replacement) return;
+-			const { accepted, rejected } = validateFilesForQueue([replacement]);
++			const zoneCopy = t(localeStore.locale).upload;
++			const { accepted, rejected } = validateFilesForQueue([replacement], {
++				unsupportedType: zoneCopy.errorUnsupportedType,
++				tooLarge: zoneCopy.errorTooLarge
++			});
+ 			if (rejected.length > 0) {
+ 				rejectedFiles = [...rejectedFiles, { name: replacement.name, reason: rejected[0].reason }];
+ 				return;
+@@ -191,11 +208,11 @@
+ </script>
+ 
+ <svelte:head>
+-	<title>Upload Document — HealthCabinet</title>
++	<title>{copy.headTitle}</title>
+ </svelte:head>
+ 
+ <div class="hc-import-page">
+-	<div class="hc-import-dialog hc-dash-section" role="region" aria-label="Import health document">
++	<div class="hc-import-dialog hc-dash-section" role="region" aria-label={copy.pageAriaRegion}>
+ 		<div class="hc-dash-section-header hc-import-header">
+ 			<span class="hc-import-title">{sectionTitle}</span>
+ 		</div>
+@@ -204,13 +221,13 @@
+ 			{#if isRetryMode}
+ 				<!-- ===== Single-file retry mode (Story 2.5 flow, unchanged) ===== -->
+ 				{#if uploadState === 'idle'}
+-					<p class="hc-import-subtitle">Replace the content of an existing document slot</p>
++					<p class="hc-import-subtitle">{copy.subtitleRetry}</p>
+ 					<div class="hc-import-dropzone">
+ 						<DocumentUploadZone onSuccess={onUploadSuccess} {retryDocumentId} />
+ 					</div>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Cancel</button>
++						<button type="button" onclick={navigateBack}>{copy.cancel}</button>
+ 					</div>
+ 				{:else if uploadState === 'success' && documentId}
+ 					{#if uploadedFilename}
+@@ -232,17 +249,17 @@
+ 					</div>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Cancel</button>
++						<button type="button" onclick={navigateBack}>{copy.cancel}</button>
+ 					</div>
+ 				{:else if uploadState === 'done'}
+ 					<div class="hc-import-success" role="status">
+-						<p>✓ Upload complete</p>
+-						<p>Your document has been processed successfully.</p>
+-						<a href="/documents" class="hc-import-link">View your results</a>
++						<p>{copy.successText}</p>
++						<p>{copy.successSub}</p>
++						<a href="/documents" class="hc-import-link">{copy.viewResults}</a>
+ 					</div>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Close</button>
++						<button type="button" onclick={navigateBack}>{copy.close}</button>
+ 					</div>
+ 				{:else if uploadState === 'partial' && documentId}
+ 					<PartialExtractionCard
+@@ -252,7 +269,7 @@
+ 					/>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Close</button>
++						<button type="button" onclick={navigateBack}>{copy.close}</button>
+ 					</div>
+ 				{:else if uploadState === 'failed' && documentId}
+ 					<PartialExtractionCard
+@@ -262,26 +279,26 @@
+ 					/>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Close</button>
++						<button type="button" onclick={navigateBack}>{copy.close}</button>
+ 					</div>
+ 				{:else if uploadState === 'partial'}
+ 					<div class="hc-import-partial" role="status">
+-						<p>⚠ Partial Extraction</p>
+-						<p>Processing finished with partial extraction. Some values may need review.</p>
+-						<a href="/documents" class="hc-import-link">View your results</a>
++						<p>{copy.partialBannerText}</p>
++						<p>{copy.partialBannerSub}</p>
++						<a href="/documents" class="hc-import-link">{copy.viewResults}</a>
+ 					</div>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Close</button>
++						<button type="button" onclick={navigateBack}>{copy.close}</button>
+ 					</div>
+ 				{:else if uploadState === 'failed'}
+ 					<div class="hc-import-error" role="alert">
+-						<p>Processing failed. Please try uploading your document again.</p>
+-						<a href="/documents/upload" class="hc-import-link">Try uploading again</a>
++						<p>{copy.errorProcessingFailed}</p>
++						<a href="/documents/upload" class="hc-import-link">{copy.tryUploadAgain}</a>
+ 					</div>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Close</button>
++						<button type="button" onclick={navigateBack}>{copy.close}</button>
+ 					</div>
+ 				{/if}
+ 			{:else}
+@@ -289,7 +306,7 @@
+ 				{#if queueAuthError}
+ 					<div
+ 						role="alert"
+-						aria-label="Authentication required"
++						aria-label={copy.authErrorAria}
+ 						style="padding: 8px 10px; border: 1px solid var(--status-action, #e05252); background: rgba(224, 82, 82, 0.08); font-size: 12px;"
+ 					>
+ 						<p style="margin: 0;">{queueAuthError}</p>
+@@ -299,10 +316,10 @@
+ 				{#if rejectedFiles.length > 0}
+ 					<div
+ 						role="alert"
+-						aria-label="Rejected files"
++						aria-label={copy.rejectedFilesAria}
+ 						style="padding: 8px 10px; border: 1px solid var(--status-action, #e05252); background: rgba(224, 82, 82, 0.08); font-size: 12px;"
+ 					>
+-						<p>These files couldn't be added:</p>
++						<p>{copy.rejectedFilesIntro}</p>
+ 						<ul style="margin: 4px 0 0; padding-left: 18px;">
+ 							{#each rejectedFiles as rej (rej.name + rej.reason)}
+ 								<li>
+@@ -314,13 +331,13 @@
+ 				{/if}
+ 
+ 				{#if queueStatus === 'idle'}
+-					<p class="hc-import-subtitle">Add a new lab result to your health record</p>
++					<p class="hc-import-subtitle">{copy.subtitleBatch}</p>
+ 					<div class="hc-import-dropzone">
+ 						<DocumentUploadZone multiple {onFilesSelected} />
+ 					</div>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Cancel</button>
++						<button type="button" onclick={navigateBack}>{copy.cancel}</button>
+ 					</div>
+ 				{:else if queueStatus === 'active'}
+ 					<UploadQueuePanel
+@@ -332,13 +349,13 @@
+ 					/>
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Cancel batch</button>
++						<button type="button" onclick={navigateBack}>{copy.cancelBatch}</button>
+ 					</div>
+ 				{:else if queueStatus === 'summary'}
+ 					<UploadBatchSummary {queue} onStartAnother={resetBatch} />
+ 
+ 					<div class="hc-import-actions hc-import-actions-end">
+-						<button type="button" onclick={navigateBack}>Close</button>
++						<button type="button" onclick={navigateBack}>{copy.close}</button>
+ 					</div>
+ 				{/if}
+ 			{/if}
+diff --git a/healthcabinet/frontend/src/routes/(auth)/+layout.svelte b/healthcabinet/frontend/src/routes/(auth)/+layout.svelte
+index 1aeab49..803b7af 100644
+--- a/healthcabinet/frontend/src/routes/(auth)/+layout.svelte
++++ b/healthcabinet/frontend/src/routes/(auth)/+layout.svelte
+@@ -1,11 +1,16 @@
+ <script lang="ts">
+ 	// Public layout — no auth guard
++	import { LocaleToggle } from '$lib/components/ui/locale-toggle';
++
+ 	interface Props {
+ 		children: import('svelte').Snippet;
+ 	}
+ 	let { children }: Props = $props();
+ </script>
+ 
+-<div class="flex min-h-screen flex-col items-center justify-center bg-background">
++<div class="hc-auth-layout flex min-h-screen flex-col items-center justify-center bg-background">
++	<div class="hc-auth-locale-corner">
++		<LocaleToggle />
++	</div>
+ 	{@render children()}
+ </div>
+diff --git a/healthcabinet/frontend/src/routes/(auth)/login/+page.svelte b/healthcabinet/frontend/src/routes/(auth)/login/+page.svelte
+index 54b90cf..b9574b2 100644
+--- a/healthcabinet/frontend/src/routes/(auth)/login/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(auth)/login/+page.svelte
+@@ -2,22 +2,41 @@
+ 	import { goto } from '$app/navigation';
+ 	import { login, me } from '$lib/api/auth';
+ 	import { authStore } from '$lib/stores/auth.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
+ 	import { Button } from '$lib/components/ui/button';
+ 	import { Input } from '$lib/components/ui/input';
+ 	import { Label } from '$lib/components/ui/label';
+ 
++	const copy = $derived(t(localeStore.locale).login);
++
++	type LoginErrorKey = '' | 'suspended' | 'invalid' | 'generic';
++
+ 	let email = $state('');
+ 	let password = $state('');
+-	let error = $state('');
++	let errorKey = $state<LoginErrorKey>('');
+ 	let isSubmitting = $state(false);
+ 	let showPassword = $state(false);
+ 
++	const error = $derived.by(() => {
++		switch (errorKey) {
++			case 'suspended':
++				return copy.errorSuspended;
++			case 'invalid':
++				return copy.errorInvalid;
++			case 'generic':
++				return copy.errorGeneric;
++			default:
++				return '';
++		}
++	});
++
+ 	async function handleSubmit(event: Event) {
+ 		event.preventDefault();
+ 		if (isSubmitting) return;
+ 
+ 		isSubmitting = true;
+-		error = '';
++		errorKey = '';
+ 
+ 		try {
+ 			const response = await login(email, password);
+@@ -38,11 +57,11 @@
+ 			// 401 = wrong credentials, 403 = account suspended, else = server/network error
+ 			const status = (e as { status?: number })?.status;
+ 			if (status === 403) {
+-				error = 'Your account has been suspended. Please contact support.';
++				errorKey = 'suspended';
+ 			} else if (status === 401) {
+-				error = 'Invalid email or password';
++				errorKey = 'invalid';
+ 			} else {
+-				error = 'Something went wrong, please try again';
++				errorKey = 'generic';
+ 			}
+ 		} finally {
+ 			isSubmitting = false;
+@@ -51,15 +70,15 @@
+ </script>
+ 
+ <svelte:head>
+-	<title>Sign In — HealthCabinet</title>
+-	<meta name="description" content="Sign in to your HealthCabinet account. Access your health data, lab results, and AI-powered interpretations." />
++	<title>{copy.headTitle}</title>
++	<meta name="description" content={copy.headDescription} />
+ 	<meta name="robots" content="noindex" />
+ </svelte:head>
+ 
+ <main class="hc-auth-page">
+ 	<div class="hc-auth-dialog hc-auth-login">
+-		<h1 class="hc-auth-dialog-header"><span aria-hidden="true">🔑</span> Sign In</h1>
+-		<div class="hc-auth-dialog-subtitle">Access your HealthCabinet account</div>
++		<h1 class="hc-auth-dialog-header"><span aria-hidden="true">🔑</span> {copy.dialogHeader}</h1>
++		<div class="hc-auth-dialog-subtitle">{copy.dialogSubtitle}</div>
+ 		<div class="hc-auth-dialog-body">
+ 			{#if error}
+ 				<div id="form-error" class="hc-auth-error" role="alert">
+@@ -69,27 +88,27 @@
+ 
+ 			<form onsubmit={handleSubmit} novalidate>
+ 				<div class="hc-auth-field-group">
+-					<Label for="email">Email</Label>
++					<Label for="email">{copy.emailLabel}</Label>
+ 					<Input
+ 						id="email"
+ 						type="email"
+ 						bind:value={email}
+ 						autocomplete="email"
+-						placeholder="you@example.com"
++						placeholder={copy.emailPlaceholder}
+ 						aria-describedby={error ? 'form-error' : undefined}
+ 						required
+ 					/>
+ 				</div>
+ 
+ 				<div class="hc-auth-field-group">
+-					<Label for="password">Password</Label>
++					<Label for="password">{copy.passwordLabel}</Label>
+ 					<div class="hc-password-wrapper">
+ 						<Input
+ 							id="password"
+ 							type={showPassword ? 'text' : 'password'}
+ 							bind:value={password}
+ 							autocomplete="current-password"
+-							placeholder="Enter your password"
++							placeholder={copy.passwordPlaceholder}
+ 							aria-describedby={error ? 'form-error' : undefined}
+ 							required
+ 						/>
+@@ -97,7 +116,7 @@
+ 							type="button"
+ 							class="hc-password-toggle"
+ 							onclick={() => (showPassword = !showPassword)}
+-							aria-label={showPassword ? 'Hide password' : 'Show password'}
++							aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+ 						>
+ 							{#if showPassword}
+ 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+@@ -114,16 +133,16 @@
+ 				</div>
+ 
+ 				<Button type="submit" variant="primary" class="hc-auth-submit" disabled={isSubmitting}>
+-					{isSubmitting ? 'Signing in...' : 'Sign In'}
++					{isSubmitting ? copy.submitting : copy.submit}
+ 				</Button>
+ 			</form>
+ 
+ 			<div class="hc-auth-link">
+-				Don't have an account? <a href="/register">Register</a>
++				{copy.linkPrompt} <a href="/register">{copy.linkTarget}</a>
+ 			</div>
+ 		</div>
+ 		<div class="hc-auth-trust">
+-			<span aria-hidden="true">🔒</span> Your data is encrypted and stored in the EU
++			<span aria-hidden="true">🔒</span> {copy.trust}
+ 		</div>
+ 	</div>
+ </main>
+diff --git a/healthcabinet/frontend/src/routes/(auth)/login/page.test.ts b/healthcabinet/frontend/src/routes/(auth)/login/page.test.ts
+index 9b9d84c..8ec6c29 100644
+--- a/healthcabinet/frontend/src/routes/(auth)/login/page.test.ts
++++ b/healthcabinet/frontend/src/routes/(auth)/login/page.test.ts
+@@ -1,7 +1,8 @@
+ import { fireEvent, waitFor } from '@testing-library/svelte';
+ import axe from 'axe-core';
+-import { describe, expect, test, vi, beforeEach } from 'vitest';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+ import { renderComponent } from '$lib/test-utils/render';
++import { localeStore } from '$lib/stores/locale.svelte';
+ import LoginPage from './+page.svelte';
+ 
+ vi.mock('$lib/api/auth', () => ({
+@@ -38,6 +39,13 @@ const mockLogin = vi.mocked(login);
+ describe('Login page', () => {
+ 	beforeEach(() => {
+ 		vi.clearAllMocks();
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++
++	afterEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
+ 	});
+ 
+ 	test('shows "Invalid email or password" on 401 response', async () => {
+@@ -76,6 +84,23 @@ describe('Login page', () => {
+ 		});
+ 	});
+ 
++	test('mapped auth error rerenders in active locale after toggle', async () => {
++		mockLogin.mockRejectedValueOnce({ status: 401, detail: 'Invalid email or password' });
++
++		const { getByLabelText, getByText, getByRole } = renderComponent(LoginPage);
++		await fireEvent.input(getByLabelText(/email/i), { target: { value: 'user@example.com' } });
++		await fireEvent.input(getByLabelText(/^password$/i), { target: { value: 'wrongpassword' } });
++		await fireEvent.click(getByRole('button', { name: /sign in/i }));
++
++		await waitFor(() => {
++			expect(getByText(/invalid email or password/i)).toBeInTheDocument();
++		});
++
++		localeStore.setLocale('uk');
++		await new Promise((r) => setTimeout(r, 0));
++		expect(getByText(/невірний email або пароль/i)).toBeInTheDocument();
++	});
++
+ 	test('does not differentiate between wrong password and unknown email in error message', async () => {
+ 		mockLogin.mockRejectedValueOnce({ status: 401, detail: 'Invalid email or password' });
+ 
+diff --git a/healthcabinet/frontend/src/routes/(auth)/register/+page.svelte b/healthcabinet/frontend/src/routes/(auth)/register/+page.svelte
+index b146b21..5f448a9 100644
+--- a/healthcabinet/frontend/src/routes/(auth)/register/+page.svelte
++++ b/healthcabinet/frontend/src/routes/(auth)/register/+page.svelte
+@@ -4,29 +4,77 @@
+ 	import type { ApiError } from '$lib/api/client.svelte';
+ 	import { PRIVACY_POLICY_VERSION } from '$lib/constants';
+ 	import { authStore } from '$lib/stores/auth.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
+ 	import { Button } from '$lib/components/ui/button';
+ 	import { Checkbox } from '$lib/components/ui/checkbox';
+ 	import { Input } from '$lib/components/ui/input';
+ 	import { Label } from '$lib/components/ui/label';
+ 
++	const copy = $derived(t(localeStore.locale).register);
++
++	type EmailErrorKey = '' | 'required' | 'invalid' | 'taken';
++	type PasswordErrorKey = '' | 'length' | 'tooLong';
++	type FormErrorKey = '' | 'passwordMismatch' | 'inputGeneric' | 'registrationFailed' | 'custom';
++
+ 	let email = $state('');
+ 	let password = $state('');
+ 	let confirmPassword = $state('');
+ 	let consentChecked = $state(false);
+ 	let isSubmitting = $state(false);
+-	let emailError = $state('');
+-	let passwordError = $state('');
+-	let formError = $state('');
++	let emailErrorKey = $state<EmailErrorKey>('');
++	let passwordErrorKey = $state<PasswordErrorKey>('');
++	let formErrorKey = $state<FormErrorKey>('');
++	let customFormError = $state('');
+ 	let showPassword = $state(false);
+ 	let showConfirmPassword = $state(false);
+ 
++	const emailError = $derived.by(() => {
++		switch (emailErrorKey) {
++			case 'required':
++				return copy.errorEmailRequired;
++			case 'invalid':
++				return copy.errorEmailInvalid;
++			case 'taken':
++				return copy.errorEmailTaken;
++			default:
++				return '';
++		}
++	});
++
++	const passwordError = $derived.by(() => {
++		switch (passwordErrorKey) {
++			case 'length':
++				return copy.errorPasswordLength;
++			case 'tooLong':
++				return copy.errorPasswordTooLong;
++			default:
++				return '';
++		}
++	});
++
++	const formError = $derived.by(() => {
++		switch (formErrorKey) {
++			case 'passwordMismatch':
++				return copy.errorPasswordMismatch;
++			case 'inputGeneric':
++				return copy.errorInputGeneric;
++			case 'registrationFailed':
++				return copy.errorRegistrationFailed;
++			case 'custom':
++				return customFormError;
++			default:
++				return '';
++		}
++	});
++
+ 	function validateEmail() {
+ 		if (!email) {
+-			emailError = 'Email is required';
++			emailErrorKey = 'required';
+ 		} else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+-			emailError = 'Please enter a valid email address';
++			emailErrorKey = 'invalid';
+ 		} else {
+-			emailError = '';
++			emailErrorKey = '';
+ 		}
+ 	}
+ 
+@@ -34,22 +82,22 @@
+ 	function validatePasswordBlur() {
+ 		if (!password) return;
+ 		if (password.length < 8) {
+-			passwordError = 'Password must be at least 8 characters';
++			passwordErrorKey = 'length';
+ 		} else if (new TextEncoder().encode(password).length > 72) {
+-			passwordError = 'Password is too long (max 72 bytes)';
++			passwordErrorKey = 'tooLong';
+ 		} else {
+-			passwordError = '';
++			passwordErrorKey = '';
+ 		}
+ 	}
+ 
+ 	// submit: full validation including empty check
+ 	function validatePasswordSubmit() {
+ 		if (!password || password.length < 8) {
+-			passwordError = 'Password must be at least 8 characters';
++			passwordErrorKey = 'length';
+ 		} else if (new TextEncoder().encode(password).length > 72) {
+-			passwordError = 'Password is too long (max 72 bytes)';
++			passwordErrorKey = 'tooLong';
+ 		} else {
+-			passwordError = '';
++			passwordErrorKey = '';
+ 		}
+ 	}
+ 
+@@ -57,19 +105,20 @@
+ 		event.preventDefault();
+ 		if (!consentChecked || isSubmitting) return;
+ 
+-		formError = '';
++		formErrorKey = '';
++		customFormError = '';
+ 		validateEmail();
+ 		validatePasswordSubmit();
+ 		if (emailError || passwordError) return;
+ 
+ 		if (password !== confirmPassword) {
+-			formError = 'Passwords do not match';
++			formErrorKey = 'passwordMismatch';
+ 			return;
+ 		}
+ 
+ 		isSubmitting = true;
+-		emailError = '';
+-		passwordError = '';
++		emailErrorKey = '';
++		passwordErrorKey = '';
+ 
+ 		try {
+ 			const response = await register(email, password, true, PRIVACY_POLICY_VERSION);
+@@ -78,12 +127,17 @@
+ 		} catch (err) {
+ 			const apiError = err as ApiError;
+ 			if (apiError.status === 409) {
+-				emailError = 'An account with this email already exists';
++				emailErrorKey = 'taken';
+ 			} else {
+ 				const detail = apiError.detail;
+-				formError = Array.isArray(detail)
+-					? 'Please check your input and try again.'
+-					: (detail ?? 'Registration failed. Please try again.');
++				if (Array.isArray(detail)) {
++					formErrorKey = 'inputGeneric';
++				} else if (typeof detail === 'string' && detail.trim().length > 0) {
++					customFormError = detail;
++					formErrorKey = 'custom';
++				} else {
++					formErrorKey = 'registrationFailed';
++				}
+ 			}
+ 		} finally {
+ 			isSubmitting = false;
+@@ -92,19 +146,19 @@
+ </script>
+ 
+ <svelte:head>
+-	<title>Create Account — HealthCabinet</title>
+-	<meta name="description" content="Create your HealthCabinet account. Securely store, understand, and track your health data with AI-powered interpretation." />
++	<title>{copy.headTitle}</title>
++	<meta name="description" content={copy.headDescription} />
+ 	<meta name="robots" content="noindex" />
+ </svelte:head>
+ 
+ <main class="hc-auth-page">
+ 	<div class="hc-auth-dialog hc-auth-register">
+-		<h1 class="hc-auth-dialog-header"><span aria-hidden="true">📝</span> Create Your Account</h1>
+-		<div class="hc-auth-dialog-subtitle">Securely store, understand, and track your health data</div>
++		<h1 class="hc-auth-dialog-header"><span aria-hidden="true">📝</span> {copy.dialogHeader}</h1>
++		<div class="hc-auth-dialog-subtitle">{copy.dialogSubtitle}</div>
+ 		<div class="hc-auth-dialog-body">
+ 			<form onsubmit={handleSubmit} novalidate>
+ 				<div class="hc-auth-field-group">
+-					<Label for="email">Email address</Label>
++					<Label for="email">{copy.emailLabel}</Label>
+ 					<Input
+ 						id="email"
+ 						type="email"
+@@ -112,7 +166,7 @@
+ 						onblur={validateEmail}
+ 						aria-describedby={emailError ? 'email-error' : undefined}
+ 						autocomplete="email"
+-						placeholder="you@example.com"
++						placeholder={copy.emailPlaceholder}
+ 						required
+ 					/>
+ 					{#if emailError}
+@@ -121,7 +175,7 @@
+ 				</div>
+ 
+ 				<div class="hc-auth-field-group">
+-					<Label for="password">Password</Label>
++					<Label for="password">{copy.passwordLabel}</Label>
+ 					<div class="hc-password-wrapper">
+ 						<Input
+ 							id="password"
+@@ -130,14 +184,14 @@
+ 							onblur={validatePasswordBlur}
+ 							aria-describedby={passwordError ? 'password-error password-hint' : 'password-hint'}
+ 							autocomplete="new-password"
+-							placeholder="Choose a password"
++							placeholder={copy.passwordPlaceholder}
+ 							required
+ 						/>
+ 						<button
+ 							type="button"
+ 							class="hc-password-toggle"
+ 							onclick={() => (showPassword = !showPassword)}
+-							aria-label={showPassword ? 'Hide password' : 'Show password'}
++							aria-label={showPassword ? copy.hidePassword : copy.showPassword}
+ 						>
+ 							{#if showPassword}
+ 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+@@ -151,28 +205,28 @@
+ 							{/if}
+ 						</button>
+ 					</div>
+-					<div id="password-hint" class="hc-auth-helper-text">Minimum 8 characters</div>
++					<div id="password-hint" class="hc-auth-helper-text">{copy.passwordHint}</div>
+ 					{#if passwordError}
+ 						<p id="password-error" class="hc-auth-field-error">{passwordError}</p>
+ 					{/if}
+ 				</div>
+ 
+ 				<div class="hc-auth-field-group">
+-					<Label for="confirm-password">Confirm Password</Label>
++					<Label for="confirm-password">{copy.confirmPasswordLabel}</Label>
+ 					<div class="hc-password-wrapper">
+ 						<Input
+ 							id="confirm-password"
+ 							type={showConfirmPassword ? 'text' : 'password'}
+ 							bind:value={confirmPassword}
+ 							autocomplete="new-password"
+-							placeholder="Repeat your password"
++							placeholder={copy.confirmPasswordPlaceholder}
+ 							required
+ 						/>
+ 						<button
+ 							type="button"
+ 							class="hc-password-toggle"
+ 							onclick={() => (showConfirmPassword = !showConfirmPassword)}
+-							aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
++							aria-label={showConfirmPassword ? copy.hidePassword : copy.showPassword}
+ 						>
+ 							{#if showConfirmPassword}
+ 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+@@ -192,12 +246,11 @@
+ 					<div class="hc-auth-consent-row">
+ 						<Checkbox id="gdpr-consent" bind:checked={consentChecked} aria-describedby="gdpr-description" />
+ 						<div>
+-							<label class="hc-auth-consent-label" for="gdpr-consent">I consent to health data processing</label>
++							<label class="hc-auth-consent-label" for="gdpr-consent">{copy.consentLabel}</label>
+ 							<div id="gdpr-description" class="hc-auth-consent-desc">
+-								Your data is encrypted with AES-256 and stored exclusively in EU data centers.
+-								You can export or delete all data at any time.
++								{copy.consentDesc}
+ 							</div>
+-							<a href="/privacy-policy" class="hc-auth-consent-link">Read our Privacy Policy</a>
++							<a href="/privacy-policy" class="hc-auth-consent-link">{copy.consentLink}</a>
+ 						</div>
+ 					</div>
+ 				</div>
+@@ -209,19 +262,19 @@
+ 				{/if}
+ 
+ 				<Button type="submit" variant="primary" class="hc-auth-submit" disabled={!consentChecked || isSubmitting}>
+-					{isSubmitting ? 'Creating account...' : 'Create Account'}
++					{isSubmitting ? copy.submitting : copy.submit}
+ 				</Button>
+ 			</form>
+ 
+ 			<div class="hc-auth-link">
+-				Already have an account? <a href="/login">Sign in</a>
++				{copy.linkPrompt} <a href="/login">{copy.linkTarget}</a>
+ 			</div>
+ 		</div>
+ 	</div>
+ 
+ 	<div class="hc-auth-trust-below">
+-		<div class="hc-landing-trust-badge"><span aria-hidden="true">🔒</span> AES-256</div>
+-		<div class="hc-landing-trust-badge"><span aria-hidden="true">🇪🇺</span> EU Data</div>
+-		<div class="hc-landing-trust-badge"><span aria-hidden="true">🛡️</span> GDPR</div>
++		<div class="hc-landing-trust-badge"><span aria-hidden="true">🔒</span> {copy.trustAes}</div>
++		<div class="hc-landing-trust-badge"><span aria-hidden="true">🇪🇺</span> {copy.trustEu}</div>
++		<div class="hc-landing-trust-badge"><span aria-hidden="true">🛡️</span> {copy.trustGdpr}</div>
+ 	</div>
+ </main>
+diff --git a/healthcabinet/frontend/src/routes/(auth)/register/page.test.ts b/healthcabinet/frontend/src/routes/(auth)/register/page.test.ts
+index 671f888..c0e307f 100644
+--- a/healthcabinet/frontend/src/routes/(auth)/register/page.test.ts
++++ b/healthcabinet/frontend/src/routes/(auth)/register/page.test.ts
+@@ -1,7 +1,8 @@
+ import { fireEvent } from '@testing-library/svelte';
+ import axe from 'axe-core';
+-import { describe, expect, test, vi } from 'vitest';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+ import { renderComponent } from '$lib/test-utils/render';
++import { localeStore } from '$lib/stores/locale.svelte';
+ import RegisterPage from './+page.svelte';
+ 
+ vi.mock('$lib/api/client.svelte', () => ({
+@@ -12,6 +13,16 @@ vi.mock('$lib/api/client.svelte', () => ({
+ }));
+ 
+ describe('Register page', () => {
++	beforeEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++
++	afterEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++
+ 	test('submit button disabled when consent unchecked', () => {
+ 		const { getByRole } = renderComponent(RegisterPage);
+ 		const submitButton = getByRole('button', { name: /create account/i });
+@@ -33,6 +44,18 @@ describe('Register page', () => {
+ 		expect(getByText(/please enter a valid email address/i)).toBeInTheDocument();
+ 	});
+ 
++	test('inline validation error rerenders in active locale after toggle', async () => {
++		const { getByLabelText, getByText } = renderComponent(RegisterPage);
++		const emailInput = getByLabelText(/email/i);
++		await fireEvent.input(emailInput, { target: { value: 'not-an-email' } });
++		await fireEvent.blur(emailInput);
++		expect(getByText(/please enter a valid email address/i)).toBeInTheDocument();
++
++		localeStore.setLocale('uk');
++		await new Promise((r) => setTimeout(r, 0));
++		expect(getByText(/вкажіть коректну електронну адресу/i)).toBeInTheDocument();
++	});
++
+ 	test('password blur shows inline error for short password', async () => {
+ 		const { getByLabelText, getByText } = renderComponent(RegisterPage);
+ 		const passwordInput = getByLabelText(/^password$/i);
+diff --git a/healthcabinet/frontend/src/routes/+page.svelte b/healthcabinet/frontend/src/routes/+page.svelte
+index 648fa58..cf81ba5 100644
+--- a/healthcabinet/frontend/src/routes/+page.svelte
++++ b/healthcabinet/frontend/src/routes/+page.svelte
+@@ -2,7 +2,12 @@
+ 	import { goto } from '$app/navigation';
+ 	import { page } from '$app/stores';
+ 	import { Button } from '$lib/components/ui/button';
++	import { LocaleToggle } from '$lib/components/ui/locale-toggle';
+ 	import { authStore } from '$lib/stores/auth.svelte';
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	const copy = $derived(t(localeStore.locale).landing);
+ 
+ 	let showDeletedBanner = $state(false);
+ 
+@@ -25,65 +30,65 @@
+ </script>
+ 
+ <svelte:head>
+-	<title>HealthCabinet — Your health data, finally understood</title>
+-	<meta name="description" content="Upload lab results. Get AI-powered interpretation in plain language. Track biomarker trends across time. AES-256 encrypted, EU data residency, GDPR compliant." />
++	<title>{copy.headTitle}</title>
++	<meta name="description" content={copy.headDescription} />
+ </svelte:head>
+ 
+ {#if showDeletedBanner}
+ 	<div class="hc-state hc-state-success" role="status" style="margin: 16px auto; max-width: 640px;">
+-		<p class="hc-state-title">Your account and all associated data have been permanently deleted.</p>
++		<p class="hc-state-title">{copy.deletedBanner}</p>
+ 	</div>
+ {/if}
+ 
+ {#if !authStore.isAuthenticated}
+ <div class="hc-landing">
+ 	<!-- Top bar -->
+-	<nav class="hc-landing-topbar" aria-label="Main">
++	<nav class="hc-landing-topbar" aria-label={copy.topbarAria}>
+ 		<div class="hc-landing-brand">
+ 			<span class="hc-landing-brand-icon" aria-hidden="true">⚕</span>
+-			<span>HealthCabinet</span>
++			<span>{copy.brand}</span>
+ 		</div>
+ 		<div class="hc-landing-topbar-actions">
+-			<Button href="/login" variant="standard">Sign In</Button>
+-			<Button href="/register" variant="primary">Get Started</Button>
++			<div class="hc-landing-locale"><LocaleToggle /></div>
++			<Button href="/login" variant="standard">{copy.topbarSignIn}</Button>
++			<Button href="/register" variant="primary">{copy.topbarGetStarted}</Button>
+ 		</div>
+ 	</nav>
+ 
+ 	<!-- Hero -->
+ 	<main class="hc-landing-hero">
+ 		<h1 class="hc-landing-heading">
+-			Your health data,<br />
+-			<span class="hc-landing-accent">finally understood.</span>
++			{copy.heroTitleTop}<br />
++			<span class="hc-landing-accent">{copy.heroTitleBottom}</span>
+ 		</h1>
+ 		<p class="hc-landing-subtitle">
+-			Upload lab results. Get AI-powered interpretation in plain language. Track trends across
+-			time.
++			{copy.heroSubtitle}
+ 		</p>
+ 		<div class="hc-landing-cta">
+ 			<Button href="/register" variant="primary" class="hc-landing-cta-btn"
+-				>Create Free Account →</Button
++				>{copy.ctaCreateAccount}</Button
+ 			>
+ 		</div>
+ 	</main>
+ 
+ 	<!-- Trust signals -->
+ 	<div class="hc-landing-trust">
+-		<div class="hc-landing-trust-badge"><span aria-hidden="true">🔒</span> AES-256 Encrypted</div>
+-		<div class="hc-landing-trust-badge"><span aria-hidden="true">🇪🇺</span> EU Data Residency</div>
+-		<div class="hc-landing-trust-badge"><span aria-hidden="true">🛡️</span> GDPR Compliant</div>
++		<div class="hc-landing-trust-badge"><span aria-hidden="true">🔒</span> {copy.trustAes}</div>
++		<div class="hc-landing-trust-badge"><span aria-hidden="true">🇪🇺</span> {copy.trustEu}</div>
++		<div class="hc-landing-trust-badge"><span aria-hidden="true">🛡️</span> {copy.trustGdpr}</div>
+ 	</div>
+ 
+ 	<!-- Preview teaser -->
+ 	<div class="hc-landing-preview">
+ 		<div class="hc-landing-preview-frame">
+-			<table class="hc-landing-preview-table" aria-label="Example biomarker results">
++			<table class="hc-landing-preview-table" aria-label={copy.previewExampleAria}>
+ 				<thead>
+ 					<tr>
+-						<th>Biomarker</th>
+-						<th>Value</th>
+-						<th>Range</th>
+-						<th>Status</th>
+-						<th>Trend</th>
++						<th>{copy.previewBiomarker}</th>
++						<th>{copy.previewValue}</th>
++						<th>{copy.previewRange}</th>
++						<th>{copy.previewStatus}</th>
++						<th>{copy.previewTrend}</th>
+ 					</tr>
+ 				</thead>
+ 				<tbody>
+@@ -91,34 +96,34 @@
+ 						<td class="hc-landing-biomarker-name">TSH</td>
+ 						<td>3.8 mIU/L</td>
+ 						<td>0.4 – 4.0</td>
+-						<td class="hc-status-optimal">Optimal</td>
+-						<td class="hc-trend-neutral"><span aria-label="Stable">→</span></td>
++						<td class="hc-status-optimal">{copy.previewStatusOptimal}</td>
++						<td class="hc-trend-neutral"><span aria-label={copy.previewTrendStable}>→</span></td>
+ 					</tr>
+ 					<tr>
+ 						<td class="hc-landing-biomarker-name">Vitamin D</td>
+ 						<td>22 ng/mL</td>
+ 						<td>30 – 100</td>
+-						<td class="hc-status-concerning">Low</td>
+-						<td class="hc-trend-down-bad"><span aria-label="Decreasing">↓</span></td>
++						<td class="hc-status-concerning">{copy.previewStatusLow}</td>
++						<td class="hc-trend-down-bad"><span aria-label={copy.previewTrendDecreasing}>↓</span></td>
+ 					</tr>
+ 					<tr>
+ 						<td class="hc-landing-biomarker-name">Hemoglobin</td>
+ 						<td>11.8 g/dL</td>
+ 						<td>12.0 – 15.5</td>
+-						<td class="hc-status-borderline">Borderline</td>
+-						<td class="hc-trend-down-warn"><span aria-label="Decreasing">↓</span></td>
++						<td class="hc-status-borderline">{copy.previewStatusBorderline}</td>
++						<td class="hc-trend-down-warn"><span aria-label={copy.previewTrendDecreasing}>↓</span></td>
+ 					</tr>
+ 					<tr>
+ 						<td class="hc-landing-biomarker-name">Ferritin</td>
+ 						<td>45 ng/mL</td>
+ 						<td>12 – 150</td>
+-						<td class="hc-status-optimal">Optimal</td>
+-						<td class="hc-trend-up-good"><span aria-label="Increasing">↑</span></td>
++						<td class="hc-status-optimal">{copy.previewStatusOptimal}</td>
++						<td class="hc-trend-up-good"><span aria-label={copy.previewTrendIncreasing}>↑</span></td>
+ 					</tr>
+ 				</tbody>
+ 			</table>
+ 			<div class="hc-landing-preview-overlay">
+-				<div class="hc-landing-preview-overlay-text">See your health clearly</div>
++				<div class="hc-landing-preview-overlay-text">{copy.previewOverlay}</div>
+ 			</div>
+ 		</div>
+ 	</div>
+diff --git a/healthcabinet/frontend/src/routes/page.test.ts b/healthcabinet/frontend/src/routes/page.test.ts
+index d839e72..950d0d0 100644
+--- a/healthcabinet/frontend/src/routes/page.test.ts
++++ b/healthcabinet/frontend/src/routes/page.test.ts
+@@ -1,6 +1,7 @@
+ import axe from 'axe-core';
+-import { describe, expect, test, vi, beforeEach } from 'vitest';
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+ import { renderComponent } from '$lib/test-utils/render';
++import { localeStore } from '$lib/stores/locale.svelte';
+ import LandingPage from './+page.svelte';
+ 
+ vi.mock('$lib/stores/auth.svelte', () => ({
+@@ -32,6 +33,13 @@ vi.mock('$lib/api/client.svelte', () => ({
+ describe('Landing page', () => {
+ 	beforeEach(() => {
+ 		vi.clearAllMocks();
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++
++	afterEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
+ 	});
+ 
+ 	test('renders heading text', () => {
+@@ -74,6 +82,17 @@ describe('Landing page', () => {
+ 		expect(brand!.textContent).toContain('HealthCabinet');
+ 	});
+ 
++	test('topbar nav aria label is localized after locale toggle', async () => {
++		const { container, getByRole } = renderComponent(LandingPage);
++		const topbar = container.querySelector('.hc-landing-topbar');
++		expect(topbar).toHaveAttribute('aria-label', 'Main');
++
++		getByRole('button', { name: /ukrainian/i }).click();
++		await new Promise((r) => setTimeout(r, 0));
++
++		expect(topbar).toHaveAttribute('aria-label', 'Основна');
++	});
++
+ 	test('renders preview teaser table', () => {
+ 		const { container } = renderComponent(LandingPage);
+ 		const table = container.querySelector('.hc-landing-preview-table');
+diff --git a/healthcabinet/frontend/src/lib/components/ui/locale-toggle/index.ts b/healthcabinet/frontend/src/lib/components/ui/locale-toggle/index.ts
+new file mode 100644
+index 0000000..c09eda5
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/components/ui/locale-toggle/index.ts
+@@ -0,0 +1 @@
++export { default as LocaleToggle } from './locale-toggle.svelte';
+diff --git a/healthcabinet/frontend/src/lib/components/ui/locale-toggle/locale-toggle.svelte b/healthcabinet/frontend/src/lib/components/ui/locale-toggle/locale-toggle.svelte
+new file mode 100644
+index 0000000..74a4307
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/components/ui/locale-toggle/locale-toggle.svelte
+@@ -0,0 +1,43 @@
++<script lang="ts">
++	import { localeStore } from '$lib/stores/locale.svelte';
++	import { t } from '$lib/i18n/messages';
++
++	interface Props {
++		class?: string;
++	}
++	let { class: className = '' }: Props = $props();
++
++	const copy = $derived(t(localeStore.locale).localeToggle);
++	const isEn = $derived(localeStore.locale === 'en');
++	const isUk = $derived(localeStore.locale === 'uk');
++
++	function select(next: 'en' | 'uk') {
++		localeStore.setLocale(next);
++	}
++</script>
++
++<div
++	class="hc-locale-toggle {className}"
++	role="group"
++	aria-label={copy.label}
++	data-testid="locale-toggle"
++>
++	<button
++		type="button"
++		class="hc-locale-toggle-btn"
++		aria-pressed={isEn}
++		aria-label={copy.ariaEn}
++		onclick={() => select('en')}
++	>
++		{copy.en}
++	</button>
++	<button
++		type="button"
++		class="hc-locale-toggle-btn"
++		aria-pressed={isUk}
++		aria-label={copy.ariaUk}
++		onclick={() => select('uk')}
++	>
++		{copy.uk}
++	</button>
++</div>
+diff --git a/healthcabinet/frontend/src/lib/components/ui/locale-toggle/locale-toggle.test.ts b/healthcabinet/frontend/src/lib/components/ui/locale-toggle/locale-toggle.test.ts
+new file mode 100644
+index 0000000..676d93b
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/components/ui/locale-toggle/locale-toggle.test.ts
+@@ -0,0 +1,49 @@
++import { afterEach, beforeEach, describe, expect, test } from 'vitest';
++import { renderComponent } from '$lib/test-utils/render';
++import { localeStore } from '$lib/stores/locale.svelte';
++import LocaleToggle from './locale-toggle.svelte';
++
++describe('LocaleToggle', () => {
++	beforeEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++	afterEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
++	});
++
++	test('renders EN / UA buttons with group label', () => {
++		const { getByRole, getByTestId } = renderComponent(LocaleToggle);
++		const group = getByTestId('locale-toggle');
++		expect(group).toBeInTheDocument();
++		// Buttons expose accessible names in the current locale (English by default).
++		expect(getByRole('button', { name: /english/i })).toBeInTheDocument();
++		expect(getByRole('button', { name: /ukrainian/i })).toBeInTheDocument();
++	});
++
++	test('reflects current locale via aria-pressed', () => {
++		const { getAllByRole } = renderComponent(LocaleToggle);
++		const buttons = getAllByRole('button');
++		// Two pressed-state buttons; exactly one is pressed (en by default).
++		const pressed = buttons.filter((b) => b.getAttribute('aria-pressed') === 'true');
++		expect(pressed).toHaveLength(1);
++		expect(pressed[0].textContent?.trim()).toBe('EN');
++	});
++
++	test('clicking UA sets locale to uk and persists it', () => {
++		const { getByRole } = renderComponent(LocaleToggle);
++		const ua = getByRole('button', { name: /ukrainian/i });
++		ua.click();
++		expect(localeStore.locale).toBe('uk');
++		expect(window.localStorage.getItem('hc.locale')).toBe('uk');
++	});
++
++	test('clicking EN after UA switches back to en', () => {
++		const { getByRole } = renderComponent(LocaleToggle);
++		getByRole('button', { name: /ukrainian/i }).click();
++		expect(localeStore.locale).toBe('uk');
++		getByRole('button', { name: /english/i }).click();
++		expect(localeStore.locale).toBe('en');
++	});
++});
+diff --git a/healthcabinet/frontend/src/lib/i18n/format.test.ts b/healthcabinet/frontend/src/lib/i18n/format.test.ts
+new file mode 100644
+index 0000000..bd20603
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/i18n/format.test.ts
+@@ -0,0 +1,54 @@
++import { describe, expect, test } from 'vitest';
++import { formatDate, formatDateTime, formatTime, toBcp47 } from './format';
++
++describe('toBcp47', () => {
++	test('maps en to en-US and uk to uk-UA', () => {
++		expect(toBcp47('en')).toBe('en-US');
++		expect(toBcp47('uk')).toBe('uk-UA');
++	});
++});
++
++describe('formatDate', () => {
++	test('returns an empty string for null/undefined/invalid input', () => {
++		expect(formatDate(null, 'en')).toBe('');
++		expect(formatDate(undefined, 'en')).toBe('');
++		expect(formatDate('not-a-date', 'en')).toBe('');
++	});
++
++	test('formats with the selected locale (en vs uk produce different strings)', () => {
++		const iso = '2026-04-22T10:00:00Z';
++		const en = formatDate(iso, 'en');
++		const uk = formatDate(iso, 'uk');
++		expect(en).toMatch(/04/);
++		expect(uk).toMatch(/04/);
++		// Separators differ between en-US and uk-UA output; explicit equality
++		// on host-dependent formatting is brittle, so just assert they differ.
++		expect(en).not.toBe(uk);
++	});
++
++	test('accepts a Date object directly', () => {
++		const d = new Date('2026-04-22T10:00:00Z');
++		expect(formatDate(d, 'en')).not.toBe('');
++	});
++});
++
++describe('formatTime', () => {
++	test('returns empty string for invalid input', () => {
++		expect(formatTime(undefined, 'uk')).toBe('');
++	});
++
++	test('formats 10:05 UTC in both locales', () => {
++		const iso = '2026-04-22T10:05:00Z';
++		expect(formatTime(iso, 'en')).not.toBe('');
++		expect(formatTime(iso, 'uk')).not.toBe('');
++	});
++});
++
++describe('formatDateTime', () => {
++	test('produces output that contains both date and time components', () => {
++		const iso = '2026-04-22T10:05:00Z';
++		const out = formatDateTime(iso, 'en');
++		expect(out).toMatch(/\d/);
++		expect(out.length).toBeGreaterThan(5);
++	});
++});
+diff --git a/healthcabinet/frontend/src/lib/i18n/format.ts b/healthcabinet/frontend/src/lib/i18n/format.ts
+new file mode 100644
+index 0000000..e5638f3
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/i18n/format.ts
+@@ -0,0 +1,67 @@
++import type { Locale } from '$lib/stores/locale.svelte';
++
++/**
++ * Locale-aware formatting helpers (Story 15.6).
++ *
++ * Map the internal app locale to a BCP 47 tag and defer to Intl.DateTimeFormat
++ * so touched surfaces produce the right language for dates and times.
++ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat
++ */
++
++export function toBcp47(locale: Locale): string {
++	return locale === 'uk' ? 'uk-UA' : 'en-US';
++}
++
++function toDate(input: Date | string | number | null | undefined): Date | null {
++	if (input == null) return null;
++	const date = input instanceof Date ? input : new Date(input);
++	return Number.isNaN(date.getTime()) ? null : date;
++}
++
++function safeFormat(
++	locale: Locale,
++	date: Date,
++	options: Intl.DateTimeFormatOptions
++): string {
++	try {
++		const normalized = options ?? {};
++		return new Intl.DateTimeFormat(toBcp47(locale), normalized).format(date);
++	} catch {
++		return '';
++	}
++}
++
++export function formatDate(
++	input: Date | string | number | null | undefined,
++	locale: Locale,
++	options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' }
++): string {
++	const date = toDate(input);
++	if (!date) return '';
++	return safeFormat(locale, date, options);
++}
++
++export function formatTime(
++	input: Date | string | number | null | undefined,
++	locale: Locale,
++	options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
++): string {
++	const date = toDate(input);
++	if (!date) return '';
++	return safeFormat(locale, date, options);
++}
++
++export function formatDateTime(
++	input: Date | string | number | null | undefined,
++	locale: Locale
++): string {
++	const date = toDate(input);
++	if (!date) return '';
++	return safeFormat(locale, date, {
++		year: 'numeric',
++		month: '2-digit',
++		day: '2-digit',
++		hour: '2-digit',
++		minute: '2-digit'
++	});
++}
+diff --git a/healthcabinet/frontend/src/lib/i18n/messages.ts b/healthcabinet/frontend/src/lib/i18n/messages.ts
+new file mode 100644
+index 0000000..c7416b4
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/i18n/messages.ts
+@@ -0,0 +1,793 @@
++import type { Locale } from '$lib/stores/locale.svelte';
++
++/**
++ * Core UI message catalog for Story 15.6.
++ *
++ * English is the source of truth for message keys. The `Messages` shape is
++ * derived from the `en` object, so every other locale must satisfy the same
++ * structure or TypeScript will fail at compile time — this is the key-
++ * completeness guarantee the story requires.
++ *
++ * Only UI chrome strings live here: labels, empty states, hints, aria text,
++ * button copy, status text. Backend response bodies, document filenames,
++ * biomarker names, and AI-generated interpretation text are not translated.
++ */
++
++const en = {
++	localeToggle: {
++		label: 'Interface language',
++		en: 'EN',
++		uk: 'UA',
++		ariaEn: 'Switch language to English',
++		ariaUk: 'Switch language to Ukrainian'
++	},
++	common: {
++		cancel: 'Cancel',
++		working: 'Working…',
++		retry: 'Try again',
++		close: 'Close',
++		confirm: 'Confirm'
++	},
++	landing: {
++		headTitle: 'HealthCabinet — Your health data, finally understood',
++		headDescription:
++			'Upload lab results. Get AI-powered interpretation in plain language. Track biomarker trends across time. AES-256 encrypted, EU data residency, GDPR compliant.',
++		brand: 'HealthCabinet',
++		topbarAria: 'Main',
++		topbarSignIn: 'Sign In',
++		topbarGetStarted: 'Get Started',
++		heroTitleTop: 'Your health data,',
++		heroTitleBottom: 'finally understood.',
++		heroSubtitle:
++			'Upload lab results. Get AI-powered interpretation in plain language. Track trends across time.',
++		ctaCreateAccount: 'Create Free Account →',
++		trustAes: 'AES-256 Encrypted',
++		trustEu: 'EU Data Residency',
++		trustGdpr: 'GDPR Compliant',
++		previewBiomarker: 'Biomarker',
++		previewValue: 'Value',
++		previewRange: 'Range',
++		previewStatus: 'Status',
++		previewTrend: 'Trend',
++		previewStatusOptimal: 'Optimal',
++		previewStatusLow: 'Low',
++		previewStatusBorderline: 'Borderline',
++		previewTrendStable: 'Stable',
++		previewTrendDecreasing: 'Decreasing',
++		previewTrendIncreasing: 'Increasing',
++		previewExampleAria: 'Example biomarker results',
++		previewOverlay: 'See your health clearly',
++		deletedBanner: 'Your account and all associated data have been permanently deleted.'
++	},
++	login: {
++		headTitle: 'Sign In — HealthCabinet',
++		headDescription:
++			'Sign in to your HealthCabinet account. Access your health data, lab results, and AI-powered interpretations.',
++		dialogHeader: 'Sign In',
++		dialogSubtitle: 'Access your HealthCabinet account',
++		emailLabel: 'Email',
++		emailPlaceholder: 'you@example.com',
++		passwordLabel: 'Password',
++		passwordPlaceholder: 'Enter your password',
++		showPassword: 'Show password',
++		hidePassword: 'Hide password',
++		submit: 'Sign In',
++		submitting: 'Signing in…',
++		linkPrompt: "Don't have an account?",
++		linkTarget: 'Register',
++		trust: 'Your data is encrypted and stored in the EU',
++		errorSuspended: 'Your account has been suspended. Please contact support.',
++		errorInvalid: 'Invalid email or password',
++		errorGeneric: 'Something went wrong, please try again'
++	},
++	register: {
++		headTitle: 'Create Account — HealthCabinet',
++		headDescription:
++			'Create your HealthCabinet account. Securely store, understand, and track your health data with AI-powered interpretation.',
++		dialogHeader: 'Create Your Account',
++		dialogSubtitle: 'Securely store, understand, and track your health data',
++		emailLabel: 'Email address',
++		emailPlaceholder: 'you@example.com',
++		passwordLabel: 'Password',
++		passwordPlaceholder: 'Choose a password',
++		passwordHint: 'Minimum 8 characters',
++		confirmPasswordLabel: 'Confirm Password',
++		confirmPasswordPlaceholder: 'Repeat your password',
++		showPassword: 'Show password',
++		hidePassword: 'Hide password',
++		consentLabel: 'I consent to health data processing',
++		consentDesc:
++			'Your data is encrypted with AES-256 and stored exclusively in EU data centers. You can export or delete all data at any time.',
++		consentLink: 'Read our Privacy Policy',
++		submit: 'Create Account',
++		submitting: 'Creating account…',
++		linkPrompt: 'Already have an account?',
++		linkTarget: 'Sign in',
++		trustAes: 'AES-256',
++		trustEu: 'EU Data',
++		trustGdpr: 'GDPR',
++		errorEmailRequired: 'Email is required',
++		errorEmailInvalid: 'Please enter a valid email address',
++		errorPasswordLength: 'Password must be at least 8 characters',
++		errorPasswordTooLong: 'Password is too long (max 72 bytes)',
++		errorPasswordMismatch: 'Passwords do not match',
++		errorEmailTaken: 'An account with this email already exists',
++		errorInputGeneric: 'Please check your input and try again.',
++		errorRegistrationFailed: 'Registration failed. Please try again.'
++	},
++	appShell: {
++		brand: 'HealthCabinet',
++		skipToContent: 'Skip to main content',
++		signOut: 'Sign Out',
++		mainNavAria: 'Main navigation',
++		navHeader: 'Navigation',
++		navSectionApp: 'App Pages',
++		navSectionAdmin: 'Admin',
++		navDashboard: 'Dashboard',
++		navDocuments: 'Documents',
++		navSettings: 'Settings',
++		navAdminConsole: 'Admin Console',
++		statusReady: 'Ready'
++	},
++	dashboard: {
++		loadingAria: 'Loading health data',
++		loadingText: 'Loading your health data…',
++		errorRetry: 'Try again',
++		filterAria: 'Dashboard filter',
++		filterLegend: 'Filter documents',
++		filterAll: 'All',
++		filterAnalyses: 'Analyses',
++		filterDocuments: 'Documents',
++		importDocument: '📂 Import Document',
++		biomarkersAria: 'Biomarker results',
++		interpretationAria: 'AI interpretation',
++		chatAria: 'AI health assistant',
++		filteredResultsAria: 'Filtered results',
++		firstTimeAria: 'Upload your first document',
++		firstTimeTitle: 'Upload your first lab result',
++		firstTimeSub: 'Your trends and insights will appear here',
++		firstTimeUpload: '📤 Upload Health Document',
++		firstTimeHint: 'PDF or photo · Max 20 MB',
++		emptyAll: 'No documents match this filter yet',
++		emptyAnalysis: 'No analyses yet — upload a lab result to populate this view',
++		emptyDocument: 'No plain documents yet — upload one to populate this view',
++		biomarkerEmptyDefault: 'No biomarker values are available for this filter yet',
++		biomarkerEmptyDocument: 'Plain documents do not contain extracted biomarker values for this view',
++		statusFieldDocumentsOne: 'Document',
++		statusFieldDocumentsMany: 'Documents',
++		statusFieldBiomarkersOne: 'Biomarker',
++		statusFieldBiomarkersMany: 'Biomarkers',
++		statusFieldLastImport: 'Last Import',
++		loadErrorBody: 'Unable to load your health data. Please try again.',
++		recommendedTestsHeader: 'Recommended Tests',
++		recommendedTestColumn: 'Test',
++		recommendedFrequencyColumn: 'Recommended Frequency',
++		recommendedReasonColumn: 'Reason',
++		recommendedDisclaimer: 'Based on your profile. Not a medical diagnosis.',
++		baselineAria: 'Baseline screening recommendations'
++	},
++	aiClinicalNote: {
++		header: 'ℹ AI Clinical Note',
++		aria: 'AI health interpretation',
++		loadingAria: 'Loading AI interpretation',
++		empty: 'Upload a document to receive AI interpretation',
++		emptyDashboard: 'No AI interpretation for this filter yet',
++		generating: 'AI interpretation is being generated…',
++		errorUnable: 'Unable to load AI interpretation.',
++		reasoningShow: 'Show reasoning',
++		reasoningHide: 'Hide reasoning',
++		reasoningTableCaption: 'Biomarker values used in this interpretation',
++		biomarkerHeader: 'Biomarker',
++		valueHeader: 'Value',
++		referenceHeader: 'Reference',
++		statusHeader: 'Status',
++		statusNormal: 'Normal',
++		statusHigh: 'High',
++		statusLow: 'Low',
++		statusUnknown: 'Unknown',
++		disclaimer: 'AI-generated · for educational purposes only · not a medical diagnosis'
++	},
++	aiChat: {
++		title: 'Dr. Health — AI Assistant',
++		minimize: 'Minimize chat window',
++		restore: 'Restore chat window',
++		maximize: 'Maximize chat window',
++		systemGreeting: 'Dr. Health is online. Ask anything about your health data.',
++		senderUser: 'You',
++		senderAi: 'Dr. Health',
++		editorLabel: 'Ask about your health data',
++		editorPlaceholder: 'Type your question here…',
++		messagesLabel: 'Chat messages',
++		send: 'Send ▶',
++		sendingIndicator: '…',
++		hintTip: 'Tip: Ask about specific biomarkers, trends, or what to discuss with your doctor',
++		hintNoContext: 'Chat is available once this filter has at least one interpreted document',
++		errorGeneric: 'Unable to get a response. Please try again.',
++		errorNetwork: 'A network error occurred. Please try again.',
++		errorStreaming: 'Streaming not supported in this environment.',
++		disclaimer: 'For reference only — not a medical diagnosis',
++		toolbarBold: 'Bold',
++		toolbarItalic: 'Italic',
++		toolbarUnderline: 'Underline'
++	},
++	documents: {
++		headTitle: 'Documents — HealthCabinet',
++		listTitle: 'Documents',
++		upload: 'Upload',
++		headerTypeSr: 'Type',
++		headerDocumentId: 'Document ID',
++		headerName: 'Name',
++		headerDate: 'Date',
++		headerStatus: 'Status',
++		headerSize: 'Size',
++		headerActions: 'Actions',
++		loading: 'Loading documents…',
++		loadError: 'Failed to load documents. Please try again.',
++		emptyTitle: 'No documents yet',
++		emptySub: 'Upload your first health document to get started with AI-powered analysis.',
++		emptyUploadCta: 'Upload Health Document',
++		statusCompleted: 'Completed',
++		statusProcessing: 'Processing',
++		statusPartial: 'Partial',
++		statusFailed: 'Failed',
++		statusPending: 'Pending',
++		statusUnknown: 'Unknown',
++		viewDetail: 'View',
++		viewFilenameAria: 'View',
++		kindAnalysis: 'Analysis',
++		kindDocument: 'Document',
++		detailBack: '← Back to documents',
++		detailMetaDate: 'Date',
++		detailMetaKind: 'Kind',
++		detailMetaStatus: 'Status',
++		detailExtractedValues: 'Extracted values',
++		detailNoValues: 'No extracted values for this document yet',
++		detailConfirmYear: 'Confirm the year on this document',
++		detailResultDate: 'Result date',
++		detailUnknownDate: 'Date unknown'
++	},
++	upload: {
++		headTitle: 'Upload Document — HealthCabinet',
++		pageAriaRegion: 'Import health document',
++		sectionRetryIdle: '📁 Retry Upload',
++		sectionRetryProcessing: '⏳ Processing Document',
++		sectionRetryDone: '✓ Upload Complete',
++		sectionRetryPartial: '⚠ Partial Extraction',
++		sectionRetryFailed: '✕ Upload Failed',
++		sectionBatchIdle: '📁 Import Health Documents',
++		sectionBatchActive: '⏳ Processing Batch',
++		sectionBatchSummary: '✓ Batch Complete',
++		subtitleRetry: 'Replace the content of an existing document slot',
++		subtitleBatch: 'Add a new lab result to your health record',
++		successText: '✓ Upload complete',
++		successSub: 'Your document has been processed successfully.',
++		viewResults: 'View your results',
++		partialBannerText: '⚠ Partial Extraction',
++		partialBannerSub: 'Processing finished with partial extraction. Some values may need review.',
++		errorProcessingFailed: 'Processing failed. Please try uploading your document again.',
++		tryUploadAgain: 'Try uploading again',
++		cancel: 'Cancel',
++		cancelBatch: 'Cancel batch',
++		close: 'Close',
++		sessionExpired: 'Your session expired. Please sign in again to continue this batch.',
++		streamConnectionLost: 'Processing status connection lost.',
++		processingFailedFallback: 'Processing failed.',
++		uploadFailedFallback: 'Upload failed',
++		authErrorAria: 'Authentication required',
++		rejectedFilesAria: 'Rejected files',
++		rejectedFilesIntro: "These files couldn't be added:",
++		queuePanelAria: 'Upload queue',
++		queueHeader: 'Upload queue',
++		queueCompleteLabel: 'complete',
++		queuePartialLabel: 'partial',
++		queueFailedLabel: 'failed',
++		queuePendingLabel: 'pending',
++		queueActiveAria: 'Active file processing',
++		queueCurrentlyProcessing: 'Currently processing:',
++		queueUploadingFile: 'Uploading',
++		batchCompleteHeader: 'Batch complete',
++		batchStartAnother: 'Start another batch',
++		batchDoneLabel: 'completed',
++		batchPartialLabel: 'partial',
++		batchFailedLabel: 'failed',
++		batchEntryViewLink: 'View',
++		batchEntryRetryLink: 'Retry',
++		batchSummaryAria: 'Upload batch summary',
++		batchSuccessfulHeader: 'Uploaded successfully',
++		batchFailedHeader: 'Failed uploads',
++		batchStatusComplete: 'Complete',
++		batchStatusPartial: 'Partial',
++		batchStatusFailed: 'Failed',
++		batchViewResult: 'View result',
++		batchUploadAnother: 'Upload another batch',
++		recoveryAriaPartial: 'Partial extraction recovery',
++		recoveryAriaFailed: 'Extraction failed recovery',
++		recoveryPartialHeading: "⚠ We couldn't read everything clearly",
++		recoveryPartialDesc:
++			'Some values were extracted but others fell below the confidence threshold. Re-uploading a clearer photo often resolves this.',
++		recoveryFailedHeading: '✕ Extraction failed',
++		recoveryFailedDesc:
++			"We couldn't extract any health values from this document. Try re-uploading a clearer photo using the tips below.",
++		recoveryTipsAria: 'Photo tips for better extraction',
++		recoveryTipsHeader: 'Tips for a better photo',
++		tipLightingLabel: 'Good lighting',
++		tipLightingDetail: 'Use bright, even light — avoid dim rooms',
++		tipFlatLabel: 'Flat surface',
++		tipFlatDetail: 'Lay the document flat on a desk or table',
++		tipNoShadowsLabel: 'No shadows',
++		tipNoShadowsDetail: 'Avoid casting shadows across the text',
++		recoveryReupload: 'Re-upload document',
++		recoveryKeepPartial: 'Keep partial results',
++		recoveryKeepPartialSaving: 'Saving…',
++		pipelineStageUploading: 'Uploading',
++		pipelineStageReading: 'Reading document',
++		pipelineStageExtracting: 'Extracting values',
++		pipelineStageGenerating: 'Generating insights',
++		pipelineStageComplete: 'Complete',
++		pipelineStatusProcessing: 'Processing…',
++		pipelineStatusPartialFallback: 'Partial extraction — some values need review.',
++		pipelineStatusFailedFallback: 'Processing failed. Please try again.',
++		pipelineStatusConnLost: 'Processing status connection lost. Please try again.',
++		pipelineStatusSessionExpired: 'Your session expired. Please sign in again.',
++		pipelineStageStatusComplete: 'Complete',
++		pipelineStageStatusInProgress: 'In Progress...',
++		pipelineStageStatusFailed: 'Failed',
++		pipelineStageStatusPending: 'Pending',
++		entryStatusQueued: 'Queued',
++		entryStatusUploading: 'Uploading',
++		entryStatusProcessing: 'Processing',
++		entryStatusComplete: 'Complete',
++		entryStatusPartial: 'Partial',
++		entryStatusFailed: 'Failed',
++		entryViewResult: 'View result',
++		entryRetryThisFile: 'Retry this file',
++		title: 'Upload document',
++		zoneAriaSingle: 'Upload health document. Press Enter or Space to open file picker.',
++		zoneAriaMulti:
++			'Upload health documents. Press Enter or Space to open file picker. Multiple files supported.',
++		zoneDragSingle: 'Drag and drop your lab document here',
++		zoneDragMulti: 'Drag and drop your lab documents here',
++		zoneDivider: '— or —',
++		zoneBrowse: 'Browse Files...',
++		zoneMaxSize: 'Maximum: 20 MB',
++		zoneDropToUpload: 'Drop file to upload',
++		zoneUploadComplete: 'Upload complete — processing starting…',
++		zoneUploading: 'Uploading…',
++		zoneRetry: 'Retry upload',
++		errorUnsupportedType: 'Unsupported file type — please upload a PDF or image.',
++		errorTooLarge: 'File too large — maximum size is 20 MB',
++		errorUploadFailed: 'Upload failed. Please try again.',
++		processingLabel: 'Processing',
++		processingStepUpload: 'Uploading',
++		processingStepRecognize: 'Recognizing text',
++		processingStepExtract: 'Extracting biomarkers',
++		processingStepInterpret: 'AI interpretation',
++		successTitle: 'Upload complete',
++		successSub: 'Your document is ready to view.',
++		partialTitle: 'Partial extraction',
++		partialSub: 'Some values could not be extracted. You can edit or re-upload.',
++		partialRetry: 'Re-upload document',
++		partialContinue: 'Continue',
++		failureTitle: 'Upload failed',
++		failureSub: 'We could not process this document. Please try again.',
++		queueTitle: 'Upload queue',
++		queueSummary: 'files selected',
++		queuePending: 'Pending',
++		queueUploading: 'Uploading',
++		queueDone: 'Done',
++		queueFailed: 'Failed',
++		batchSummaryTitle: 'Batch summary',
++		batchSummaryDone: 'Successful',
++		batchSummaryFailed: 'Failed',
++		batchViewDocuments: 'View documents',
++		batchUploadMore: 'Upload more',
++		validationTooLarge: 'File is larger than 20 MB',
++		validationBadType: 'Only PDF or image files are supported',
++		validationEmpty: 'File is empty',
++		processingFailedGeneric: 'Processing failed. Please try again.'
++	},
++	toast: {
++		dismiss: 'Dismiss notification'
++	},
++	confirmDialog: {
++		cancel: 'Cancel',
++		working: 'Working…'
++	}
++} as const;
++
++export type Messages = typeof en;
++
++const uk: Messages = {
++	localeToggle: {
++		label: 'Мова інтерфейсу',
++		en: 'EN',
++		uk: 'UA',
++		ariaEn: 'Переключити мову на англійську',
++		ariaUk: 'Переключити мову на українську'
++	},
++	common: {
++		cancel: 'Скасувати',
++		working: 'Виконується…',
++		retry: 'Спробувати ще',
++		close: 'Закрити',
++		confirm: 'Підтвердити'
++	},
++	landing: {
++		headTitle: 'HealthCabinet — Ваші дані про здоровʼя, нарешті зрозумілі',
++		headDescription:
++			'Завантажуйте результати аналізів. Отримуйте інтерпретацію ШІ зрозумілою мовою. Відстежуйте тенденції біомаркерів у часі. Шифрування AES-256, дані в ЄС, відповідність GDPR.',
++		brand: 'HealthCabinet',
++		topbarAria: 'Основна',
++		topbarSignIn: 'Увійти',
++		topbarGetStarted: 'Почати',
++		heroTitleTop: 'Ваші дані про здоровʼя —',
++		heroTitleBottom: 'нарешті зрозумілі.',
++		heroSubtitle:
++			'Завантажуйте результати аналізів. Отримуйте інтерпретацію ШІ зрозумілою мовою. Відстежуйте тенденції у часі.',
++		ctaCreateAccount: 'Створити безкоштовний акаунт →',
++		trustAes: 'Шифрування AES-256',
++		trustEu: 'Дані в ЄС',
++		trustGdpr: 'Відповідає GDPR',
++		previewBiomarker: 'Біомаркер',
++		previewValue: 'Значення',
++		previewRange: 'Діапазон',
++		previewStatus: 'Стан',
++		previewTrend: 'Тенденція',
++		previewStatusOptimal: 'Оптимально',
++		previewStatusLow: 'Низько',
++		previewStatusBorderline: 'Погранично',
++		previewTrendStable: 'Стабільно',
++		previewTrendDecreasing: 'Знижується',
++		previewTrendIncreasing: 'Зростає',
++		previewExampleAria: 'Приклад результатів біомаркерів',
++		previewOverlay: 'Бачте своє здоровʼя чітко',
++		deletedBanner: 'Ваш акаунт і всі повʼязані дані остаточно видалені.'
++	},
++	login: {
++		headTitle: 'Вхід — HealthCabinet',
++		headDescription:
++			'Увійдіть до свого акаунту HealthCabinet. Доступ до ваших даних про здоровʼя, аналізів та інтерпретацій ШІ.',
++		dialogHeader: 'Вхід',
++		dialogSubtitle: 'Доступ до вашого акаунту HealthCabinet',
++		emailLabel: 'Email',
++		emailPlaceholder: 'you@example.com',
++		passwordLabel: 'Пароль',
++		passwordPlaceholder: 'Введіть пароль',
++		showPassword: 'Показати пароль',
++		hidePassword: 'Сховати пароль',
++		submit: 'Увійти',
++		submitting: 'Виконується вхід…',
++		linkPrompt: 'Ще не маєте акаунту?',
++		linkTarget: 'Зареєструватися',
++		trust: 'Ваші дані зашифровані та зберігаються в ЄС',
++		errorSuspended: 'Ваш акаунт призупинено. Звʼяжіться з підтримкою.',
++		errorInvalid: 'Невірний email або пароль',
++		errorGeneric: 'Сталася помилка, спробуйте ще раз'
++	},
++	register: {
++		headTitle: 'Створити акаунт — HealthCabinet',
++		headDescription:
++			'Створіть акаунт HealthCabinet. Безпечно зберігайте, розумійте та відстежуйте свої дані про здоровʼя з інтерпретацією ШІ.',
++		dialogHeader: 'Створити акаунт',
++		dialogSubtitle: 'Безпечно зберігайте, розумійте та відстежуйте свої дані про здоровʼя',
++		emailLabel: 'Електронна адреса',
++		emailPlaceholder: 'you@example.com',
++		passwordLabel: 'Пароль',
++		passwordPlaceholder: 'Оберіть пароль',
++		passwordHint: 'Мінімум 8 символів',
++		confirmPasswordLabel: 'Підтвердіть пароль',
++		confirmPasswordPlaceholder: 'Повторіть пароль',
++		showPassword: 'Показати пароль',
++		hidePassword: 'Сховати пароль',
++		consentLabel: 'Я погоджуюся на обробку медичних даних',
++		consentDesc:
++			'Ваші дані зашифровані AES-256 і зберігаються виключно в центрах обробки даних ЄС. Ви можете експортувати або видалити всі дані в будь-який час.',
++		consentLink: 'Ознайомитися з Політикою конфіденційності',
++		submit: 'Створити акаунт',
++		submitting: 'Створюється акаунт…',
++		linkPrompt: 'Вже маєте акаунт?',
++		linkTarget: 'Увійти',
++		trustAes: 'AES-256',
++		trustEu: 'Дані ЄС',
++		trustGdpr: 'GDPR',
++		errorEmailRequired: 'Email обовʼязковий',
++		errorEmailInvalid: 'Вкажіть коректну електронну адресу',
++		errorPasswordLength: 'Пароль має містити щонайменше 8 символів',
++		errorPasswordTooLong: 'Пароль занадто довгий (макс. 72 байти)',
++		errorPasswordMismatch: 'Паролі не співпадають',
++		errorEmailTaken: 'Акаунт з цим email вже існує',
++		errorInputGeneric: 'Перевірте введені дані та спробуйте ще раз.',
++		errorRegistrationFailed: 'Реєстрація не вдалася. Спробуйте ще раз.'
++	},
++	appShell: {
++		brand: 'HealthCabinet',
++		skipToContent: 'Перейти до основного вмісту',
++		signOut: 'Вийти',
++		mainNavAria: 'Основна навігація',
++		navHeader: 'Навігація',
++		navSectionApp: 'Розділи',
++		navSectionAdmin: 'Адміністратор',
++		navDashboard: 'Панель',
++		navDocuments: 'Документи',
++		navSettings: 'Налаштування',
++		navAdminConsole: 'Консоль адміністратора',
++		statusReady: 'Готово'
++	},
++	dashboard: {
++		loadingAria: 'Завантаження даних про здоровʼя',
++		loadingText: 'Завантаження ваших даних про здоровʼя…',
++		errorRetry: 'Спробувати ще',
++		filterAria: 'Фільтр панелі',
++		filterLegend: 'Фільтр документів',
++		filterAll: 'Усі',
++		filterAnalyses: 'Аналізи',
++		filterDocuments: 'Документи',
++		importDocument: '📂 Імпортувати документ',
++		biomarkersAria: 'Результати біомаркерів',
++		interpretationAria: 'Інтерпретація ШІ',
++		chatAria: 'AI-асистент з питань здоровʼя',
++		filteredResultsAria: 'Відфільтровані результати',
++		firstTimeAria: 'Завантажте свій перший документ',
++		firstTimeTitle: 'Завантажте свій перший результат аналізу',
++		firstTimeSub: 'Ваші тенденції та інсайти зʼявляться тут',
++		firstTimeUpload: '📤 Завантажити медичний документ',
++		firstTimeHint: 'PDF або фото · Макс. 20 МБ',
++		emptyAll: 'За цим фільтром ще немає документів',
++		emptyAnalysis: 'Ще немає аналізів — завантажте результат, щоб заповнити цей вигляд',
++		emptyDocument: 'Ще немає звичайних документів — завантажте один, щоб заповнити цей вигляд',
++		biomarkerEmptyDefault: 'Для цього фільтра ще немає значень біомаркерів',
++		biomarkerEmptyDocument: 'Звичайні документи не містять витягнутих біомаркерів для цього вигляду',
++		statusFieldDocumentsOne: 'Документ',
++		statusFieldDocumentsMany: 'Документи',
++		statusFieldBiomarkersOne: 'Біомаркер',
++		statusFieldBiomarkersMany: 'Біомаркери',
++		statusFieldLastImport: 'Останній імпорт',
++		loadErrorBody: 'Не вдалося завантажити дані про здоровʼя. Спробуйте ще раз.',
++		recommendedTestsHeader: 'Рекомендовані аналізи',
++		recommendedTestColumn: 'Аналіз',
++		recommendedFrequencyColumn: 'Рекомендована частота',
++		recommendedReasonColumn: 'Обґрунтування',
++		recommendedDisclaimer: 'На основі вашого профілю. Не є медичним діагнозом.',
++		baselineAria: 'Рекомендації базового скринінгу'
++	},
++	aiClinicalNote: {
++		header: 'ℹ Клінічна нотатка ШІ',
++		aria: 'Інтерпретація здоровʼя від ШІ',
++		loadingAria: 'Завантаження інтерпретації ШІ',
++		empty: 'Завантажте документ, щоб отримати інтерпретацію ШІ',
++		emptyDashboard: 'Для цього фільтра ще немає інтерпретації ШІ',
++		generating: 'Інтерпретація ШІ генерується…',
++		errorUnable: 'Не вдалося завантажити інтерпретацію ШІ.',
++		reasoningShow: 'Показати міркування',
++		reasoningHide: 'Сховати міркування',
++		reasoningTableCaption: 'Біомаркери, використані в цій інтерпретації',
++		biomarkerHeader: 'Біомаркер',
++		valueHeader: 'Значення',
++		referenceHeader: 'Референс',
++		statusHeader: 'Стан',
++		statusNormal: 'Норма',
++		statusHigh: 'Вище норми',
++		statusLow: 'Нижче норми',
++		statusUnknown: 'Невідомо',
++		disclaimer: 'Згенеровано ШІ · лише для інформаційних цілей · не є медичним діагнозом'
++	},
++	aiChat: {
++		title: 'Dr. Health — AI-асистент',
++		minimize: 'Згорнути вікно чату',
++		restore: 'Розгорнути вікно чату',
++		maximize: 'На весь екран',
++		systemGreeting: 'Dr. Health онлайн. Запитайте будь-що про ваші дані здоровʼя.',
++		senderUser: 'Ви',
++		senderAi: 'Dr. Health',
++		editorLabel: 'Запитайте про свої дані здоровʼя',
++		editorPlaceholder: 'Введіть запитання тут…',
++		messagesLabel: 'Повідомлення чату',
++		send: 'Надіслати ▶',
++		sendingIndicator: '…',
++		hintTip: 'Порада: запитайте про конкретні біомаркери, тенденції або про що спитати лікаря',
++		hintNoContext: 'Чат стане доступним, коли за цим фільтром буде хоча б один інтерпретований документ',
++		errorGeneric: 'Не вдалося отримати відповідь. Спробуйте ще раз.',
++		errorNetwork: 'Сталася помилка мережі. Спробуйте ще раз.',
++		errorStreaming: 'Потокове передавання не підтримується в цьому середовищі.',
++		disclaimer: 'Для довідки — не є медичним діагнозом',
++		toolbarBold: 'Жирний',
++		toolbarItalic: 'Курсив',
++		toolbarUnderline: 'Підкреслений'
++	},
++	documents: {
++		headTitle: 'Документи — HealthCabinet',
++		listTitle: 'Документи',
++		upload: 'Завантажити',
++		headerTypeSr: 'Тип',
++		headerDocumentId: 'ID документа',
++		headerName: 'Назва',
++		headerDate: 'Дата',
++		headerStatus: 'Стан',
++		headerSize: 'Розмір',
++		headerActions: 'Дії',
++		loading: 'Завантаження документів…',
++		loadError: 'Не вдалося завантажити документи. Спробуйте ще раз.',
++		emptyTitle: 'Ще немає документів',
++		emptySub:
++			'Завантажте свій перший медичний документ, щоб почати роботу з аналізом на базі ШІ.',
++		emptyUploadCta: 'Завантажити медичний документ',
++		statusCompleted: 'Завершено',
++		statusProcessing: 'Обробка',
++		statusPartial: 'Частково',
++		statusFailed: 'Помилка',
++		statusPending: 'Очікує',
++		statusUnknown: 'Невідомо',
++		viewDetail: 'Переглянути',
++		viewFilenameAria: 'Переглянути',
++		kindAnalysis: 'Аналіз',
++		kindDocument: 'Документ',
++		detailBack: '← Назад до документів',
++		detailMetaDate: 'Дата',
++		detailMetaKind: 'Тип',
++		detailMetaStatus: 'Стан',
++		detailExtractedValues: 'Витягнуті значення',
++		detailNoValues: 'Для цього документа ще немає витягнутих значень',
++		detailConfirmYear: 'Підтвердіть рік у цьому документі',
++		detailResultDate: 'Дата результату',
++		detailUnknownDate: 'Дата невідома'
++	},
++	upload: {
++		headTitle: 'Завантажити документ — HealthCabinet',
++		pageAriaRegion: 'Імпорт медичного документа',
++		sectionRetryIdle: '📁 Повторне завантаження',
++		sectionRetryProcessing: '⏳ Обробка документа',
++		sectionRetryDone: '✓ Завантаження завершено',
++		sectionRetryPartial: '⚠ Часткове витягнення',
++		sectionRetryFailed: '✕ Не вдалося завантажити',
++		sectionBatchIdle: '📁 Імпорт медичних документів',
++		sectionBatchActive: '⏳ Обробка пакету',
++		sectionBatchSummary: '✓ Пакет завершено',
++		subtitleRetry: 'Замінити вміст існуючого документа',
++		subtitleBatch: 'Додайте новий результат аналізу до вашої медичної історії',
++		successText: '✓ Завантаження завершено',
++		successSub: 'Ваш документ успішно оброблено.',
++		viewResults: 'Переглянути результати',
++		partialBannerText: '⚠ Часткове витягнення',
++		partialBannerSub:
++			'Обробку завершено з частковим витягненням. Деякі значення можуть потребувати перегляду.',
++		errorProcessingFailed: 'Обробка не вдалася. Спробуйте завантажити документ ще раз.',
++		tryUploadAgain: 'Спробувати завантажити ще раз',
++		cancel: 'Скасувати',
++		cancelBatch: 'Скасувати пакет',
++		close: 'Закрити',
++		sessionExpired: 'Сесію завершено. Увійдіть знову, щоб продовжити цей пакет.',
++		streamConnectionLost: 'Втрачено звʼязок із потоком обробки.',
++		processingFailedFallback: 'Обробка не вдалася.',
++		uploadFailedFallback: 'Завантаження не вдалося',
++		authErrorAria: 'Потрібна автентифікація',
++		rejectedFilesAria: 'Відхилені файли',
++		rejectedFilesIntro: 'Не вдалося додати ці файли:',
++		queuePanelAria: 'Черга завантажень',
++		queueHeader: 'Черга завантажень',
++		queueCompleteLabel: 'завершено',
++		queuePartialLabel: 'частково',
++		queueFailedLabel: 'невдалі',
++		queuePendingLabel: 'в очікуванні',
++		queueActiveAria: 'Обробка активного файлу',
++		queueCurrentlyProcessing: 'Наразі обробляється:',
++		queueUploadingFile: 'Завантажується',
++		batchCompleteHeader: 'Пакет завершено',
++		batchStartAnother: 'Почати новий пакет',
++		batchDoneLabel: 'успішно',
++		batchPartialLabel: 'частково',
++		batchFailedLabel: 'невдало',
++		batchEntryViewLink: 'Переглянути',
++		batchEntryRetryLink: 'Повторити',
++		batchSummaryAria: 'Підсумок пакету завантажень',
++		batchSuccessfulHeader: 'Успішно завантажено',
++		batchFailedHeader: 'Невдалі завантаження',
++		batchStatusComplete: 'Завершено',
++		batchStatusPartial: 'Частково',
++		batchStatusFailed: 'Помилка',
++		batchViewResult: 'Переглянути результат',
++		batchUploadAnother: 'Завантажити ще один пакет',
++		recoveryAriaPartial: 'Відновлення після часткового витягнення',
++		recoveryAriaFailed: 'Відновлення після невдалого витягнення',
++		recoveryPartialHeading: '⚠ Не вдалося прочитати все чітко',
++		recoveryPartialDesc:
++			'Деякі значення було витягнуто, але інші не пройшли поріг впевненості. Повторне завантаження чіткішого фото часто допомагає.',
++		recoveryFailedHeading: '✕ Витягнення не вдалося',
++		recoveryFailedDesc:
++			'Нам не вдалося витягнути жодних медичних значень із цього документа. Спробуйте повторно завантажити чіткіше фото, скориставшись порадами нижче.',
++		recoveryTipsAria: 'Поради для кращого фото',
++		recoveryTipsHeader: 'Поради для кращого фото',
++		tipLightingLabel: 'Добре освітлення',
++		tipLightingDetail: 'Використовуйте яскраве, рівномірне світло — уникайте тьмяних приміщень',
++		tipFlatLabel: 'Рівна поверхня',
++		tipFlatDetail: 'Покладіть документ плашмя на стіл',
++		tipNoShadowsLabel: 'Без тіней',
++		tipNoShadowsDetail: 'Уникайте тіней, що падають на текст',
++		recoveryReupload: 'Повторно завантажити документ',
++		recoveryKeepPartial: 'Зберегти часткові результати',
++		recoveryKeepPartialSaving: 'Збереження…',
++		pipelineStageUploading: 'Завантаження',
++		pipelineStageReading: 'Читання документа',
++		pipelineStageExtracting: 'Витягнення значень',
++		pipelineStageGenerating: 'Генерація інсайтів',
++		pipelineStageComplete: 'Завершено',
++		pipelineStatusProcessing: 'Обробка…',
++		pipelineStatusPartialFallback: 'Часткове витягнення — деякі значення потребують перегляду.',
++		pipelineStatusFailedFallback: 'Обробка не вдалася. Спробуйте ще раз.',
++		pipelineStatusConnLost: 'Втрачено звʼязок із потоком обробки. Спробуйте ще раз.',
++		pipelineStatusSessionExpired: 'Сесію завершено. Увійдіть знову.',
++		pipelineStageStatusComplete: 'Завершено',
++		pipelineStageStatusInProgress: 'Виконується...',
++		pipelineStageStatusFailed: 'Помилка',
++		pipelineStageStatusPending: 'Очікує',
++		entryStatusQueued: 'У черзі',
++		entryStatusUploading: 'Завантажується',
++		entryStatusProcessing: 'Обробка',
++		entryStatusComplete: 'Завершено',
++		entryStatusPartial: 'Частково',
++		entryStatusFailed: 'Помилка',
++		entryViewResult: 'Переглянути результат',
++		entryRetryThisFile: 'Повторити цей файл',
++		title: 'Завантажити документ',
++		zoneAriaSingle: 'Завантажити медичний документ. Натисніть Enter або Space, щоб обрати файл.',
++		zoneAriaMulti:
++			'Завантажити медичні документи. Натисніть Enter або Space, щоб обрати файли. Підтримується кілька файлів.',
++		zoneDragSingle: 'Перетягніть свій медичний документ сюди',
++		zoneDragMulti: 'Перетягніть свої медичні документи сюди',
++		zoneDivider: '— або —',
++		zoneBrowse: 'Обрати файли...',
++		zoneMaxSize: 'Максимум: 20 МБ',
++		zoneDropToUpload: 'Відпустіть файл, щоб завантажити',
++		zoneUploadComplete: 'Завантаження завершено — розпочинається обробка…',
++		zoneUploading: 'Завантаження…',
++		zoneRetry: 'Повторити завантаження',
++		errorUnsupportedType: 'Непідтримуваний тип файлу — завантажте PDF або зображення.',
++		errorTooLarge: 'Файл занадто великий — максимум 20 МБ',
++		errorUploadFailed: 'Не вдалося завантажити. Спробуйте ще раз.',
++		processingLabel: 'Обробка',
++		processingStepUpload: 'Завантаження',
++		processingStepRecognize: 'Розпізнавання тексту',
++		processingStepExtract: 'Витягнення біомаркерів',
++		processingStepInterpret: 'Інтерпретація ШІ',
++		successTitle: 'Завантаження завершено',
++		successSub: 'Ваш документ готовий до перегляду.',
++		partialTitle: 'Часткове витягнення',
++		partialSub: 'Деякі значення не вдалося витягнути. Ви можете відредагувати або повторно завантажити.',
++		partialRetry: 'Повторно завантажити документ',
++		partialContinue: 'Продовжити',
++		failureTitle: 'Не вдалося завантажити',
++		failureSub: 'Не вдалося обробити цей документ. Спробуйте ще раз.',
++		queueTitle: 'Черга завантажень',
++		queueSummary: 'файлів обрано',
++		queuePending: 'Очікує',
++		queueUploading: 'Завантажується',
++		queueDone: 'Готово',
++		queueFailed: 'Помилка',
++		batchSummaryTitle: 'Підсумок пакету',
++		batchSummaryDone: 'Успішні',
++		batchSummaryFailed: 'Невдалі',
++		batchViewDocuments: 'Переглянути документи',
++		batchUploadMore: 'Завантажити ще',
++		validationTooLarge: 'Файл більше 20 МБ',
++		validationBadType: 'Підтримуються лише PDF або зображення',
++		validationEmpty: 'Файл порожній',
++		processingFailedGeneric: 'Не вдалося обробити. Спробуйте ще раз.'
++	},
++	toast: {
++		dismiss: 'Закрити повідомлення'
++	},
++	confirmDialog: {
++		cancel: 'Скасувати',
++		working: 'Виконується…'
++	}
++};
++
++export const messages: Record<Locale, Messages> = { en, uk };
++
++/**
++ * Look up the current locale's message bundle. Components that need
++ * reactive copy should read `localeStore.locale` and call `t(locale)` in
++ * a `$derived` / template expression so toggle changes rerender in place.
++ */
++export function t(locale: Locale): Messages {
++	return messages[locale];
++}
+diff --git a/healthcabinet/frontend/src/lib/stores/locale.svelte.ts b/healthcabinet/frontend/src/lib/stores/locale.svelte.ts
+new file mode 100644
+index 0000000..3ac098f
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/stores/locale.svelte.ts
+@@ -0,0 +1,109 @@
++/**
++ * Locale store (Story 15.6).
++ *
++ * Persists the user's preferred UI locale across reloads in localStorage.
++ * Internal codes are BCP 47 'en' / 'uk' (the visible switch label is EN / UA,
++ * but 'uk' is the correct internal code). Bootstrap order on first visit:
++ *
++ *   1. saved locale in localStorage
++ *   2. browser preference (navigator.languages preferred, then navigator.language)
++ *   3. 'en' fallback
++ *
++ * SSR-safe: server-rendered HTML always uses the stable DEFAULT_LOCALE so
++ * the server and first client render agree; the store hydrates lazily on the
++ * first read from a browser context.
++ */
++
++export type Locale = 'en' | 'uk';
++
++export const LOCALES: readonly Locale[] = ['en', 'uk'] as const;
++const STORAGE_KEY = 'hc.locale';
++const DEFAULT_LOCALE: Locale = 'en';
++
++function isLocale(value: unknown): value is Locale {
++	return typeof value === 'string' && (LOCALES as readonly string[]).includes(value);
++}
++
++/** Normalize any BCP 47 tag (e.g. 'uk-UA', 'en-US', 'UK') to our internal locale. */
++export function normalizeLocaleTag(tag: unknown): Locale | null {
++	if (typeof tag !== 'string' || tag.length === 0) return null;
++	const base = tag.toLowerCase().split(/[-_]/)[0];
++	if (base === 'uk') return 'uk';
++	if (base === 'en') return 'en';
++	return null;
++}
++
++function readBrowserPreference(): Locale | null {
++	if (typeof navigator === 'undefined') return null;
++	try {
++		const langs = Array.isArray(navigator.languages) ? navigator.languages : [];
++		for (const tag of langs) {
++			const normalized = normalizeLocaleTag(tag);
++			if (normalized) return normalized;
++		}
++		return normalizeLocaleTag(navigator.language);
++	} catch {
++		// ignore browser-language access errors in hardened environments
++		return null;
++	}
++}
++
++function readFromStorage(): Locale | null {
++	if (typeof window === 'undefined') return null;
++	try {
++		const raw = window.localStorage.getItem(STORAGE_KEY);
++		if (isLocale(raw)) return raw;
++	} catch {
++		// ignore storage access errors (private mode, quota, etc.)
++	}
++	return null;
++}
++
++function writeToStorage(value: Locale): void {
++	if (typeof window === 'undefined') return;
++	try {
++		window.localStorage.setItem(STORAGE_KEY, value);
++	} catch {
++		// ignore storage write errors
++	}
++}
++
++function resolveInitialLocale(): Locale {
++	return readFromStorage() ?? readBrowserPreference() ?? DEFAULT_LOCALE;
++}
++
++// Server-render with the stable default; hydrate from storage+browser on
++// first read in a browser context.
++let _locale = $state<Locale>(DEFAULT_LOCALE);
++let _hydrated = false;
++
++function hydrateIfNeeded(): void {
++	if (_hydrated || typeof window === 'undefined') return;
++	_hydrated = true;
++	_locale = resolveInitialLocale();
++}
++
++export const localeStore = {
++	get locale(): Locale {
++		hydrateIfNeeded();
++		return _locale;
++	},
++	setLocale(next: Locale): void {
++		if (!isLocale(next)) return;
++		_hydrated = true;
++		_locale = next;
++		writeToStorage(next);
++	},
++	/** Test-only helper — clears state and localStorage and rewinds hydration. */
++	_resetForTests(): void {
++		if (typeof window !== 'undefined') {
++			try {
++				window.localStorage.removeItem(STORAGE_KEY);
++			} catch {
++				// ignore
++			}
++		}
++		_locale = DEFAULT_LOCALE;
++		_hydrated = false;
++	}
++};
+diff --git a/healthcabinet/frontend/src/lib/stores/locale.svelte.test.ts b/healthcabinet/frontend/src/lib/stores/locale.svelte.test.ts
+new file mode 100644
+index 0000000..1ff719d
+--- /dev/null
++++ b/healthcabinet/frontend/src/lib/stores/locale.svelte.test.ts
+@@ -0,0 +1,148 @@
++import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
++import { localeStore, normalizeLocaleTag } from './locale.svelte';
++
++const STORAGE_KEY = 'hc.locale';
++const originalNavigatorLanguages = Object.getOwnPropertyDescriptor(navigator, 'languages');
++const originalNavigatorLanguage = Object.getOwnPropertyDescriptor(navigator, 'language');
++
++function stubNavigatorLanguages(languages: readonly string[]) {
++	Object.defineProperty(navigator, 'languages', {
++		configurable: true,
++		get: () => languages
++	});
++	Object.defineProperty(navigator, 'language', {
++		configurable: true,
++		get: () => languages[0] ?? 'en'
++	});
++}
++
++function restoreNavigatorLanguages() {
++	if (originalNavigatorLanguages) {
++		Object.defineProperty(navigator, 'languages', originalNavigatorLanguages);
++	} else {
++		delete (navigator as { languages?: readonly string[] }).languages;
++	}
++	if (originalNavigatorLanguage) {
++		Object.defineProperty(navigator, 'language', originalNavigatorLanguage);
++	} else {
++		delete (navigator as { language?: string }).language;
++	}
++}
++
++async function readHydratedLocale() {
++	// Trigger lazy hydration, then allow the queueMicrotask hydration pass to run.
++	void localeStore.locale;
++	await new Promise<void>((resolve) => queueMicrotask(resolve));
++	return localeStore.locale;
++}
++
++describe('normalizeLocaleTag', () => {
++	test('maps en, en-US, EN, en_US to en', () => {
++		expect(normalizeLocaleTag('en')).toBe('en');
++		expect(normalizeLocaleTag('en-US')).toBe('en');
++		expect(normalizeLocaleTag('EN')).toBe('en');
++		expect(normalizeLocaleTag('en_US')).toBe('en');
++	});
++
++	test('maps uk, uk-UA, UK to uk', () => {
++		expect(normalizeLocaleTag('uk')).toBe('uk');
++		expect(normalizeLocaleTag('uk-UA')).toBe('uk');
++		expect(normalizeLocaleTag('UK')).toBe('uk');
++	});
++
++	test('returns null for unsupported tags and garbage input', () => {
++		expect(normalizeLocaleTag('fr')).toBeNull();
++		expect(normalizeLocaleTag('')).toBeNull();
++		expect(normalizeLocaleTag(undefined)).toBeNull();
++		expect(normalizeLocaleTag(42)).toBeNull();
++	});
++
++	test('ignores ua (not a BCP 47 tag) and maps nothing for it', () => {
++		// 'ua' is a country code; the language tag for Ukrainian is 'uk'. The
++		// UI's visible label is 'UA' but the internal code must remain 'uk'.
++		expect(normalizeLocaleTag('ua')).toBeNull();
++	});
++});
++
++describe('localeStore', () => {
++	beforeEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
++		stubNavigatorLanguages(['en-US']);
++	});
++
++	afterEach(() => {
++		window.localStorage.clear();
++		localeStore._resetForTests();
++		restoreNavigatorLanguages();
++	});
++
++	test('defaults to en when nothing is saved and browser has no preference', async () => {
++		stubNavigatorLanguages([]);
++		expect(await readHydratedLocale()).toBe('en');
++	});
++
++	test('saved locale wins over browser preference', async () => {
++		window.localStorage.setItem(STORAGE_KEY, 'uk');
++		stubNavigatorLanguages(['en-US']);
++		expect(await readHydratedLocale()).toBe('uk');
++	});
++
++	test('browser preference uk-UA normalizes to internal uk when nothing saved', async () => {
++		stubNavigatorLanguages(['uk-UA', 'en-US']);
++		expect(await readHydratedLocale()).toBe('uk');
++	});
++
++	test('navigator.languages order is respected (uk comes before en)', async () => {
++		stubNavigatorLanguages(['uk', 'en-US']);
++		expect(await readHydratedLocale()).toBe('uk');
++	});
++
++	test('unsupported browser preferences fall through to en', async () => {
++		stubNavigatorLanguages(['fr-FR', 'de-DE']);
++		expect(await readHydratedLocale()).toBe('en');
++	});
++
++	test('invalid stored value is ignored and bootstrap continues', async () => {
++		window.localStorage.setItem(STORAGE_KEY, 'banana');
++		stubNavigatorLanguages(['uk-UA']);
++		expect(await readHydratedLocale()).toBe('uk');
++	});
++
++	test('setLocale updates reactive state and persists to localStorage', () => {
++		localeStore.setLocale('uk');
++		expect(localeStore.locale).toBe('uk');
++		expect(window.localStorage.getItem(STORAGE_KEY)).toBe('uk');
++		localeStore.setLocale('en');
++		expect(localeStore.locale).toBe('en');
++		expect(window.localStorage.getItem(STORAGE_KEY)).toBe('en');
++	});
++
++	test('setLocale rejects garbage values at the boundary', () => {
++		(localeStore as unknown as { setLocale: (v: unknown) => void }).setLocale('banana');
++		expect(localeStore.locale).toBe('en');
++		expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
++	});
++
++	test('_resetForTests clears both state and storage', () => {
++		localeStore.setLocale('uk');
++		expect(window.localStorage.getItem(STORAGE_KEY)).toBe('uk');
++		localeStore._resetForTests();
++		expect(localeStore.locale).toBe('en');
++		expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
++	});
++
++	test('storage access failures do not break rendering', () => {
++		// Simulate a SecurityError from blocked-storage scenarios.
++		const getItemSpy = vi
++			.spyOn(Storage.prototype, 'getItem')
++			.mockImplementation(() => {
++				throw new Error('SecurityError');
++			});
++		try {
++			expect(localeStore.locale).toBe('en');
++		} finally {
++			getItemSpy.mockRestore();
++		}
++	});
++});

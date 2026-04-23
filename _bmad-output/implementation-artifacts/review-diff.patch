@@ -1,0 +1,495 @@
+diff --git a/healthcabinet/backend/app/admin/repository.py b/healthcabinet/backend/app/admin/repository.py
+index 9984a46..6151067 100644
+--- a/healthcabinet/backend/app/admin/repository.py
++++ b/healthcabinet/backend/app/admin/repository.py
+@@ -390,6 +390,28 @@ async def set_user_account_status(
+     return True
+ 
+ 
++async def revoke_user_sessions(
++    db: AsyncSession, user_id: uuid.UUID, revoked_at: datetime
++) -> bool:
++    """Stamp users.tokens_invalid_before, invalidating every JWT with iat < revoked_at.
++
++    Scoped to role='user' for the same reason as account-status updates: admin self-
++    revocation would lock out the admin console from the current session and is best
++    handled through an explicit password reset flow, not this endpoint.
++
++    Returns True if the user was found and updated, False if no matching row.
++    """
++    result = await db.execute(
++        select(User).where(User.id == user_id, User.role == "user").with_for_update()
++    )
++    user = result.scalar_one_or_none()
++    if user is None:
++        return False
++    user.tokens_invalid_before = revoked_at
++    await db.flush()
++    return True
++
++
+ # ---------------------------------------------------------------------------
+ # Story 5.3: Flagged value reports
+ # ---------------------------------------------------------------------------
+diff --git a/healthcabinet/backend/app/admin/router.py b/healthcabinet/backend/app/admin/router.py
+index 7af14ef..d6a5d59 100644
+--- a/healthcabinet/backend/app/admin/router.py
++++ b/healthcabinet/backend/app/admin/router.py
+@@ -23,6 +23,7 @@ from app.admin.service import (
+     get_document_for_correction,
+     get_error_queue,
+     review_flag,
++    revoke_sessions,
+     submit_correction,
+     update_user_status,
+ )
+@@ -138,6 +139,28 @@ async def update_user_account_status(
+     return detail
+ 
+ 
++@router.post("/users/{user_id}/revoke-sessions", status_code=200)
++async def revoke_user_sessions_endpoint(
++    user_id: uuid.UUID,
++    _current_user: User = Depends(require_admin),
++    db: AsyncSession = Depends(get_db),
++) -> AdminUserDetail:
++    """Force-logout a user on every device without suspending the account.
++
++    Bumps users.tokens_invalid_before to now(); every access/refresh token with an
++    earlier iat is rejected at validation time. Safe to call repeatedly (idempotent
++    per call — each invocation moves the cutoff forward). Scoped to role='user' at
++    the repository layer to prevent admins from locking themselves out of the console.
++    """
++    found = await revoke_sessions(db, user_id)
++    if not found:
++        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
++    detail = await fetch_admin_user_detail(db, user_id)
++    if detail is None:
++        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
++    return detail
++
++
+ # ---------------------------------------------------------------------------
+ # Story 5.3: Flagged value report endpoints
+ # ---------------------------------------------------------------------------
+diff --git a/healthcabinet/backend/app/admin/service.py b/healthcabinet/backend/app/admin/service.py
+index 5705fb7..83d422e 100644
+--- a/healthcabinet/backend/app/admin/service.py
++++ b/healthcabinet/backend/app/admin/service.py
+@@ -1,4 +1,5 @@
+ import uuid
++from datetime import UTC, datetime
+ 
+ import structlog
+ from sqlalchemy.ext.asyncio import AsyncSession
+@@ -208,6 +209,23 @@ async def update_user_status(
+     return await set_user_account_status(db, user_id, account_status)
+ 
+ 
++async def revoke_sessions(db: AsyncSession, user_id: uuid.UUID) -> bool:
++    """Force-logout a user on all devices by bumping tokens_invalid_before to now.
++
++    Works independently of account_status: revoked users can log in again immediately
++    (unlike suspend), but every pre-existing access/refresh token is rejected.
++    Returns True if the user was found and updated, False if not.
++
++    The cutoff is floored to second precision because JWT `iat` is encoded as integer
++    seconds. Without flooring, a user who re-logs in during the same wall-clock second
++    as the revocation would receive a new token whose iat is numerically less than the
++    microsecond-precise cutoff — the fresh token would be incorrectly rejected.
++    """
++    from app.admin.repository import revoke_user_sessions
++
++    return await revoke_user_sessions(db, user_id, datetime.now(UTC).replace(microsecond=0))
++
++
+ # ---------------------------------------------------------------------------
+ # Story 5.3: Flagged value reports
+ # ---------------------------------------------------------------------------
+diff --git a/healthcabinet/backend/app/auth/dependencies.py b/healthcabinet/backend/app/auth/dependencies.py
+index 4897194..c86bef6 100644
+--- a/healthcabinet/backend/app/auth/dependencies.py
++++ b/healthcabinet/backend/app/auth/dependencies.py
+@@ -6,6 +6,7 @@ query params. This pattern is established here and enforced across all domains.
+ """
+ 
+ import uuid
++from datetime import UTC, datetime
+ 
+ from fastapi import Depends, HTTPException, status
+ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+@@ -32,6 +33,10 @@ async def get_current_user(
+         if not user_id_str:
+             raise ValueError("Missing subject in token")
+         user_id = uuid.UUID(user_id_str)
++        iat_raw = payload.get("iat")
++        token_iat = (
++            datetime.fromtimestamp(int(iat_raw), tz=UTC) if iat_raw is not None else None
++        )
+     except ValueError as e:
+         # Narrowed from `except Exception` — only token-parsing errors (ValueError from
+         # decode_token and uuid.UUID) should become 401s. DB errors from get_user_by_id
+@@ -49,6 +54,18 @@ async def get_current_user(
+             detail="Invalid authentication credentials",
+             headers={"WWW-Authenticate": "Bearer"},
+         )
++    # Reject tokens issued before the user's last session-revocation event.
++    # Tokens minted after a revoke still carry an iat >= tokens_invalid_before and pass.
++    # Missing iat (legacy tokens predating this field) is treated as revoked when a
++    # revocation timestamp exists — any legacy token must be re-issued post-revoke.
++    if user.tokens_invalid_before is not None and (
++        token_iat is None or token_iat < user.tokens_invalid_before
++    ):
++        raise HTTPException(
++            status_code=status.HTTP_401_UNAUTHORIZED,
++            detail="Session has been revoked",
++            headers={"WWW-Authenticate": "Bearer"},
++        )
+     # Reject suspended accounts — existing access tokens stop working immediately
+     if user.account_status != "active":
+         raise HTTPException(
+diff --git a/healthcabinet/backend/app/auth/models.py b/healthcabinet/backend/app/auth/models.py
+index 3bd4fbe..c6727fb 100644
+--- a/healthcabinet/backend/app/auth/models.py
++++ b/healthcabinet/backend/app/auth/models.py
+@@ -22,6 +22,12 @@ class User(Base):
+     last_login_at: Mapped[datetime | None] = mapped_column(
+         DateTime(timezone=True), nullable=True
+     )
++    # Any access/refresh token whose `iat` is strictly before this instant is treated as
++    # revoked. Admins bump this via POST /admin/users/{id}/revoke-sessions to force-logout
++    # a user without suspending the account. NULL means no revocation has ever occurred.
++    tokens_invalid_before: Mapped[datetime | None] = mapped_column(
++        DateTime(timezone=True), nullable=True
++    )
+     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+     # NOTE: onupdate=func.now() emits the SQL expression but with expire_on_commit=False
+     # the in-memory value is NOT refreshed after ORM UPDATE. Callers must do
+diff --git a/healthcabinet/backend/app/auth/service.py b/healthcabinet/backend/app/auth/service.py
+index 3347720..293697c 100644
+--- a/healthcabinet/backend/app/auth/service.py
++++ b/healthcabinet/backend/app/auth/service.py
+@@ -96,9 +96,21 @@ async def refresh_access_token(db: AsyncSession, refresh_token_str: str) -> tupl
+         user_id = uuid.UUID(user_id_str)
+     except ValueError as e:
+         raise InvalidCredentialsError() from e
++    iat_raw = payload.get("iat")
++    try:
++        token_iat = datetime.fromtimestamp(int(iat_raw), tz=UTC) if iat_raw is not None else None
++    except (TypeError, ValueError) as e:
++        raise InvalidCredentialsError() from e
+     user = await get_user_by_id(db, user_id)
+     if user is None:
+         raise InvalidCredentialsError()
++    # Reject refresh tokens issued before an admin revocation. Treated as InvalidCredentials
++    # (not AccountSuspended) so the clear-cookie path runs and the user is redirected to /login
++    # — the account is still active, they simply need to re-authenticate.
++    if user.tokens_invalid_before is not None and (
++        token_iat is None or token_iat < user.tokens_invalid_before
++    ):
++        raise InvalidCredentialsError()
+     # Reject suspended accounts on refresh — forces logout per AC #3
+     if user.account_status != "active":
+         raise AccountSuspendedError()
+diff --git a/healthcabinet/backend/app/core/rate_limit.py b/healthcabinet/backend/app/core/rate_limit.py
+index 3e75072..0f136b4 100644
+--- a/healthcabinet/backend/app/core/rate_limit.py
++++ b/healthcabinet/backend/app/core/rate_limit.py
+@@ -6,7 +6,9 @@ Two-layer protection:
+ - Per-IP: 50 attempts per 60s — stops credential stuffing (one IP, many emails).
+ 
+ Refresh rate limiting:
+-- Per-IP: 10 calls per 60s — throttles stolen-cookie abuse.
++- Per-IP: 60 calls per 60s — throttles stolen-cookie abuse while tolerating
++  normal reload churn and users sharing a NAT'd IP. A lower cap (previously 10)
++  caused legitimate users to be logged out after a handful of page reloads.
+ 
+ Counter is reset on successful login (per-email only) so legitimate users are never
+ locked out from normal activity. Fails open on Redis unavailability so an outage never
+@@ -27,7 +29,7 @@ logger = structlog.get_logger()
+ LOGIN_RATE_LIMIT_ATTEMPTS = 10  # max per-email login attempts per window
+ LOGIN_RATE_LIMIT_IP_ATTEMPTS = 50  # max per-IP login attempts per window
+ LOGIN_RATE_LIMIT_WINDOW_SECONDS = 60  # 1-minute window for login keys
+-REFRESH_RATE_LIMIT_IP_ATTEMPTS = 10  # max per-IP refresh attempts per window
++REFRESH_RATE_LIMIT_IP_ATTEMPTS = 60  # max per-IP refresh attempts per window
+ REFRESH_RATE_LIMIT_WINDOW_SECONDS = 60  # 1-minute window for refresh key
+ REGISTER_RATE_LIMIT_IP_ATTEMPTS = 10  # max per-IP registration attempts per window
+ REGISTER_RATE_LIMIT_WINDOW_SECONDS = 300  # 5-minute window for registration key
+@@ -123,7 +125,7 @@ async def check_refresh_rate_limit(
+     ip: str | None = None,
+     redis: aioredis.Redis | None = None,
+ ) -> None:
+-    """Check refresh token rate limit — per-IP only (10/min).
++    """Check refresh token rate limit — per-IP only (60/min).
+ 
+     Throttles stolen-cookie abuse: a holder of a stolen refresh cookie cannot silently
+     generate unlimited access tokens. Per-email is not applicable here since the refresh
+diff --git a/healthcabinet/backend/app/core/security.py b/healthcabinet/backend/app/core/security.py
+index eb0ee98..13b7580 100644
+--- a/healthcabinet/backend/app/core/security.py
++++ b/healthcabinet/backend/app/core/security.py
+@@ -43,16 +43,18 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
+ 
+ 
+ def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
+-    expire = datetime.now(UTC) + (
+-        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+-    )
+-    payload: dict[str, Any] = {"sub": subject, "exp": expire, "type": "access"}
++    now = datetime.now(UTC)
++    expire = now + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
++    # iat is required for admin-initiated session revocation — validators compare it against
++    # User.tokens_invalid_before and reject any token issued before a revocation event.
++    payload: dict[str, Any] = {"sub": subject, "exp": expire, "iat": now, "type": "access"}
+     return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+ 
+ 
+ def create_refresh_token(subject: str) -> str:
+-    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+-    payload: dict[str, Any] = {"sub": subject, "exp": expire, "type": "refresh"}
++    now = datetime.now(UTC)
++    expire = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
++    payload: dict[str, Any] = {"sub": subject, "exp": expire, "iat": now, "type": "refresh"}
+     return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+ 
+ 
+diff --git a/healthcabinet/backend/tests/admin/test_admin_users.py b/healthcabinet/backend/tests/admin/test_admin_users.py
+index 4963d0d..8c4ef58 100644
+--- a/healthcabinet/backend/tests/admin/test_admin_users.py
++++ b/healthcabinet/backend/tests/admin/test_admin_users.py
+@@ -10,7 +10,7 @@ Uses real database — no DB mocking per project rules.
+ 
+ import uuid
+ from collections.abc import AsyncGenerator
+-from datetime import UTC, datetime
++from datetime import UTC, datetime, timedelta
+ 
+ import pytest
+ import pytest_asyncio
+@@ -850,3 +850,185 @@ class TestAdminAuthGuards:
+         fake_id = uuid.uuid4()
+         resp = await admin_client.post(f"/api/v1/admin/flags/{fake_id}/review")
+         assert resp.status_code == 401
++
++
++# ===========================================================================
++# Tests: POST /admin/users/{id}/revoke-sessions
++# ===========================================================================
++
++
++class TestAdminRevokeSessions:
++    """Admin-initiated session revocation tests.
++
++    Revocation invalidates every JWT (access + refresh) whose iat is strictly before
++    users.tokens_invalid_before, without changing account_status. Unlike suspension,
++    revoked users can log in again immediately and receive fresh working tokens.
++    """
++
++    async def test_revoke_rejects_existing_access_token(
++        self,
++        admin_client: AsyncClient,
++        async_db_session: AsyncSession,
++        make_user,
++    ):
++        admin = await _make_admin(make_user, async_db_session, "rev_a_admin@example.com")
++        user, _ = await make_user(email="rev_a_user@example.com")
++        # Backdate iat so the revocation cutoff (now, floored to second) is strictly
++        # after this token. A helper would hide the claim shape; the test documents it.
++        import jwt as _jwt
++        from app.core.config import settings as _settings
++        from app.core.security import ALGORITHM
++        past = datetime.now(UTC) - timedelta(seconds=5)
++        pre_token = _jwt.encode(
++            {
++                "sub": str(user.id),
++                "iat": past,
++                "exp": past + timedelta(minutes=15),
++                "type": "access",
++            },
++            _settings.SECRET_KEY,
++            algorithm=ALGORITHM,
++        )
++
++        # Pre-revoke: token works
++        resp = await admin_client.get(
++            "/api/v1/auth/me", headers={"Authorization": f"Bearer {pre_token}"}
++        )
++        assert resp.status_code == 200
++
++        # Admin revokes sessions
++        resp = await admin_client.post(
++            f"/api/v1/admin/users/{user.id}/revoke-sessions",
++            headers=admin_headers(admin),
++        )
++        assert resp.status_code == 200
++        assert resp.json()["user_id"] == str(user.id)
++
++        # Old token now rejected
++        resp = await admin_client.get(
++            "/api/v1/auth/me", headers={"Authorization": f"Bearer {pre_token}"}
++        )
++        assert resp.status_code == 401
++        assert resp.json()["detail"] == "Session has been revoked"
++
++    async def test_revoke_rejects_existing_refresh_token(
++        self,
++        admin_client: AsyncClient,
++        async_db_session: AsyncSession,
++        make_user,
++    ):
++        admin = await _make_admin(make_user, async_db_session, "rev_r_admin@example.com")
++        user, _ = await make_user(email="rev_r_user@example.com")
++        import jwt as _jwt
++        from app.core.security import ALGORITHM
++        from app.core.config import settings as _settings
++        past = datetime.now(UTC) - timedelta(seconds=5)
++        old_refresh = _jwt.encode(
++            {
++                "sub": str(user.id),
++                "iat": past,
++                "exp": past + timedelta(days=30),
++                "type": "refresh",
++            },
++            _settings.SECRET_KEY,
++            algorithm=ALGORITHM,
++        )
++
++        resp = await admin_client.post(
++            f"/api/v1/admin/users/{user.id}/revoke-sessions",
++            headers=admin_headers(admin),
++        )
++        assert resp.status_code == 200
++
++        # Old refresh token rejected; cookie-clear header attached so browsers drop it.
++        resp = await admin_client.post(
++            "/api/v1/auth/refresh",
++            cookies={"refresh_token": old_refresh},
++        )
++        assert resp.status_code == 401
++        set_cookie = resp.headers.get("set-cookie", "").lower()
++        assert "refresh_token=" in set_cookie
++        assert "max-age=0" in set_cookie
++
++    async def test_revoke_allows_fresh_login(
++        self,
++        admin_client: AsyncClient,
++        async_db_session: AsyncSession,
++        make_user,
++    ):
++        """Unlike suspension, revocation leaves the account active — the user can log in."""
++        admin = await _make_admin(make_user, async_db_session, "rev_fl_admin@example.com")
++        user, password = await make_user(email="rev_fl_user@example.com")
++
++        resp = await admin_client.post(
++            f"/api/v1/admin/users/{user.id}/revoke-sessions",
++            headers=admin_headers(admin),
++        )
++        assert resp.status_code == 200
++
++        # Fresh login succeeds and returns a working token.
++        resp = await admin_client.post(
++            "/api/v1/auth/login",
++            json={"email": "rev_fl_user@example.com", "password": password},
++        )
++        assert resp.status_code == 200
++        new_token = resp.json()["access_token"]
++
++        resp = await admin_client.get(
++            "/api/v1/auth/me", headers={"Authorization": f"Bearer {new_token}"}
++        )
++        assert resp.status_code == 200
++
++    async def test_revoke_cannot_target_admin(
++        self,
++        admin_client: AsyncClient,
++        async_db_session: AsyncSession,
++        make_user,
++    ):
++        """Repository scopes revoke to role='user' — admins cannot be revoked here."""
++        admin = await _make_admin(make_user, async_db_session, "rev_ad_admin@example.com")
++        other_admin = await _make_admin(
++            make_user, async_db_session, "rev_ad_target@example.com"
++        )
++
++        resp = await admin_client.post(
++            f"/api/v1/admin/users/{other_admin.id}/revoke-sessions",
++            headers=admin_headers(admin),
++        )
++        assert resp.status_code == 404
++
++    async def test_revoke_nonexistent_user_returns_404(
++        self,
++        admin_client: AsyncClient,
++        async_db_session: AsyncSession,
++        make_user,
++    ):
++        admin = await _make_admin(make_user, async_db_session, "rev_nf_admin@example.com")
++        fake_id = uuid.uuid4()
++
++        resp = await admin_client.post(
++            f"/api/v1/admin/users/{fake_id}/revoke-sessions",
++            headers=admin_headers(admin),
++        )
++        assert resp.status_code == 404
++
++    async def test_revoke_requires_admin(
++        self,
++        admin_client: AsyncClient,
++        async_db_session: AsyncSession,
++        make_user,
++    ):
++        """A regular user cannot call the revoke endpoint."""
++        user, _ = await make_user(email="rev_nonadmin@example.com")
++        target, _ = await make_user(email="rev_nonadmin_target@example.com")
++
++        resp = await admin_client.post(
++            f"/api/v1/admin/users/{target.id}/revoke-sessions",
++            headers=user_headers(user),
++        )
++        assert resp.status_code == 403
++
++    async def test_revoke_no_jwt_returns_401(self, admin_client: AsyncClient):
++        fake_id = uuid.uuid4()
++        resp = await admin_client.post(f"/api/v1/admin/users/{fake_id}/revoke-sessions")
++        assert resp.status_code == 401
+diff --git a/healthcabinet/backend/alembic/versions/015_users_tokens_invalid_before.py b/healthcabinet/backend/alembic/versions/015_users_tokens_invalid_before.py
+new file mode 100644
+index 0000000..4fecbb2
+--- /dev/null
++++ b/healthcabinet/backend/alembic/versions/015_users_tokens_invalid_before.py
+@@ -0,0 +1,35 @@
++"""015_users_tokens_invalid_before
++
++Add users.tokens_invalid_before for admin-initiated session revocation.
++Any JWT (access or refresh) with iat strictly before this timestamp is rejected
++at token validation time, effectively force-logging-out the user on all devices.
++NULL (the default) means no revocation has ever been performed.
++
++Revision ID: 015
++Revises: 014
++Create Date: 2026-04-18
++
++"""
++
++from collections.abc import Sequence
++
++import sqlalchemy as sa
++
++from alembic import op
++
++# revision identifiers, used by Alembic.
++revision: str = "015"
++down_revision: str | None = "014"
++branch_labels: Sequence[str] | None = None
++depends_on: Sequence[str] | None = None
++
++
++def upgrade() -> None:
++    op.add_column(
++        "users",
++        sa.Column("tokens_invalid_before", sa.DateTime(timezone=True), nullable=True),
++    )
++
++
++def downgrade() -> None:
++    op.drop_column("users", "tokens_invalid_before")
