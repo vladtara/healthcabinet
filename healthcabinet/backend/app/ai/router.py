@@ -1,6 +1,7 @@
 """AI interpretation router — GET /api/v1/ai/documents/{document_id}/interpretation."""
 
 import uuid
+from typing import Literal
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -96,6 +97,7 @@ async def chat_with_ai(
             user_id=current_user.id,
             document_id=payload.document_id,
             question=payload.question,
+            output_language=payload.locale,
         )
     except NoAiContextError:
         raise HTTPException(
@@ -110,11 +112,14 @@ async def chat_with_ai(
 
 @router.get("/patterns", response_model=AiPatternsResponse)
 async def get_patterns(
+    locale: Literal["en", "uk"] = Query(default="en"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AiPatternsResponse:
     await check_ai_patterns_rate_limit(str(current_user.id))
-    return await ai_service.detect_cross_upload_patterns(db, user_id=current_user.id)
+    return await ai_service.detect_cross_upload_patterns(
+        db, user_id=current_user.id, output_language=locale
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -134,13 +139,14 @@ async def get_dashboard_interpretation(
             "excludes 'unknown' (which is rejected by this Literal)."
         ),
     ),
+    locale: Literal["en", "uk"] = Query(default="en"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DashboardInterpretationResponse:
     await check_ai_dashboard_rate_limit(str(current_user.id))
     try:
         return await ai_service.generate_dashboard_interpretation(
-            db, user_id=current_user.id, document_kind=document_kind
+            db, user_id=current_user.id, document_kind=document_kind, output_language=locale
         )
     except NoDashboardAiContextError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from None
@@ -161,6 +167,7 @@ async def dashboard_chat(
             user_id=current_user.id,
             document_kind=payload.document_kind,
             question=payload.question,
+            output_language=payload.locale,
         )
     except NoDashboardAiContextError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from None

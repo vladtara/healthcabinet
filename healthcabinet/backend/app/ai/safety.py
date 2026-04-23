@@ -37,10 +37,19 @@ _DISCLAIMER = (
     "with your healthcare provider."
 )
 
+_DISCLAIMER_BY_LOCALE: dict[str, str] = {
+    "en": _DISCLAIMER,
+    "uk": (
+        "Ця інформація надана виключно в освітніх цілях і не є медичним діагнозом або "
+        "рекомендацією щодо лікування — будь ласка, обговоріть свої результати з лікарем."
+    ),
+}
 
-async def inject_disclaimer(text: str) -> str:
+
+async def inject_disclaimer(text: str, locale: str = "en") -> str:
     """Append non-diagnostic disclaimer as natural language (final sentence, not footnote)."""
-    return f"{text.rstrip()} {_DISCLAIMER}"
+    disclaimer = _DISCLAIMER_BY_LOCALE.get(locale, _DISCLAIMER)
+    return f"{text.rstrip()} {disclaimer}"
 
 
 async def validate_no_diagnostic(text: str) -> str:

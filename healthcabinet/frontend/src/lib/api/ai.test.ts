@@ -6,7 +6,8 @@ import {
 	getDashboardInterpretation,
 	getDocumentInterpretation,
 	streamAiChat,
-	streamDashboardChat
+	streamDashboardChat,
+	getAiPatterns
 } from './ai';
 
 vi.mock('$lib/api/client.svelte', () => ({
@@ -46,7 +47,7 @@ describe('AI API client (Story 15.3)', () => {
 			});
 			await getDashboardInterpretation('analysis');
 			expect(mockApiFetch).toHaveBeenCalledWith(
-			'/api/v1/ai/dashboard/interpretation?document_kind=analysis'
+			'/api/v1/ai/dashboard/interpretation?document_kind=analysis&locale=en'
 		);
 	});
 
@@ -70,6 +71,34 @@ describe('AI API client (Story 15.3)', () => {
 			expect.objectContaining({
 				method: 'POST',
 				body: JSON.stringify({ document_kind: 'all', question: 'Summarize' })
+			})
+		);
+	});
+
+	test('getDashboardInterpretation appends &locale=uk when called with locale="uk"', async () => {
+		mockApiFetch.mockResolvedValueOnce({
+			document_id: null,
+			document_kind: 'all',
+			source_document_ids: [],
+			interpretation: '',
+			model_version: null,
+			generated_at: '2026-04-23T00:00:00Z',
+			reasoning: null
+		});
+		await getDashboardInterpretation('all', 'uk');
+		expect(mockApiFetch).toHaveBeenCalledWith(
+			'/api/v1/ai/dashboard/interpretation?document_kind=all&locale=uk'
+		);
+	});
+
+	test('streamAiChat body includes locale field when provided', async () => {
+		mockApiStream.mockResolvedValueOnce(new Response(''));
+		await streamAiChat({ document_id: 'doc-1', question: 'What is my TSH?', locale: 'uk' });
+		expect(mockApiStream).toHaveBeenCalledWith(
+			'/api/v1/ai/chat',
+			expect.objectContaining({
+				method: 'POST',
+				body: JSON.stringify({ document_id: 'doc-1', question: 'What is my TSH?', locale: 'uk' })
 			})
 		);
 	});

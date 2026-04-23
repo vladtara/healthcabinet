@@ -119,7 +119,7 @@ describe('AiFollowUpChat', () => {
 
 		await waitFor(() => {
 			expect(mockStreamAiChat).toHaveBeenCalledWith(
-				{ document_id: 'doc-42', question: 'What does this mean?' },
+				expect.objectContaining({ document_id: 'doc-42', question: 'What does this mean?' }),
 				expect.any(AbortSignal)
 			);
 		});

@@ -88,7 +88,10 @@
 		let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
 		try {
-			const response = await streamAiChat({ document_id: documentId, question: trimmed }, signal);
+			const response = await streamAiChat(
+			{ document_id: documentId, question: trimmed, locale: localeStore.locale },
+			signal
+		);
 
 			if (!response.ok) {
 				const err = await response.json().catch(() => ({ status: response.status }));

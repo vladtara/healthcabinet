@@ -3,13 +3,14 @@
 	import { getAiPatterns } from '$lib/api/ai';
 	import type { PatternObservation } from '$lib/api/ai';
 	import { authStore } from '$lib/stores/auth.svelte';
+	import { localeStore } from '$lib/stores/locale.svelte';
 
 	const userId = $derived(authStore.user?.id ?? null);
 
 	const patternsQuery = createQuery(() => ({
-		queryKey: ['ai_patterns', userId] as const,
+		queryKey: ['ai_patterns', userId, localeStore.locale] as const,
 		enabled: userId !== null,
-		queryFn: () => getAiPatterns(),
+		queryFn: () => getAiPatterns(localeStore.locale),
 		retry: false,
 		staleTime: 5 * 60 * 1000
 	}));

@@ -85,10 +85,18 @@
 	);
 
 	const dashboardInterpretationQuery = createQuery(() => ({
-		queryKey: ['ai_dashboard_interpretation', filter] as const,
-		queryFn: () => getDashboardInterpretation(filter),
+		queryKey: ['ai_dashboard_interpretation', filter, localeStore.locale] as const,
+		queryFn: () => getDashboardInterpretation(filter, localeStore.locale),
 		enabled: filteredDocuments.length > 0,
-		retry: false
+		staleTime: 60_000,
+		// Retry once on transient errors (429 rate-limit, 503 unavailable).
+		// Do NOT retry on 4xx client errors (409 filter-empty is permanent).
+		retry: (failureCount: number, error: unknown) => {
+			const status = (error as { status?: number })?.status;
+			if (typeof status === 'number' && status >= 400 && status < 500) return false;
+			return failureCount < 1;
+		},
+		retryDelay: () => 2000
 	}));
 
 	// Group existing values by canonical biomarker name for inline sparklines (no extra API calls)

@@ -148,11 +148,14 @@
 		if (props.mode === 'document') {
 			// Narrowed: documentId must be non-null (canSubmit guard).
 			return streamAiChat(
-				{ document_id: props.documentId as string, question: trimmed },
+				{ document_id: props.documentId as string, question: trimmed, locale: localeStore.locale },
 				signal
 			);
 		}
-		return streamDashboardChat({ document_kind: props.documentKind, question: trimmed }, signal);
+		return streamDashboardChat(
+			{ document_kind: props.documentKind, question: trimmed, locale: localeStore.locale },
+			signal
+		);
 	}
 
 	async function handleSubmit() {

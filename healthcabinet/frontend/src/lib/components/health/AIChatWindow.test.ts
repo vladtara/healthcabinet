@@ -157,7 +157,7 @@ describe('AIChatWindow', () => {
 		await new Promise((r) => setTimeout(r, 0));
 
 		expect(mockStream).toHaveBeenCalledWith(
-			{ document_kind: 'all', question: 'Summarize please' },
+			expect.objectContaining({ document_kind: 'all', question: 'Summarize please' }),
 			expect.any(AbortSignal)
 		);
 	});

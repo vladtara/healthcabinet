@@ -47,6 +47,7 @@ export async function getDocumentInterpretation(
 export interface AiChatRequest {
 	document_id: string;
 	question: string;
+	locale?: string;
 }
 
 export async function streamAiChat(payload: AiChatRequest, signal?: AbortSignal): Promise<Response> {
@@ -57,8 +58,8 @@ export async function streamAiChat(payload: AiChatRequest, signal?: AbortSignal)
 	});
 }
 
-export async function getAiPatterns(): Promise<AiPatternsResponse> {
-	return apiFetch<AiPatternsResponse>('/api/v1/ai/patterns');
+export async function getAiPatterns(locale: string = 'en'): Promise<AiPatternsResponse> {
+	return apiFetch<AiPatternsResponse>(`/api/v1/ai/patterns?locale=${encodeURIComponent(locale)}`);
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -78,13 +79,15 @@ export interface DashboardInterpretationResponse {
 export interface DashboardChatRequest {
 	document_kind: DashboardFilter;
 	question: string;
+	locale?: string;
 }
 
 export async function getDashboardInterpretation(
-	documentKind: DashboardFilter
+	documentKind: DashboardFilter,
+	locale: string = 'en'
 ): Promise<DashboardInterpretationResponse> {
 	return apiFetch<DashboardInterpretationResponse>(
-		`/api/v1/ai/dashboard/interpretation?document_kind=${encodeURIComponent(documentKind)}`
+		`/api/v1/ai/dashboard/interpretation?document_kind=${encodeURIComponent(documentKind)}&locale=${encodeURIComponent(locale)}`
 	);
 }
 

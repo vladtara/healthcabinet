@@ -171,7 +171,7 @@ describe('AIClinicalNote', () => {
 		renderDashboardNote('all');
 
 		await waitFor(() => {
-			expect(mockGetDashboardInterpretation).toHaveBeenCalledWith('all');
+			expect(mockGetDashboardInterpretation).toHaveBeenCalledWith('all', expect.any(String));
 		});
 		expect(mockGetInterpretation).not.toHaveBeenCalled();
 	});

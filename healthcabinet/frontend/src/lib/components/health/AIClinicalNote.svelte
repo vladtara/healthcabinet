@@ -49,13 +49,21 @@
 		const documentKind = props.documentKind;
 		const hasContext = props.hasContext;
 		return {
-			queryKey: ['ai_dashboard_interpretation', documentKind],
-			queryFn: (): Promise<InterpretationData> => getDashboardInterpretation(documentKind),
+			queryKey: ['ai_dashboard_interpretation', documentKind, localeStore.locale],
+			queryFn: (): Promise<InterpretationData> => getDashboardInterpretation(documentKind, localeStore.locale),
 			// When the parent has already determined the filter is empty, skip
 			// the network round-trip entirely — it would only 409 and produce
 			// log noise on every filter-empty mount.
 			enabled: hasContext !== false,
-			retry: false
+			staleTime: 60_000,
+			// Retry once on transient errors (429 rate-limit, 503 unavailable).
+			// Do NOT retry on 4xx client errors (409 filter-empty is permanent).
+			retry: (failureCount: number, error: unknown) => {
+				const status = (error as ApiError)?.status;
+				if (typeof status === 'number' && status >= 400 && status < 500) return false;
+				return failureCount < 1;
+			},
+			retryDelay: () => 2000
 		};
 	});
 

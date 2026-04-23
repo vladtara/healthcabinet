@@ -19,6 +19,7 @@ from app.ai.llm_client import (
 )
 from app.ai.safety import (
     _DISCLAIMER,
+    _DISCLAIMER_BY_LOCALE,
     SafetyValidationError,
     inject_disclaimer,
     surface_uncertainty,
@@ -169,22 +170,54 @@ Guidelines:
 - Keep tone calm, informative, and non-alarming
 - Use plain language a non-expert can understand
 - If uncertain, surface that uncertainty clearly
+- {language_instruction}
 """
 
-_PATTERN_RECOMMENDATION = "Discuss this pattern with your healthcare provider."
+_PATTERN_RECOMMENDATION: dict[str, str] = {
+    "en": "Discuss this pattern with your healthcare provider.",
+    "uk": "Обговоріть цю закономірність зі своїм лікарем.",
+}
 _PATTERN_CONTEXT_MAX_DOCS = 10
 _PATTERN_CONTEXT_MAX_CHARS_PER_DOC = 500
-_FOLLOW_UP_SCOPE_FALLBACK = (
-    " I'm unable to provide a response to that question as it falls outside "
-    "the scope of educational health information."
-)
-_FOLLOW_UP_UNAVAILABLE_DETAIL = (
-    "AI follow-up is temporarily unavailable. Please try again in a moment."
-)
-_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK = (
-    " The AI service became temporarily unavailable before the response finished. "
-    "Please try again in a moment."
-)
+_FOLLOW_UP_SCOPE_FALLBACK: dict[str, str] = {
+    "en": (
+        " I'm unable to provide a response to that question as it falls outside "
+        "the scope of educational health information."
+    ),
+    "uk": (
+        " Я не можу відповісти на це запитання, оскільки воно виходить за межі "
+        "освітньої інформації про здоров'я."
+    ),
+}
+_FOLLOW_UP_UNAVAILABLE_DETAIL: dict[str, str] = {
+    "en": "AI follow-up is temporarily unavailable. Please try again in a moment.",
+    "uk": "Функція чату з ШІ тимчасово недоступна. Будь ласка, спробуйте пізніше.",
+}
+_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK: dict[str, str] = {
+    "en": (
+        " The AI service became temporarily unavailable before the response finished. "
+        "Please try again in a moment."
+    ),
+    "uk": (
+        " Сервіс ШІ став тимчасово недоступним до завершення відповіді. "
+        "Будь ласка, спробуйте пізніше."
+    ),
+}
+
+
+_DASHBOARD_UNAVAILABLE_DETAIL: dict[str, str] = {
+    "en": "AI dashboard interpretation is temporarily unavailable. Please try again in a moment.",
+    "uk": "Зведений аналіз ШІ тимчасово недоступний. Будь ласка, спробуйте пізніше.",
+}
+_DASHBOARD_SAFETY_REJECTION_DETAIL: dict[str, str] = {
+    "en": "AI dashboard interpretation could not be generated safely. Please try again in a moment.",
+    "uk": "Зведений аналіз ШІ не вдалося безпечно сформувати. Будь ласка, спробуйте пізніше.",
+}
+
+
+def _fb(strings: dict[str, str], locale: str) -> str:
+    """Look up a locale string from a two-entry dict, falling back to 'en'."""
+    return strings.get(locale, strings["en"])
 
 
 def _is_valid_iso_date(s: str) -> bool:
@@ -207,6 +240,7 @@ Rules:
 - Do NOT recommend specific medications, dosages, or treatments
 - Only include patterns that are clearly observable from the data
 - If no meaningful patterns exist, return an empty JSON array
+- {language_instruction}
 
 Return ONLY a valid JSON array with this exact structure (no prose, no markdown fences):
 [
@@ -259,6 +293,7 @@ def _build_follow_up_prompt(
     context_rows: list[dict[str, object]],
     question: str,
     active_document_id: uuid.UUID | None = None,
+    output_language: str = "en",
 ) -> str:
     """Combine context rows and question into a follow-up prompt."""
     context_parts: list[str] = []
@@ -294,24 +329,33 @@ def _build_follow_up_prompt(
         context_parts.append(part)
 
     context_section = "\n\n".join(context_parts)
+    lang_instruction = (
+        "Відповідай українською мовою." if output_language == "uk" else "Respond in English."
+    )
     return _FOLLOW_UP_PROMPT_TEMPLATE.format(
         context_section=context_section,
         question=question,
+        language_instruction=lang_instruction,
     )
 
 
 async def detect_cross_upload_patterns(
     db: AsyncSession,
     user_id: uuid.UUID,
+    output_language: str = "en",
 ) -> AiPatternsResponse:
     """Detect cross-upload health patterns for a user. Returns empty list if < 2 documents."""
     context_rows = await ai_repository.list_user_ai_context(db, user_id=user_id)
     if len(context_rows) < 2:
         return AiPatternsResponse(patterns=[])
 
+    lang_instruction = (
+        "Відповідай українською мовою." if output_language == "uk" else "Respond in English."
+    )
     prompt = _PATTERN_DETECTION_PROMPT_TEMPLATE.format(
         count=len(context_rows),
         context_section=_build_pattern_context(context_rows),
+        language_instruction=lang_instruction,
     )
 
     try:
@@ -357,7 +401,7 @@ async def detect_cross_upload_patterns(
             PatternObservation(
                 description=safe_description,
                 document_dates=document_dates,
-                recommendation=_PATTERN_RECOMMENDATION,
+                recommendation=_fb(_PATTERN_RECOMMENDATION, output_language),
             )
         )
 
@@ -369,6 +413,7 @@ async def stream_follow_up_answer(
     user_id: uuid.UUID,
     document_id: uuid.UUID,
     question: str,
+    output_language: str = "en",
 ) -> AsyncIterator[bytes]:
     """Yield UTF-8 encoded response chunks for StreamingResponse."""
     context_rows = await ai_repository.list_user_ai_context(
@@ -377,7 +422,9 @@ async def stream_follow_up_answer(
     if not context_rows:
         raise NoAiContextError("No usable AI context available for this user")
 
-    prompt = _build_follow_up_prompt(context_rows, question, active_document_id=document_id)
+    prompt = _build_follow_up_prompt(
+        context_rows, question, active_document_id=document_id, output_language=output_language
+    )
     model_stream = stream_model_text(prompt)
 
     try:
@@ -390,7 +437,7 @@ async def stream_follow_up_answer(
             user_id=str(user_id),
             document_id=str(document_id),
         )
-        raise AiServiceUnavailableError(_FOLLOW_UP_UNAVAILABLE_DETAIL) from exc
+        raise AiServiceUnavailableError(_fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language)) from exc
 
     async def _validate_and_encode(
         delta: str,
@@ -401,7 +448,7 @@ async def stream_follow_up_answer(
         try:
             await validate_no_diagnostic(next_cumulative)
         except SafetyValidationError:
-            return cumulative, _FOLLOW_UP_SCOPE_FALLBACK.encode(), True
+            return cumulative, _fb(_FOLLOW_UP_SCOPE_FALLBACK, output_language).encode(), True
 
         await surface_uncertainty(next_cumulative)
         return next_cumulative, delta.encode(), False
@@ -435,7 +482,7 @@ async def stream_follow_up_answer(
                 user_id=str(user_id),
                 document_id=str(document_id),
             )
-            yield _FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK.encode()
+            yield _fb(_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK, output_language).encode()
             return
         except ModelPermanentError:
             logger.warning(
@@ -443,10 +490,11 @@ async def stream_follow_up_answer(
                 user_id=str(user_id),
                 document_id=str(document_id),
             )
-            yield _FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK.encode()
+            yield _fb(_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK, output_language).encode()
             return
 
-        yield f" {_DISCLAIMER}".encode()
+        disclaimer = _DISCLAIMER_BY_LOCALE.get(output_language, _DISCLAIMER)
+        yield f" {disclaimer}".encode()
 
     return _generate()
 
@@ -481,10 +529,15 @@ Write a single plain-language overview that:
 - Does NOT diagnose, prescribe, or recommend treatments
 - Does NOT re-interpret raw values — quote or paraphrase what the per-document interpretations already said
 - Keeps the total response under 400 words
+- {language_instruction}
 """
 
 
-def _build_dashboard_prompt(context_rows: list[dict[str, object]], document_kind: DashboardKind) -> str:
+def _build_dashboard_prompt(
+    context_rows: list[dict[str, object]],
+    document_kind: DashboardKind,
+    output_language: str = "en",
+) -> str:
     parts: list[str] = []
     for i, row in enumerate(context_rows[:_DASHBOARD_CONTEXT_MAX_DOCS], start=1):
         updated_at = row.get("updated_at")
@@ -492,9 +545,13 @@ def _build_dashboard_prompt(context_rows: list[dict[str, object]], document_kind
         interpretation = str(row.get("interpretation", ""))[:_DASHBOARD_CONTEXT_MAX_CHARS_PER_DOC]
         parts.append(f"[Document {i} — {date}]\n{interpretation}")
     context_section = "\n\n".join(parts)
+    lang_instruction = (
+        "Відповідай українською мовою." if output_language == "uk" else "Respond in English."
+    )
     return _DASHBOARD_INTERPRETATION_PROMPT_TEMPLATE.format(
         filter_label=_DASHBOARD_KIND_LABEL[document_kind],
         context_section=context_section,
+        language_instruction=lang_instruction,
     )
 
 
@@ -502,6 +559,7 @@ async def generate_dashboard_interpretation(
     db: AsyncSession,
     user_id: uuid.UUID,
     document_kind: DashboardKind,
+    output_language: str = "en",
 ) -> DashboardInterpretationResponse:
     """Generate an aggregate interpretation from every per-document AiMemory row
     that matches the filter. Raises NoDashboardAiContextError when the filter
@@ -541,7 +599,7 @@ async def generate_dashboard_interpretation(
         # producing an empty aggregate.
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
-    prompt = _build_dashboard_prompt(prompt_rows, document_kind)
+    prompt = _build_dashboard_prompt(prompt_rows, document_kind, output_language=output_language)
     try:
         raw_text = await call_model_text(prompt)
     except (ModelTemporaryUnavailableError, ModelPermanentError) as exc:
@@ -551,7 +609,7 @@ async def generate_dashboard_interpretation(
             document_kind=document_kind,
         )
         raise AiServiceUnavailableError(
-            "AI dashboard interpretation is temporarily unavailable. Please try again in a moment."
+            _fb(_DASHBOARD_UNAVAILABLE_DETAIL, output_language)
         ) from exc
 
     try:
@@ -560,7 +618,7 @@ async def generate_dashboard_interpretation(
         # scope; the per-document interpretations already went through that
         # pipeline when they were generated. Pass empty values list.
         text = await surface_uncertainty(text, [])
-        text = await inject_disclaimer(text)
+        text = await inject_disclaimer(text, locale=output_language)
     except SafetyValidationError as exc:
         logger.warning(
             "ai.dashboard_safety_rejection",
@@ -568,7 +626,7 @@ async def generate_dashboard_interpretation(
             document_kind=document_kind,
         )
         raise AiServiceUnavailableError(
-            "AI dashboard interpretation could not be generated safely. Please try again in a moment."
+            _fb(_DASHBOARD_SAFETY_REJECTION_DETAIL, output_language)
         ) from exc
 
     return DashboardInterpretationResponse(
@@ -587,6 +645,7 @@ async def stream_dashboard_follow_up(
     user_id: uuid.UUID,
     document_kind: DashboardKind,
     question: str,
+    output_language: str = "en",
 ) -> AsyncIterator[bytes]:
     """Yield UTF-8 encoded response chunks for dashboard-scoped chat.
 
@@ -600,7 +659,9 @@ async def stream_dashboard_follow_up(
     if not context_rows:
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
-    prompt = _build_follow_up_prompt(context_rows, question, active_document_id=None)
+    prompt = _build_follow_up_prompt(
+        context_rows, question, active_document_id=None, output_language=output_language
+    )
     model_stream = stream_model_text(prompt)
 
     try:
@@ -613,7 +674,7 @@ async def stream_dashboard_follow_up(
             user_id=str(user_id),
             document_kind=document_kind,
         )
-        raise AiServiceUnavailableError(_FOLLOW_UP_UNAVAILABLE_DETAIL) from exc
+        raise AiServiceUnavailableError(_fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language)) from exc
 
     # If the model returned zero deltas, treat as unavailable rather than
     # emitting just a leading-space disclaimer with no content.
@@ -623,7 +684,7 @@ async def stream_dashboard_follow_up(
             user_id=str(user_id),
             document_kind=document_kind,
         )
-        raise AiServiceUnavailableError(_FOLLOW_UP_UNAVAILABLE_DETAIL)
+        raise AiServiceUnavailableError(_fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language))
 
     async def _validate_and_encode(
         delta: str,
@@ -634,7 +695,7 @@ async def stream_dashboard_follow_up(
         try:
             await validate_no_diagnostic(next_cumulative)
         except SafetyValidationError:
-            return cumulative, _FOLLOW_UP_SCOPE_FALLBACK.encode(), True
+            return cumulative, _fb(_FOLLOW_UP_SCOPE_FALLBACK, output_language).encode(), True
 
         await surface_uncertainty(next_cumulative)
         return next_cumulative, delta.encode(), False
@@ -665,7 +726,7 @@ async def stream_dashboard_follow_up(
                 user_id=str(user_id),
                 document_kind=document_kind,
             )
-            yield _FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK.encode()
+            yield _fb(_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK, output_language).encode()
             return
         except ModelPermanentError:
             logger.warning(
@@ -673,9 +734,10 @@ async def stream_dashboard_follow_up(
                 user_id=str(user_id),
                 document_kind=document_kind,
             )
-            yield _FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK.encode()
+            yield _fb(_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK, output_language).encode()
             return
 
-        yield f" {_DISCLAIMER}".encode()
+        disclaimer = _DISCLAIMER_BY_LOCALE.get(output_language, _DISCLAIMER)
+        yield f" {disclaimer}".encode()
 
     return _generate()
