@@ -44,12 +44,13 @@ jobs:
 
       - name: Upload misconfiguration results
         uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
-        if: always()
+        if: ${{ always() && hashFiles('trivy-repo-misconfig.sarif') != '' }}
         with:
           sarif_file: trivy-repo-misconfig.sarif
           category: trivy-repo-misconfig
 
       - name: Scan repo for leaked secrets
+        if: always()
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: fs
@@ -61,7 +62,7 @@ jobs:
 
       - name: Upload secret scan results
         uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
-        if: always()
+        if: ${{ always() && hashFiles('trivy-repo-secrets.sarif') != '' }}
         with:
           sarif_file: trivy-repo-secrets.sarif
           category: trivy-repo-secrets
@@ -118,7 +119,7 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
-        if: always()
+        if: ${{ always() && hashFiles('trivy-backend.sarif') != '' }}
         with:
           sarif_file: trivy-backend.sarif
           category: trivy-backend
@@ -178,7 +179,7 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
-        if: always()
+        if: ${{ always() && hashFiles('trivy-frontend.sarif') != '' }}
         with:
           sarif_file: trivy-frontend.sarif
           category: trivy-frontend
