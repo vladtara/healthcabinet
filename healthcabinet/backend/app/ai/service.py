@@ -17,6 +17,7 @@ from app.ai.llm_client import (
     get_model_name,
     stream_model_text,
 )
+from app.ai.repository import ChatMessageRecord
 from app.ai.safety import (
     _DISCLAIMER,
     _DISCLAIMER_BY_LOCALE,
@@ -32,6 +33,8 @@ from app.ai.schemas import (
     PatternObservation,
 )
 from app.processing.schemas import NormalizedHealthValue
+from app.users import repository as users_repository
+from app.users.repository import ProfileContext
 
 # Pipeline order: validate raw AI output first, then surface uncertainty,
 # then inject disclaimer. This is functionally more sound than the spec's
@@ -341,6 +344,61 @@ def _extract_json_array(text: str) -> list[dict[str, object]]:
     return [item for item in parsed if isinstance(item, dict)]
 
 
+_RECENT_MESSAGES_LIMIT = 20
+_RECENT_MESSAGE_MAX_CHARS = 1000
+
+
+def _build_profile_block(profile: ProfileContext | None) -> str | None:
+    """Render the canonical [User profile] prompt block from the Settings page
+    data. Returns None when the profile is empty so the caller can skip the
+    block entirely (keeps the prompt shorter for fresh users).
+
+    The block is plain key-value lines — no reasoning instructions — so the
+    model gets a stable anchor for who the user is. Missing fields are
+    omitted, never rendered as "Unknown".
+    """
+    if profile is None or profile.is_empty():
+        return None
+    lines: list[str] = ["[User profile]"]
+    lines.append(
+        "Background information the user has shared about themselves. "
+        "Use it to frame interpretations; do NOT repeat it back verbatim unless asked."
+    )
+    if profile.age is not None:
+        lines.append(f"Age: {profile.age}")
+    if profile.sex:
+        lines.append(f"Sex: {profile.sex}")
+    if profile.known_conditions:
+        lines.append(f"Known conditions: {', '.join(profile.known_conditions)}")
+    if profile.medications:
+        lines.append(f"Current medications: {', '.join(profile.medications)}")
+    if profile.family_history:
+        lines.append(f"Family history: {profile.family_history}")
+    return "\n".join(lines)
+
+
+def _build_recent_messages_block(
+    recent_messages: list[ChatMessageRecord] | None,
+) -> str | None:
+    """Render prior turns of the current thread. Oldest first. Returns None
+    when there is no prior turn yet (first message of a thread).
+    """
+    if not recent_messages:
+        return None
+    lines: list[str] = ["[Recent conversation]"]
+    lines.append(
+        "The following are prior turns between you and the user on this thread, "
+        "oldest first. Use them to stay consistent with what was already said."
+    )
+    for msg in recent_messages:
+        role_label = "User" if msg.role == "user" else "Assistant"
+        text = msg.text.strip()
+        if len(text) > _RECENT_MESSAGE_MAX_CHARS:
+            text = text[:_RECENT_MESSAGE_MAX_CHARS] + "…"
+        lines.append(f"{role_label}: {text}")
+    return "\n".join(lines)
+
+
 def _build_follow_up_prompt(
     context_rows: list[dict[str, object]],
     question: str,
@@ -348,6 +406,8 @@ def _build_follow_up_prompt(
     output_language: str = "en",
     main_summary: tuple[str, datetime.datetime | None] | None = None,
     filter_summary: tuple[str, str, datetime.datetime | None] | None = None,
+    profile_block: str | None = None,
+    recent_messages: list[ChatMessageRecord] | None = None,
 ) -> str:
     """Combine context rows and question into a follow-up prompt.
 
@@ -363,6 +423,11 @@ def _build_follow_up_prompt(
     is instructed to prefer the main summary.
     """
     context_parts: list[str] = []
+    # Profile block first — canonical, user-owned, deterministic. Goes before
+    # the summary/filter view so the cache breakpoint lands after the stable
+    # stack (profile → main summary → filter view → prior docs).
+    if profile_block is not None:
+        context_parts.append(profile_block)
     if main_summary is not None:
         summary_text, summary_updated = main_summary
         date_label = summary_updated.date().isoformat() if summary_updated else "unknown date"
@@ -412,6 +477,14 @@ def _build_follow_up_prompt(
             except Exception:
                 logger.warning("ai.prompt_reasoning_malformed")
         context_parts.append(part)
+
+    # Recent conversation last — it is the most volatile and should sit right
+    # before the user's new question so the model has fresh memory of the turn
+    # it is replying to. Placed after the prior-docs block so the cache
+    # breakpoint still cuts after the stable docs section.
+    recent_block = _build_recent_messages_block(recent_messages)
+    if recent_block is not None:
+        context_parts.append(recent_block)
 
     context_section = "\n\n".join(context_parts)
     lang_instruction = (
@@ -507,7 +580,20 @@ async def stream_follow_up_answer(
     if not context_rows:
         raise NoAiContextError("No usable AI context available for this user")
 
+    thread_id = ai_repository.thread_id_for_document(user_id, document_id)
     main_summary = await _load_main_summary_for_chat(db, user_id=user_id)
+    profile_context = await users_repository.get_profile_context(db, user_id=user_id)
+    profile_block = _build_profile_block(profile_context)
+    recent_messages = await ai_repository.list_chat_messages(
+        db, user_id=user_id, thread_id=thread_id, limit=_RECENT_MESSAGES_LIMIT
+    )
+
+    # Persist the user turn before streaming so the audit trail is correct
+    # even if the model stream fails mid-way.
+    await ai_repository.append_chat_message(
+        db, user_id=user_id, thread_id=thread_id, role="user", text=question
+    )
+    await db.commit()
 
     prompt = _build_follow_up_prompt(
         context_rows,
@@ -515,6 +601,8 @@ async def stream_follow_up_answer(
         active_document_id=document_id,
         output_language=output_language,
         main_summary=main_summary,
+        profile_block=profile_block,
+        recent_messages=recent_messages,
     )
     model_stream = stream_model_text(prompt)
 
@@ -586,6 +674,26 @@ async def stream_follow_up_answer(
             yield _fb(_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK, output_language).encode()
             return
 
+        # Clean completion — persist the assistant turn before the disclaimer.
+        # Disclaimer is a generic localized string and is intentionally excluded
+        # from the audit row so rehydration doesn't double-render it when the
+        # frontend appends its own disclaimer styling.
+        if cumulative.strip():
+            try:
+                await ai_repository.append_chat_message(
+                    db,
+                    user_id=user_id,
+                    thread_id=thread_id,
+                    role="assistant",
+                    text=cumulative,
+                )
+                await db.commit()
+            except Exception:
+                logger.warning(
+                    "ai.follow_up_persist_failed",
+                    user_id=str(user_id),
+                    document_id=str(document_id),
+                )
         disclaimer = _DISCLAIMER_BY_LOCALE.get(output_language, _DISCLAIMER)
         yield f" {disclaimer}".encode()
 
@@ -879,6 +987,7 @@ async def stream_dashboard_follow_up(
     if not context_rows:
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
+    thread_id = ai_repository.thread_id_for_dashboard(user_id, document_kind)
     main_summary = await _load_main_summary_for_chat(db, user_id=user_id)
     # When the user is filtered, also inject the active-filter's cached
     # summary so the chat has the filter-scoped narrative available alongside
@@ -893,6 +1002,19 @@ async def stream_dashboard_follow_up(
         if loaded is not None:
             filter_summary = (document_kind, loaded[0], loaded[1])
 
+    profile_context = await users_repository.get_profile_context(db, user_id=user_id)
+    profile_block = _build_profile_block(profile_context)
+    recent_messages = await ai_repository.list_chat_messages(
+        db, user_id=user_id, thread_id=thread_id, limit=_RECENT_MESSAGES_LIMIT
+    )
+
+    # Persist the user turn before streaming so the audit trail is correct
+    # even if the model stream fails mid-way.
+    await ai_repository.append_chat_message(
+        db, user_id=user_id, thread_id=thread_id, role="user", text=question
+    )
+    await db.commit()
+
     prompt = _build_follow_up_prompt(
         context_rows,
         question,
@@ -900,6 +1022,8 @@ async def stream_dashboard_follow_up(
         output_language=output_language,
         main_summary=main_summary,
         filter_summary=filter_summary,
+        profile_block=profile_block,
+        recent_messages=recent_messages,
     )
     model_stream = stream_model_text(prompt)
 
@@ -978,6 +1102,23 @@ async def stream_dashboard_follow_up(
             yield _fb(_FOLLOW_UP_STREAM_INTERRUPTED_FALLBACK, output_language).encode()
             return
 
+        # Clean completion — persist the assistant turn before the disclaimer.
+        if cumulative.strip():
+            try:
+                await ai_repository.append_chat_message(
+                    db,
+                    user_id=user_id,
+                    thread_id=thread_id,
+                    role="assistant",
+                    text=cumulative,
+                )
+                await db.commit()
+            except Exception:
+                logger.warning(
+                    "ai.dashboard_follow_up_persist_failed",
+                    user_id=str(user_id),
+                    document_kind=document_kind,
+                )
         disclaimer = _DISCLAIMER_BY_LOCALE.get(output_language, _DISCLAIMER)
         yield f" {disclaimer}".encode()
 

@@ -1,12 +1,20 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { streamAiChat, streamDashboardChat } from '$lib/api/ai';
+	import {
+		clearDashboardChat,
+		clearDocumentChat,
+		listDashboardChatMessages,
+		listDocumentChatMessages,
+		streamAiChat,
+		streamDashboardChat
+	} from '$lib/api/ai';
 	import type { DashboardFilter } from '$lib/stores/dashboard-filter.svelte';
 	import { localeStore } from '$lib/stores/locale.svelte';
 	import { t } from '$lib/i18n/messages';
 	import { formatTime } from '$lib/i18n/format';
 	import { marked } from 'marked';
 	import { isNearBottom } from './ai-chat-scroll';
+	import { ConfirmDialog } from '$lib/components/ui/confirm-dialog';
 
 	const copy = $derived(t(localeStore.locale).aiChat);
 
@@ -77,6 +85,12 @@
 	// fires when this was true immediately before a messages[] mutation, so
 	// scrolling upward to read history is never yanked back by new chunks.
 	let stickyBottom = $state(true);
+	// Transient notice that fires when the dashboard filter flips mid-chat.
+	// Distinct from a generic error — it reassures the user that the reset
+	// was intentional, not a bug.
+	let filterSwitchNotice = $state('');
+	let filterSwitchTimeout: ReturnType<typeof setTimeout> | null = null;
+	let firstIdentityApplied = false;
 
 	let activeController: AbortController | null = null;
 
@@ -84,10 +98,49 @@
 	// it via `formatTime` at render time, so existing transcripts retranslate on
 	// locale flip instead of being frozen at send-time.
 
+	async function hydrateFromServer(): Promise<void> {
+		try {
+			if (props.mode === 'document') {
+				if (props.documentId == null) {
+					messages = [];
+					return;
+				}
+				const res = await listDocumentChatMessages(props.documentId, { limit: 50 });
+				messages = res.messages.map((m) => ({
+					role: m.role === 'assistant' ? 'ai' : 'user',
+					text: m.text,
+					timestamp: new Date(m.created_at)
+				}));
+			} else {
+				const res = await listDashboardChatMessages(props.documentKind, { limit: 50 });
+				messages = res.messages.map((m) => ({
+					role: m.role === 'assistant' ? 'ai' : 'user',
+					text: m.text,
+					timestamp: new Date(m.created_at)
+				}));
+			}
+		} catch {
+			// Hydration is best-effort — a failure leaves the chat empty rather
+			// than blocking the user from sending a new message.
+			messages = [];
+		}
+		// Only snap to the bottom when we actually hydrated messages. An empty
+		// hydration (first mount, cleared thread, API error) must not disturb
+		// the user's existing scroll position — tests assert this and the UX
+		// would feel jarring otherwise.
+		if (messages.length > 0) {
+			await tick();
+			if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+			stickyBottom = true;
+		}
+	}
+
 	// Reset state when the bound identity flips (document switch OR filter change).
+	// Unlike the prior behavior (which wiped the in-memory transcript), we now
+	// hydrate the persistent audit trail so prior Q&A survives reloads / tab
+	// navigation / filter switches.
 	$effect(() => {
-		void identity;
-		messages = [];
+		const currentIdentity = identity;
 		clearEditor();
 		isStreaming = false;
 		errorKey = '';
@@ -95,7 +148,60 @@
 		stickyBottom = true;
 		activeController?.abort();
 		activeController = null;
+
+		// Skip the first run toast — we don't want to toast on initial mount.
+		const showToast = firstIdentityApplied && props.mode === 'dashboard';
+		firstIdentityApplied = true;
+
+		if (showToast) {
+			// Set via microtask so the write doesn't appear in the effect's
+			// synchronous scope (keeps the dependency graph stable).
+			queueMicrotask(() => {
+				filterSwitchNotice = copy.filterSwitchNotice ?? '';
+				if (filterSwitchTimeout) clearTimeout(filterSwitchTimeout);
+				filterSwitchTimeout = setTimeout(() => {
+					filterSwitchNotice = '';
+					filterSwitchTimeout = null;
+				}, 3500);
+			});
+		}
+
+		void hydrateFromServer();
+		// `currentIdentity` referenced to silence the unused-var warning and to
+		// make the identity dependency explicit for Svelte's reactivity.
+		void currentIdentity;
 	});
+
+	let clearDialogOpen = $state(false);
+	let clearDialogLoading = $state(false);
+
+	function handleClearConversation(): void {
+		if (isStreaming || clearDialogLoading) return;
+		clearDialogOpen = true;
+	}
+
+	async function performClearConversation(): Promise<void> {
+		clearDialogLoading = true;
+		try {
+			if (props.mode === 'document') {
+				if (props.documentId == null) {
+					clearDialogLoading = false;
+					clearDialogOpen = false;
+					return;
+				}
+				await clearDocumentChat(props.documentId);
+			} else {
+				await clearDashboardChat(props.documentKind);
+			}
+			messages = [];
+			clearDialogOpen = false;
+		} catch {
+			errorKey = 'generic';
+			clearDialogOpen = false;
+		} finally {
+			clearDialogLoading = false;
+		}
+	}
 
 	function handleMessagesScroll() {
 		stickyBottom = isNearBottom(messagesEl);
@@ -240,6 +346,15 @@
 		<span class="hc-ai-chat-titlebar-icon" aria-hidden="true">🩺</span>
 		<span class="hc-ai-chat-titlebar-title">{copy.title}</span>
 		<div class="hc-ai-chat-titlebar-btns">
+			{#if messages.length > 0}
+				<button
+					class="hc-ai-chat-tb-btn"
+					aria-label={copy.clearConversation ?? 'Clear conversation'}
+					title={copy.clearConversation ?? 'Clear conversation'}
+					disabled={isStreaming}
+					onclick={handleClearConversation}>🗑</button
+				>
+			{/if}
 			<button
 				class="hc-ai-chat-tb-btn"
 				aria-label={minimized ? copy.restore : copy.minimize}
@@ -337,7 +452,15 @@
 					{isStreaming ? copy.sendingIndicator : copy.send}
 				</button>
 			</div>
-			{#if showNoContextHint}
+			{#if filterSwitchNotice}
+				<div
+					class="hc-ai-chat-hint"
+					role="status"
+					data-testid="dashboard-chat-filter-switch-notice"
+				>
+					{filterSwitchNotice}
+				</div>
+			{:else if showNoContextHint}
 				<div class="hc-ai-chat-hint" data-testid="dashboard-chat-no-context-hint">
 					{copy.hintNoContext}
 				</div>
@@ -357,3 +480,14 @@
 
 	<div class="hc-ai-chat-disclaimer">{copy.disclaimer}</div>
 </div>
+
+<ConfirmDialog
+	bind:open={clearDialogOpen}
+	title={copy.clearConversation}
+	confirmLabel={copy.clearConversation}
+	confirmVariant="destructive"
+	loading={clearDialogLoading}
+	onConfirm={performClearConversation}
+>
+	<p>{copy.clearConfirm}</p>
+</ConfirmDialog>

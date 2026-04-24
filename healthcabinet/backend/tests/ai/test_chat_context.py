@@ -288,3 +288,245 @@ async def test_stream_dashboard_follow_up_anchor_only_when_no_filter_cache(
     assert "Main health summary" in prompt
     assert "Anchor-only narrative." in prompt
     assert "Filter view:" not in prompt
+
+
+# ---------------------------------------------------------------------------
+# User profile injection + recent-messages injection
+# ---------------------------------------------------------------------------
+
+
+def test_build_profile_block_empty_returns_none():
+    from app.ai.service import _build_profile_block
+    from app.users.repository import ProfileContext
+
+    assert _build_profile_block(None) is None
+    empty = ProfileContext(
+        age=None, sex=None, known_conditions=[], medications=[], family_history=None
+    )
+    assert _build_profile_block(empty) is None
+
+
+def test_build_profile_block_renders_only_filled_fields():
+    from app.ai.service import _build_profile_block
+    from app.users.repository import ProfileContext
+
+    partial = ProfileContext(
+        age=42,
+        sex=None,
+        known_conditions=["hypothyroidism"],
+        medications=[],
+        family_history=None,
+    )
+    block = _build_profile_block(partial)
+    assert block is not None
+    assert "Age: 42" in block
+    assert "Known conditions: hypothyroidism" in block
+    # Missing fields are omitted, never printed as "Unknown".
+    assert "Sex:" not in block
+    assert "Current medications:" not in block
+    assert "Family history:" not in block
+
+
+def test_build_follow_up_prompt_profile_block_precedes_main_summary():
+    from app.ai.service import _build_follow_up_prompt
+
+    prompt = _build_follow_up_prompt(
+        context_rows=[{"document_id": "11111111-1111-1111-1111-111111111111", "interpretation": "Doc A"}],
+        question="q?",
+        output_language="en",
+        main_summary=("Anchor body.", None),
+        profile_block="[User profile]\nAge: 34\nSex: female",
+    )
+    assert "[User profile]" in prompt
+    assert "Age: 34" in prompt
+    assert prompt.index("[User profile]") < prompt.index("Main health summary")
+
+
+def test_build_follow_up_prompt_recent_messages_precede_user_question():
+    import datetime as _dt
+    import uuid as _uuid
+
+    from app.ai.repository import ChatMessageRecord
+    from app.ai.service import _build_follow_up_prompt
+
+    recent = [
+        ChatMessageRecord(
+            id=_uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+            thread_id="t",
+            role="user",
+            text="earlier question",
+            created_at=_dt.datetime(2026, 4, 24, 10, 0, tzinfo=_dt.UTC),
+        ),
+        ChatMessageRecord(
+            id=_uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+            thread_id="t",
+            role="assistant",
+            text="earlier answer",
+            created_at=_dt.datetime(2026, 4, 24, 10, 1, tzinfo=_dt.UTC),
+        ),
+    ]
+    prompt = _build_follow_up_prompt(
+        context_rows=[{"document_id": "11111111-1111-1111-1111-111111111111", "interpretation": "Doc A"}],
+        question="the new question",
+        output_language="en",
+        recent_messages=recent,
+    )
+    assert "[Recent conversation]" in prompt
+    assert "User: earlier question" in prompt
+    assert "Assistant: earlier answer" in prompt
+    assert prompt.index("[Recent conversation]") < prompt.index("the new question")
+
+
+@pytest.mark.asyncio
+async def test_stream_follow_up_injects_profile_block_when_present(
+    async_db_session: AsyncSession,
+    make_user,
+    make_document,
+):
+    """stream_follow_up_answer reads the user's profile context (decrypted)
+    and injects it into the prompt."""
+    from app.ai.service import stream_follow_up_answer
+    from app.users.repository import upsert_user_profile
+
+    user, _ = await make_user(email="prof_inj@example.com")
+    doc = await make_document(user=user, status="completed")
+    async_db_session.add(
+        AiMemory(
+            user_id=user.id,
+            document_id=doc.id,
+            interpretation_encrypted=encrypt_bytes(b"Per-doc interpretation."),
+            model_version="claude-sonnet-4-6",
+            safety_validated=True,
+        )
+    )
+    await upsert_user_profile(
+        async_db_session,
+        user.id,
+        age=55,
+        sex="male",
+        known_conditions=["type 2 diabetes"],
+        medications=["metformin 500mg"],
+    )
+    await async_db_session.flush()
+
+    captured: list[str] = []
+
+    async def _fake_stream(prompt: str):
+        captured.append(prompt)
+        yield "ok"
+
+    with patch("app.ai.service.stream_model_text", _fake_stream):
+        stream = await stream_follow_up_answer(
+            async_db_session,
+            user_id=user.id,
+            document_id=doc.id,
+            question="How about my HbA1c?",
+        )
+        async for _ in stream:
+            pass
+
+    assert captured
+    p = captured[0]
+    assert "[User profile]" in p
+    assert "Age: 55" in p
+    assert "Sex: male" in p
+    assert "type 2 diabetes" in p
+    assert "metformin 500mg" in p
+
+
+@pytest.mark.asyncio
+async def test_stream_follow_up_omits_profile_block_when_empty(
+    async_db_session: AsyncSession,
+    make_user,
+    make_document,
+):
+    from app.ai.service import stream_follow_up_answer
+
+    user, _ = await make_user(email="prof_empty@example.com")
+    doc = await make_document(user=user, status="completed")
+    async_db_session.add(
+        AiMemory(
+            user_id=user.id,
+            document_id=doc.id,
+            interpretation_encrypted=encrypt_bytes(b"Per-doc."),
+            model_version="claude-sonnet-4-6",
+            safety_validated=True,
+        )
+    )
+    await async_db_session.flush()
+
+    captured: list[str] = []
+
+    async def _fake_stream(prompt: str):
+        captured.append(prompt)
+        yield "ok"
+
+    with patch("app.ai.service.stream_model_text", _fake_stream):
+        stream = await stream_follow_up_answer(
+            async_db_session,
+            user_id=user.id,
+            document_id=doc.id,
+            question="q",
+        )
+        async for _ in stream:
+            pass
+
+    assert captured
+    assert "[User profile]" not in captured[0]
+
+
+@pytest.mark.asyncio
+async def test_stream_follow_up_injects_prior_messages_as_recent_conversation(
+    async_db_session: AsyncSession,
+    make_user,
+    make_document,
+):
+    from app.ai.service import stream_follow_up_answer
+
+    user, _ = await make_user(email="recent_msgs@example.com")
+    doc = await make_document(user=user, status="completed")
+    async_db_session.add(
+        AiMemory(
+            user_id=user.id,
+            document_id=doc.id,
+            interpretation_encrypted=encrypt_bytes(b"Per-doc."),
+            model_version="claude-sonnet-4-6",
+            safety_validated=True,
+        )
+    )
+    await async_db_session.flush()
+
+    thread_id = ai_repository.thread_id_for_document(user.id, doc.id)
+    await ai_repository.append_chat_message(
+        async_db_session, user_id=user.id, thread_id=thread_id, role="user", text="earlier q"
+    )
+    await ai_repository.append_chat_message(
+        async_db_session,
+        user_id=user.id,
+        thread_id=thread_id,
+        role="assistant",
+        text="earlier a",
+    )
+    await async_db_session.flush()
+
+    captured: list[str] = []
+
+    async def _fake_stream(prompt: str):
+        captured.append(prompt)
+        yield "ok"
+
+    with patch("app.ai.service.stream_model_text", _fake_stream):
+        stream = await stream_follow_up_answer(
+            async_db_session,
+            user_id=user.id,
+            document_id=doc.id,
+            question="new question",
+        )
+        async for _ in stream:
+            pass
+
+    assert captured
+    p = captured[0]
+    assert "[Recent conversation]" in p
+    assert "User: earlier q" in p
+    assert "Assistant: earlier a" in p

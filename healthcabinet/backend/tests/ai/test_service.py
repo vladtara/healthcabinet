@@ -1,5 +1,6 @@
 """Tests for AI reasoning context construction and follow-up Q&A streaming."""
 
+import contextlib
 import uuid
 from unittest.mock import AsyncMock, patch
 
@@ -8,6 +9,34 @@ import pytest
 from app.ai.safety import _DISCLAIMER
 from app.ai.service import AiServiceUnavailableError, stream_follow_up_answer
 from app.processing.schemas import NormalizedHealthValue
+
+
+@contextlib.contextmanager
+def _mock_chat_persistence():
+    """Patch the chat-persistence repo calls that stream_follow_up_answer /
+    stream_dashboard_follow_up make. Existing service tests use db=AsyncMock(),
+    which can't execute real SQL for profile/history lookups. These patches
+    keep those tests focused on stream/safety behavior without needing a DB.
+    """
+    with (
+        patch(
+            "app.ai.service.users_repository.get_profile_context",
+            AsyncMock(return_value=None),
+        ),
+        patch(
+            "app.ai.service.ai_repository.list_chat_messages",
+            AsyncMock(return_value=[]),
+        ),
+        patch(
+            "app.ai.service.ai_repository.append_chat_message",
+            AsyncMock(),
+        ),
+        patch(
+            "app.ai.service.ai_repository.get_overall_interpretation",
+            AsyncMock(return_value=None),
+        ),
+    ):
+        yield
 
 
 def _value(
@@ -364,6 +393,7 @@ async def test_stream_follow_up_answer_builds_prompt_from_full_history():
     doc_id = uuid.uuid4()
 
     with (
+        _mock_chat_persistence(),
         patch("app.ai.service.ai_repository.list_user_ai_context", AsyncMock(return_value=context)),
         patch("app.ai.service.stream_model_text", fake_stream),
     ):
@@ -388,6 +418,7 @@ async def test_stream_follow_up_answer_appends_disclaimer_last():
     import uuid
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),
@@ -418,6 +449,7 @@ async def test_stream_follow_up_answer_stops_on_safety_failure():
     import uuid
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),
@@ -450,6 +482,7 @@ async def test_stream_follow_up_answer_raises_service_unavailable_before_first_c
         raise ai_service.ModelTemporaryUnavailableError("busy")
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),
@@ -474,6 +507,7 @@ async def test_stream_follow_up_answer_emits_fallback_when_provider_fails_mid_st
         raise ai_service.ModelTemporaryUnavailableError("busy")
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),
@@ -500,6 +534,7 @@ async def test_stream_follow_up_answer_yields_only_disclaimer_when_model_stream_
             yield ""
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),
@@ -527,6 +562,7 @@ async def test_stream_follow_up_answer_emits_fallback_on_non_temporary_provider_
         raise ai_service.ModelPermanentError("permanent error")
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),
@@ -556,6 +592,7 @@ async def test_stream_follow_up_answer_raises_service_unavailable_on_permanent_e
         raise ai_service.ModelPermanentError("permanent error on first chunk")
 
     with (
+        _mock_chat_persistence(),
         patch(
             "app.ai.service.ai_repository.list_user_ai_context",
             AsyncMock(return_value=[_make_context_row()]),

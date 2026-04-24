@@ -14,6 +14,8 @@ from app.ai.schemas import (
     AiChatRequest,
     AiInterpretationResponse,
     AiPatternsResponse,
+    ChatMessageListResponse,
+    ChatMessageResponse,
     DashboardChatRequest,
     DashboardInterpretationResponse,
     DashboardKind,
@@ -208,3 +210,111 @@ async def dashboard_chat(
         raise HTTPException(status_code=503, detail=str(exc)) from None
 
     return StreamingResponse(stream, media_type="text/plain; charset=utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Chat history endpoints — paginated list + clear.
+#
+# thread_id is derived server-side from the path/query params, never accepted
+# from the client. Ownership of the referenced document is verified on every
+# document-scoped endpoint; dashboard endpoints are implicitly scoped to
+# current_user.id.
+# ---------------------------------------------------------------------------
+
+
+_CHAT_MESSAGES_MAX_LIMIT = 100
+_CHAT_MESSAGES_DEFAULT_LIMIT = 50
+
+
+async def _build_chat_list_response(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    thread_id: str,
+    limit: int,
+    before: uuid.UUID | None,
+) -> ChatMessageListResponse:
+    records = await ai_repository.list_chat_messages(
+        db,
+        user_id=user_id,
+        thread_id=thread_id,
+        limit=limit + 1,  # fetch one extra to compute has_more
+        before=before,
+    )
+    has_more = len(records) > limit
+    if has_more:
+        records = records[-limit:]
+    next_cursor = records[0].id if has_more and records else None
+    messages = [
+        ChatMessageResponse(
+            id=record.id,
+            role=record.role,
+            text=record.text,
+            created_at=record.created_at,
+        )
+        for record in records
+    ]
+    return ChatMessageListResponse(
+        messages=messages, has_more=has_more, next_cursor=next_cursor
+    )
+
+
+@router.get(
+    "/chat/{document_id}/messages",
+    response_model=ChatMessageListResponse,
+)
+async def list_document_chat_messages(
+    document_id: uuid.UUID,
+    limit: int = Query(default=_CHAT_MESSAGES_DEFAULT_LIMIT, ge=1, le=_CHAT_MESSAGES_MAX_LIMIT),
+    before: uuid.UUID | None = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ChatMessageListResponse:
+    try:
+        await document_repository.get_document_by_id(db, document_id, current_user.id)
+    except DocumentNotFoundError:
+        raise HTTPException(status_code=404, detail="Document not found") from None
+
+    thread_id = ai_repository.thread_id_for_document(current_user.id, document_id)
+    return await _build_chat_list_response(db, current_user.id, thread_id, limit, before)
+
+
+@router.delete("/chat/{document_id}/messages", status_code=204)
+async def clear_document_chat_messages(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        await document_repository.get_document_by_id(db, document_id, current_user.id)
+    except DocumentNotFoundError:
+        raise HTTPException(status_code=404, detail="Document not found") from None
+
+    thread_id = ai_repository.thread_id_for_document(current_user.id, document_id)
+    await ai_repository.clear_chat_thread(db, user_id=current_user.id, thread_id=thread_id)
+    await db.commit()
+
+
+@router.get(
+    "/dashboard/chat/messages",
+    response_model=ChatMessageListResponse,
+)
+async def list_dashboard_chat_messages(
+    document_kind: DashboardKind = Query(...),
+    limit: int = Query(default=_CHAT_MESSAGES_DEFAULT_LIMIT, ge=1, le=_CHAT_MESSAGES_MAX_LIMIT),
+    before: uuid.UUID | None = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ChatMessageListResponse:
+    thread_id = ai_repository.thread_id_for_dashboard(current_user.id, document_kind)
+    return await _build_chat_list_response(db, current_user.id, thread_id, limit, before)
+
+
+@router.delete("/dashboard/chat/messages", status_code=204)
+async def clear_dashboard_chat_messages(
+    document_kind: DashboardKind = Query(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    thread_id = ai_repository.thread_id_for_dashboard(current_user.id, document_kind)
+    await ai_repository.clear_chat_thread(db, user_id=current_user.id, thread_id=thread_id)
+    await db.commit()

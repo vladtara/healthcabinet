@@ -11,7 +11,13 @@ import AiFollowUpChatTestWrapper from './AiFollowUpChatTestWrapper.svelte';
 
 vi.mock('$lib/api/ai', () => ({
 	getDocumentInterpretation: vi.fn(),
-	streamAiChat: vi.fn()
+	streamAiChat: vi.fn(),
+	listDocumentChatMessages: vi.fn().mockResolvedValue({
+		messages: [],
+		has_more: false,
+		next_cursor: null
+	}),
+	clearDocumentChat: vi.fn().mockResolvedValue(undefined)
 }));
 
 import { getDocumentInterpretation, streamAiChat } from '$lib/api/ai';

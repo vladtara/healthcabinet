@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -53,6 +54,14 @@ class UserProfile(Base):
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     family_history: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # AES-256-GCM ciphertext columns (phase-1 of the encryption migration).
+    # Populated alongside the plaintext columns above on every upsert. Phase-2
+    # drops the plaintext columns and switches reads to these.
+    age_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    sex_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    known_conditions_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    medications_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    family_history_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     onboarding_step: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

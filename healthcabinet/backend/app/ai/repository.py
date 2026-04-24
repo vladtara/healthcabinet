@@ -7,10 +7,11 @@ from datetime import datetime
 from typing import Literal
 
 import structlog
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.models import AiMemory
+from app.ai.models import AiChatMessage, AiMemory
 from app.core.encryption import decrypt_bytes, encrypt_bytes
 from app.documents.models import Document
 
@@ -406,3 +407,166 @@ async def get_interpretation_and_metadata(
             logger.warning("ai.reasoning_decrypt_failed", document_id=str(document_id))
             reasoning = None
     return text, reasoning, memory
+
+
+# ---------------------------------------------------------------------------
+# Chat message history (ai_chat_messages)
+#
+# Each turn of an AI chat is persisted as one row (user question or assistant
+# reply). Decryption happens only here; service.py receives plain strings.
+# ---------------------------------------------------------------------------
+
+ChatRole = Literal["user", "assistant"]
+
+
+@dataclass(slots=True)
+class ChatMessageRecord:
+    id: uuid.UUID
+    thread_id: str
+    role: ChatRole
+    text: str
+    created_at: datetime
+
+
+def thread_id_for_document(user_id: uuid.UUID, document_id: uuid.UUID) -> str:
+    return f"doc:{user_id}:{document_id}"
+
+
+def thread_id_for_dashboard(user_id: uuid.UUID, document_kind: DashboardKind) -> str:
+    return f"dash:{user_id}:{document_kind}"
+
+
+async def append_chat_message(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    thread_id: str,
+    role: ChatRole,
+    text: str,
+) -> AiChatMessage:
+    """Persist one chat turn. Encrypts `text` before writing.
+
+    `created_at` is set explicitly to Python's now() instead of relying on
+    the column server_default. Postgres `now()` returns the transaction
+    start time, so two messages written in the same transaction would share
+    a timestamp and tie-break on UUID4 (non-deterministic). Microsecond
+    resolution from Python guarantees a stable chronological ordering for
+    back-to-back user/assistant turns.
+    """
+    import datetime as _dt
+
+    row = AiChatMessage(
+        user_id=user_id,
+        thread_id=thread_id,
+        role=role,
+        text_encrypted=encrypt_bytes(text.encode("utf-8")),
+        created_at=_dt.datetime.now(_dt.UTC),
+    )
+    db.add(row)
+    await db.flush()
+    await db.refresh(row)
+    return row
+
+
+async def list_chat_messages(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    thread_id: str,
+    *,
+    limit: int = 50,
+    before: uuid.UUID | None = None,
+) -> list[ChatMessageRecord]:
+    """Return chat turns for a thread, oldest → newest, paginated.
+
+    `before` paginates backwards: given a message id, returns messages whose
+    created_at is strictly before that message's created_at. Ordering within
+    the returned page stays oldest-first so callers can render directly.
+
+    Rows whose ciphertext fails to decrypt are skipped and logged. This
+    avoids a single corrupt row breaking the entire chat view — the user
+    simply sees a gap.
+    """
+    from sqlalchemy import tuple_
+
+    stmt = select(AiChatMessage).where(
+        AiChatMessage.user_id == user_id,
+        AiChatMessage.thread_id == thread_id,
+    )
+    if before is not None:
+        cursor_result = await db.execute(
+            select(AiChatMessage.created_at, AiChatMessage.id).where(
+                AiChatMessage.user_id == user_id,
+                AiChatMessage.id == before,
+            )
+        )
+        cursor = cursor_result.one_or_none()
+        if cursor is not None:
+            cursor_created_at, cursor_id = cursor
+            # Tuple comparison so rows sharing a created_at (common within one
+            # transaction, since Postgres now() == transaction_timestamp()) are
+            # still paginated deterministically via id as a tie-breaker.
+            stmt = stmt.where(
+                tuple_(AiChatMessage.created_at, AiChatMessage.id)
+                < (cursor_created_at, cursor_id)
+            )
+    # Fetch newest N first to respect the limit, then reverse in Python.
+    stmt = stmt.order_by(AiChatMessage.created_at.desc(), AiChatMessage.id.desc()).limit(limit)
+
+    result = await db.execute(stmt)
+    rows = result.scalars().all()
+
+    records: list[ChatMessageRecord] = []
+    for row in rows:
+        try:
+            text = decrypt_bytes(row.text_encrypted).decode("utf-8")
+        except Exception:
+            logger.warning(
+                "ai.chat_message_decrypt_failed",
+                user_id=str(user_id),
+                thread_id=thread_id,
+                message_id=str(row.id),
+            )
+            continue
+        role_val: ChatRole = "user" if row.role == "user" else "assistant"
+        records.append(
+            ChatMessageRecord(
+                id=row.id,
+                thread_id=row.thread_id,
+                role=role_val,
+                text=text,
+                created_at=row.created_at,
+            )
+        )
+    records.reverse()
+    return records
+
+
+async def count_chat_messages(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    thread_id: str,
+) -> int:
+    from sqlalchemy import func as sa_func
+
+    result = await db.execute(
+        select(sa_func.count(AiChatMessage.id)).where(
+            AiChatMessage.user_id == user_id,
+            AiChatMessage.thread_id == thread_id,
+        )
+    )
+    return int(result.scalar_one() or 0)
+
+
+async def clear_chat_thread(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    thread_id: str,
+) -> int:
+    """Delete every row for this thread. Returns the number of rows deleted."""
+    stmt = sa_delete(AiChatMessage).where(
+        AiChatMessage.user_id == user_id,
+        AiChatMessage.thread_id == thread_id,
+    )
+    result = await db.execute(stmt)
+    # `rowcount` is dialect-specific but present on asyncpg-driven sessions;
+    # the cast keeps mypy happy without relaxing the Result generic globally.
+    return int(getattr(result, "rowcount", 0) or 0)

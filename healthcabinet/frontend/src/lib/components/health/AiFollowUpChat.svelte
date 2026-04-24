@@ -1,9 +1,16 @@
 <script lang="ts">
-	import { createQuery } from '@tanstack/svelte-query';
-	import { getDocumentInterpretation, streamAiChat } from '$lib/api/ai';
+	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+	import {
+		clearDocumentChat,
+		getDocumentInterpretation,
+		listDocumentChatMessages,
+		streamAiChat,
+		type ChatMessageResponse
+	} from '$lib/api/ai';
 	import type { ApiError } from '$lib/api/client.svelte';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Button } from '$lib/components/ui/button';
+	import { ConfirmDialog } from '$lib/components/ui/confirm-dialog';
 	import { localeStore } from '$lib/stores/locale.svelte';
 	import { t } from '$lib/i18n/messages';
 
@@ -16,6 +23,7 @@
 	}
 
 	let { documentId }: Props = $props();
+	const queryClient = useQueryClient();
 
 	let question = $state('');
 	let isStreaming = $state(false);
@@ -23,6 +31,8 @@
 	let streamedAnswer = $state('');
 	let errorKey = $state<FollowUpErrorKey>('');
 	let errorCustomMessage = $state('');
+	let priorMessages = $state<ChatMessageResponse[]>([]);
+	let currentUserQuestion = $state('');
 
 	// Derived message — retranslates if the user toggles locale while an error banner is visible.
 	const errorMessage = $derived.by(() => {
@@ -49,6 +59,19 @@
 		retry: false
 	}));
 
+	// Persistent chat history for this document's thread. Hydrated on mount
+	// and after each successful stream. Survives page reloads.
+	const historyQuery = createQuery(() => ({
+		queryKey: ['ai_chat_messages', 'document', documentId] as const,
+		queryFn: () => listDocumentChatMessages(documentId, { limit: 50 }),
+		staleTime: 60_000,
+		retry: false
+	}));
+
+	$effect(() => {
+		priorMessages = historyQuery.data?.messages ?? [];
+	});
+
 	function is404(error: unknown): boolean {
 		return (error as ApiError)?.status === 404;
 	}
@@ -62,6 +85,7 @@
 		isStreaming = false;
 		waitingForFirstChunk = false;
 		streamedAnswer = '';
+		currentUserQuestion = '';
 		errorKey = '';
 		errorCustomMessage = '';
 
@@ -70,6 +94,33 @@
 			activeController = null;
 		};
 	});
+
+	let clearDialogOpen = $state(false);
+	let clearDialogLoading = $state(false);
+
+	function openClearDialog(): void {
+		if (isStreaming || clearDialogLoading) return;
+		clearDialogOpen = true;
+	}
+
+	async function performClearHistory(): Promise<void> {
+		clearDialogLoading = true;
+		try {
+			await clearDocumentChat(documentId);
+			priorMessages = [];
+			streamedAnswer = '';
+			currentUserQuestion = '';
+			await queryClient.invalidateQueries({
+				queryKey: ['ai_chat_messages', 'document', documentId]
+			});
+			clearDialogOpen = false;
+		} catch {
+			errorKey = 'generic';
+			clearDialogOpen = false;
+		} finally {
+			clearDialogLoading = false;
+		}
+	}
 
 	async function handleSubmit() {
 		const trimmed = question.trim();
@@ -83,6 +134,8 @@
 		isStreaming = true;
 		waitingForFirstChunk = true;
 		streamedAnswer = '';
+		currentUserQuestion = trimmed;
+		question = '';
 		errorKey = '';
 		errorCustomMessage = '';
 
@@ -135,6 +188,21 @@
 				activeController = null;
 			}
 		}
+
+		// Stream completed cleanly — refresh the persisted history so the just-
+		// finished turn joins `priorMessages` on the next tick and the live
+		// `streamedAnswer` view can collapse into the history list.
+		if (!errorKey) {
+			try {
+				await queryClient.invalidateQueries({
+					queryKey: ['ai_chat_messages', 'document', documentId]
+				});
+				streamedAnswer = '';
+				currentUserQuestion = '';
+			} catch {
+				// Non-fatal — the next mount will pick up the write.
+			}
+		}
 	}
 </script>
 
@@ -148,7 +216,36 @@
 			aria-label={copy.followUpAria}
 			class="bg-card/50 mt-4 rounded-md border-l-4 border-l-[#3366FF] p-4"
 		>
-			<h3 class="text-foreground mb-3 text-base font-semibold">{copy.followUpHeader}</h3>
+			<div class="mb-3 flex items-center justify-between">
+				<h3 class="text-foreground text-base font-semibold">{copy.followUpHeader}</h3>
+				{#if priorMessages.length > 0}
+					<button
+						type="button"
+						class="text-muted-foreground hover:text-foreground text-[12px] underline"
+						disabled={isStreaming || clearDialogLoading}
+						onclick={openClearDialog}
+						aria-label={copy.clearConversation ?? 'Clear conversation'}
+					>
+						{copy.clearConversation ?? 'Clear conversation'}
+					</button>
+				{/if}
+			</div>
+
+			<!-- Persisted history: prior Q&A turns fetched from the server. -->
+			{#if priorMessages.length > 0}
+				<div class="mb-3 space-y-2" aria-label="Previous conversation">
+					{#each priorMessages as m}
+						<div
+							class="rounded-md border px-3 py-2 text-[14px] leading-relaxed whitespace-pre-wrap"
+						>
+							<div class="text-muted-foreground mb-1 text-[11px] font-semibold uppercase">
+								{m.role === 'user' ? copy.senderUser : copy.senderAi}
+							</div>
+							<div class="text-foreground">{m.text}</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 
 			<form
 				onsubmit={(e) => {
@@ -171,8 +268,20 @@
 				</Button>
 			</form>
 
-			<!-- Response area with aria-live for screen reader announcements -->
-			<div aria-live="polite" class="mt-4">
+			<!-- In-flight stream: shows the current user question + streaming answer
+			     until the stream completes, then the turn joins the persisted
+			     history list above via query invalidation. -->
+			<div aria-live="polite" class="mt-4 space-y-2">
+				{#if currentUserQuestion}
+					<div
+						class="border-muted rounded-md border px-3 py-2 text-[14px] leading-relaxed whitespace-pre-wrap"
+					>
+						<div class="text-muted-foreground mb-1 text-[11px] font-semibold uppercase">
+							{copy.senderUser}
+						</div>
+						<div class="text-foreground">{currentUserQuestion}</div>
+					</div>
+				{/if}
 				{#if waitingForFirstChunk}
 					<div
 						aria-busy="true"
@@ -180,8 +289,13 @@
 						class="bg-card border-border h-16 animate-pulse rounded-md border"
 					></div>
 				{:else if streamedAnswer}
-					<div class="text-foreground text-[15px] leading-relaxed whitespace-pre-wrap">
-						{streamedAnswer}
+					<div
+						class="bg-card border-border rounded-md border px-3 py-2 text-[15px] leading-relaxed whitespace-pre-wrap"
+					>
+						<div class="text-muted-foreground mb-1 text-[11px] font-semibold uppercase">
+							{copy.senderAi}
+						</div>
+						<div class="text-foreground">{streamedAnswer}</div>
 					</div>
 				{/if}
 			</div>
@@ -192,3 +306,14 @@
 		</section>
 	{/if}
 {/if}
+
+<ConfirmDialog
+	bind:open={clearDialogOpen}
+	title={copy.clearConversation}
+	confirmLabel={copy.clearConversation}
+	confirmVariant="destructive"
+	loading={clearDialogLoading}
+	onConfirm={performClearHistory}
+>
+	<p>{copy.clearConfirm}</p>
+</ConfirmDialog>

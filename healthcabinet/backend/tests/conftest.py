@@ -8,7 +8,7 @@ import pytest_asyncio
 import redis.asyncio as aioredis
 from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 # Force production-safe cookie flags for the test process, overriding any
 # local-dev bleed-through (compose sets COOKIE_SECURE=false for HTTP dev).
@@ -84,11 +84,44 @@ async def test_engine():
 
 @pytest_asyncio.fixture
 async def async_db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    """Async DB session fixture. Rolls back after each test."""
-    session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
-    async with session_factory() as session:
+    """Async DB session with SAVEPOINT isolation.
+
+    Production service code legitimately calls ``await db.commit()`` (e.g.,
+    inside streaming handlers that must persist intermediate state before the
+    response completes). Without savepoint isolation those commits break the
+    per-test rollback contract and data leaks across tests.
+
+    This fixture wraps the session in an outer transaction + a SAVEPOINT.
+    ``session.commit()`` inside a test ends the savepoint — not the outer
+    transaction — and a fresh savepoint is started so the code can commit
+    again. At teardown the outer transaction rolls back, discarding every
+    savepoint and restoring a clean DB for the next test.
+
+    Pattern source: SQLAlchemy docs — "Joining a Session into an External
+    Transaction".
+    """
+    from sqlalchemy import event
+
+    connection = await test_engine.connect()
+    transaction = await connection.begin()
+
+    session = AsyncSession(bind=connection, expire_on_commit=False)
+    await session.begin_nested()
+
+    @event.listens_for(session.sync_session, "after_transaction_end")
+    def _restart_savepoint(sync_session, trans):
+        # When the SAVEPOINT ends (commit/rollback), restart a new one so
+        # subsequent service-layer commits keep landing on a savepoint.
+        if trans.nested and not trans._parent.nested:
+            sync_session.begin_nested()
+
+    try:
         yield session
-        await session.rollback()
+    finally:
+        await session.close()
+        if transaction.is_active:
+            await transaction.rollback()
+        await connection.close()
 
 
 @pytest_asyncio.fixture

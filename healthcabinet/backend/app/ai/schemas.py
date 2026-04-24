@@ -72,3 +72,19 @@ class PatternObservation(BaseModel):
 
 class AiPatternsResponse(BaseModel):
     patterns: list[PatternObservation]
+
+
+ChatMessageRole = Literal["user", "assistant"]
+
+
+class ChatMessageResponse(BaseModel):
+    id: uuid.UUID
+    role: ChatMessageRole
+    text: str
+    created_at: datetime
+
+
+class ChatMessageListResponse(BaseModel):
+    messages: list[ChatMessageResponse]
+    has_more: bool
+    next_cursor: uuid.UUID | None = None

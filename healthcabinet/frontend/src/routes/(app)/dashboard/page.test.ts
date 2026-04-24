@@ -21,7 +21,19 @@ vi.mock('$lib/api/ai', () => ({
 	getDocumentInterpretation: vi.fn(),
 	getDashboardInterpretation: vi.fn(),
 	streamAiChat: vi.fn(),
-	streamDashboardChat: vi.fn()
+	streamDashboardChat: vi.fn(),
+	listDocumentChatMessages: vi.fn().mockResolvedValue({
+		messages: [],
+		has_more: false,
+		next_cursor: null
+	}),
+	listDashboardChatMessages: vi.fn().mockResolvedValue({
+		messages: [],
+		has_more: false,
+		next_cursor: null
+	}),
+	clearDocumentChat: vi.fn().mockResolvedValue(undefined),
+	clearDashboardChat: vi.fn().mockResolvedValue(undefined)
 }));
 
 vi.mock('$lib/api/users', () => ({

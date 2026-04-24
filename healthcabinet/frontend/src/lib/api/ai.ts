@@ -113,3 +113,64 @@ export async function streamDashboardChat(
 		signal
 	});
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Chat history endpoints (persistent messages per thread)
+// ──────────────────────────────────────────────────────────────────────────
+
+export type ChatMessageRole = 'user' | 'assistant';
+
+export interface ChatMessageResponse {
+	id: string;
+	role: ChatMessageRole;
+	text: string;
+	created_at: string;
+}
+
+export interface ChatMessageListResponse {
+	messages: ChatMessageResponse[];
+	has_more: boolean;
+	next_cursor: string | null;
+}
+
+export interface ChatHistoryQuery {
+	limit?: number;
+	before?: string;
+}
+
+function buildHistoryQuery(params: ChatHistoryQuery | undefined): string {
+	const q = new URLSearchParams();
+	if (params?.limit != null) q.set('limit', String(params.limit));
+	if (params?.before) q.set('before', params.before);
+	const s = q.toString();
+	return s ? `?${s}` : '';
+}
+
+export async function listDocumentChatMessages(
+	documentId: string,
+	params?: ChatHistoryQuery
+): Promise<ChatMessageListResponse> {
+	return apiFetch<ChatMessageListResponse>(
+		`/api/v1/ai/chat/${documentId}/messages${buildHistoryQuery(params)}`
+	);
+}
+
+export async function clearDocumentChat(documentId: string): Promise<void> {
+	await apiFetch<void>(`/api/v1/ai/chat/${documentId}/messages`, { method: 'DELETE' });
+}
+
+export async function listDashboardChatMessages(
+	documentKind: DashboardFilter,
+	params?: ChatHistoryQuery
+): Promise<ChatMessageListResponse> {
+	const base = `/api/v1/ai/dashboard/chat/messages?document_kind=${encodeURIComponent(documentKind)}`;
+	const extra = buildHistoryQuery(params).replace(/^\?/, '&');
+	return apiFetch<ChatMessageListResponse>(`${base}${extra}`);
+}
+
+export async function clearDashboardChat(documentKind: DashboardFilter): Promise<void> {
+	await apiFetch<void>(
+		`/api/v1/ai/dashboard/chat/messages?document_kind=${encodeURIComponent(documentKind)}`,
+		{ method: 'DELETE' }
+	);
+}

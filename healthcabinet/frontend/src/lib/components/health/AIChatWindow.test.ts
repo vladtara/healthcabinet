@@ -8,7 +8,19 @@ vi.mock('$lib/api/ai', () => ({
 	streamAiChat: vi.fn(),
 	streamDashboardChat: vi.fn(),
 	getDashboardInterpretation: vi.fn(),
-	getAiPatterns: vi.fn()
+	getAiPatterns: vi.fn(),
+	listDocumentChatMessages: vi.fn().mockResolvedValue({
+		messages: [],
+		has_more: false,
+		next_cursor: null
+	}),
+	listDashboardChatMessages: vi.fn().mockResolvedValue({
+		messages: [],
+		has_more: false,
+		next_cursor: null
+	}),
+	clearDocumentChat: vi.fn().mockResolvedValue(undefined),
+	clearDashboardChat: vi.fn().mockResolvedValue(undefined)
 }));
 
 vi.mock('$lib/api/client.svelte', () => ({
