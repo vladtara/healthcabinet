@@ -11,10 +11,17 @@ on:
     paths:
       - "healthcabinet/frontend/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: healthcabinet/frontend
@@ -24,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: healthcabinet/frontend/package-lock.json
 
@@ -43,6 +50,9 @@ jobs:
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: healthcabinet/frontend
@@ -52,7 +62,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: healthcabinet/frontend/package-lock.json
 
@@ -65,6 +75,9 @@ jobs:
   test-e2e:
     name: E2E Tests (Smoke)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: healthcabinet/frontend
@@ -74,7 +87,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: healthcabinet/frontend/package-lock.json
 

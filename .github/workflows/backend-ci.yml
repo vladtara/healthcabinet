@@ -11,10 +11,17 @@ on:
     paths:
       - "healthcabinet/backend/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: healthcabinet/backend
@@ -22,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v8
         with:
           version: "latest"
 
@@ -44,6 +51,9 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: healthcabinet/backend
@@ -61,8 +71,18 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DATABASE_URL: postgresql+asyncpg://healthcabinet:healthcabinet@localhost:5432/healthcabinet_test
+      REDIS_URL: redis://localhost:6379/0
       SECRET_KEY: test-secret-key-not-for-production
       ENCRYPTION_KEY: dGVzdC1rZXktMzItYnl0ZXMtZm9yLWNpLXRlc3Rpbmc=
       ENVIRONMENT: test
@@ -70,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v8
         with:
           version: "latest"
 

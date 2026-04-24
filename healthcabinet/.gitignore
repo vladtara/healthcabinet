@@ -33,6 +33,7 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.test
 
 # SOPS artifacts
 *.sops.yaml

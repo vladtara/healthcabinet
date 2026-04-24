@@ -1,4 +1,5 @@
 import os
+import redis.asyncio as aioredis
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,36 @@ TEST_DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://healthcabinet:healthcabinet@localhost:5432/healthcabinet_test",
 )
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def _flush_redis() -> AsyncGenerator[None, None]:
+    """Flush Redis at session start to prevent rate-limit state bleed across tests.
+
+    When Redis is present (CI environment with REDIS_URL set), rate-limit counters
+    could accumulate across test runs and cause legitimate tests to receive 429s.
+    Flushing once per session ensures a clean slate without per-test overhead.
+
+    Guards: only flushes when ENVIRONMENT=test to protect non-test Redis instances
+    in shared environments. Silently skips when Redis is unavailable.
+    """
+    if os.getenv("ENVIRONMENT") != "test":
+        yield
+        return
+
+    client: aioredis.Redis | None = None
+    try:
+        url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        client = aioredis.from_url(url, decode_responses=True, socket_connect_timeout=2)
+        await client.flushdb()
+    except Exception:
+        pass  # Fail-open: Redis is optional for the test suite
+    yield
+    if client is not None:
+        try:
+            await client.aclose()
+        except Exception:
+            pass
 
 
 @pytest_asyncio.fixture(scope="session")
