@@ -230,6 +230,25 @@ async def list_ai_memories_by_user(
 # ---------------------------------------------------------------------------
 
 OVERALL_SCOPE_ALL = "overall_all"
+OVERALL_SCOPE_ANALYSIS = "overall_analysis"
+OVERALL_SCOPE_DOCUMENT = "overall_document"
+
+_OVERALL_SCOPES: tuple[str, ...] = (
+    OVERALL_SCOPE_ALL,
+    OVERALL_SCOPE_ANALYSIS,
+    OVERALL_SCOPE_DOCUMENT,
+)
+
+
+def overall_scope_for_kind(document_kind: DashboardKind) -> str:
+    """Map a dashboard filter kind to its aggregate `ai_memories.scope` value."""
+    if document_kind == "all":
+        return OVERALL_SCOPE_ALL
+    if document_kind == "analysis":
+        return OVERALL_SCOPE_ANALYSIS
+    if document_kind == "document":
+        return OVERALL_SCOPE_DOCUMENT
+    raise ValueError(f"Unsupported dashboard kind: {document_kind!r}")
 
 
 async def get_overall_interpretation(
@@ -335,6 +354,31 @@ async def invalidate_overall_interpretation(
     if memory is not None:
         memory.safety_validated = False
         await db.flush()
+
+
+async def invalidate_all_overall_interpretations(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+) -> None:
+    """Mark every aggregate-scope row stale for this user.
+
+    Called from document upload/delete hooks. Writing to filter-specific scopes
+    the user never looks at is cheap; the benefit is classification-drift
+    safety — a doc reclassified between kinds cannot leave a stale filter
+    cache behind.
+    """
+    result = await db.execute(
+        select(AiMemory).where(
+            AiMemory.user_id == user_id,
+            AiMemory.scope.in_(_OVERALL_SCOPES),
+        )
+    )
+    memories = result.scalars().all()
+    if not memories:
+        return
+    for memory in memories:
+        memory.safety_validated = False
+    await db.flush()
 
 
 async def get_interpretation_and_metadata(

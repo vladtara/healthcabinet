@@ -813,10 +813,17 @@ async def test_get_dashboard_interpretation_rebuilds_after_document_delete_casca
     assert len(response_before.json()["source_document_ids"]) == 2
 
     # Remove one analysis row (mirrors cascade delete on document delete).
+    # Production document-delete also invalidates every aggregate scope;
+    # simulate that so the cache-first path sees a stale row and rebuilds.
+    from app.ai import repository as ai_repository
+
     await async_db_session.execute(
         sa_delete(AiMemoryModel).where(AiMemoryModel.document_id == a_doc_a.id)
     )
     await async_db_session.execute(sa_delete(DocumentModel).where(DocumentModel.id == a_doc_a.id))
+    await ai_repository.invalidate_all_overall_interpretations(
+        async_db_session, user_id=user.id
+    )
     await async_db_session.flush()
 
     with patch(
@@ -884,6 +891,13 @@ async def test_get_dashboard_interpretation_rebuilds_after_new_upload(
             safety_validated=True,
         )
     )
+    # Production processing finalize invalidates every aggregate scope after a
+    # per-document note lands; simulate that so the cache-first path rebuilds.
+    from app.ai import repository as ai_repository
+
+    await ai_repository.invalidate_all_overall_interpretations(
+        async_db_session, user_id=user.id
+    )
     await async_db_session.flush()
 
     with patch(
@@ -935,12 +949,19 @@ async def test_get_dashboard_interpretation_rebuilds_after_reupload(
 
     # Simulate reupload: replace a_doc_a's AiMemory interpretation in place.
     # This mirrors the processing finalize path on reupload, which upserts a
-    # fresh interpretation onto the existing row (onupdate bumps updated_at).
+    # fresh interpretation onto the existing row (onupdate bumps updated_at)
+    # and then invalidates every aggregate scope so the next aggregate GET
+    # regenerates.
+    from app.ai import repository as ai_repository
+
     refreshed_text = "Reupload sentinel: HbA1c reduced to 5.3%."
     await async_db_session.execute(
         sa_update(AiMemoryModel)
         .where(AiMemoryModel.document_id == a_doc_a.id)
         .values(interpretation_encrypted=encrypt_bytes(refreshed_text.encode()))
+    )
+    await ai_repository.invalidate_all_overall_interpretations(
+        async_db_session, user_id=user.id
     )
     await async_db_session.flush()
 

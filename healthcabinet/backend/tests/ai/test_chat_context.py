@@ -6,14 +6,18 @@ overall note (ai_memories with scope='overall_all'), and should omit that
 section cleanly when no overall note exists.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai import repository as ai_repository
 from app.ai.models import AiMemory
-from app.ai.service import _build_follow_up_prompt, stream_follow_up_answer
+from app.ai.service import (
+    _build_follow_up_prompt,
+    stream_dashboard_follow_up,
+    stream_follow_up_answer,
+)
 from app.core.encryption import encrypt_bytes
 
 
@@ -144,3 +148,143 @@ async def test_stream_follow_up_omits_main_summary_when_absent(
     assert captured_prompts
     assert "Main health summary" not in captured_prompts[0]
     assert "Only per-doc text." in captured_prompts[0]
+
+
+def test_build_follow_up_prompt_with_filter_summary_emits_filter_block():
+    prompt = _build_follow_up_prompt(
+        context_rows=[
+            {
+                "document_id": "11111111-1111-1111-1111-111111111111",
+                "interpretation": "Doc A text.",
+            }
+        ],
+        question="Any trend in my analyses?",
+        output_language="en",
+        main_summary=("Overall anchor summary.", None),
+        filter_summary=("analysis", "Filter-specific analysis narrative.", None),
+    )
+    assert "Main health summary" in prompt
+    assert "Filter view: analysis" in prompt
+    assert "Filter-specific analysis narrative." in prompt
+    # Main summary must still come before the filter-specific view so the
+    # model treats "all" as the overarching anchor.
+    assert prompt.index("Main health summary") < prompt.index("Filter view: analysis")
+
+
+@pytest.mark.asyncio
+async def test_stream_dashboard_follow_up_injects_filter_summary(
+    async_db_session: AsyncSession,
+    make_user,
+    make_document,
+):
+    """Dashboard chat scoped to `analysis` should inject BOTH the overall_all
+    anchor and the cached overall_analysis filter view into the prompt."""
+    user, _ = await make_user(email="dash_chat_filter@example.com")
+    doc = await make_document(user=user, status="completed")
+    doc.document_kind = "analysis"
+    async_db_session.add(
+        AiMemory(
+            user_id=user.id,
+            document_id=doc.id,
+            interpretation_encrypted=encrypt_bytes(b"Per-doc analysis interpretation."),
+            model_version="claude-sonnet-4-6",
+            safety_validated=True,
+        )
+    )
+    await async_db_session.flush()
+
+    await ai_repository.upsert_overall_interpretation(
+        async_db_session,
+        user_id=user.id,
+        interpretation_text="Anchor overall narrative.",
+        model_version="claude-sonnet-4-6",
+        reasoning_json={"source_document_ids": [str(doc.id)], "locale": "en"},
+        scope=ai_repository.OVERALL_SCOPE_ALL,
+    )
+    await ai_repository.upsert_overall_interpretation(
+        async_db_session,
+        user_id=user.id,
+        interpretation_text="Analysis-only narrative body.",
+        model_version="claude-sonnet-4-6",
+        reasoning_json={"source_document_ids": [str(doc.id)], "locale": "en"},
+        scope=ai_repository.OVERALL_SCOPE_ANALYSIS,
+    )
+    await async_db_session.flush()
+
+    captured_prompts: list[str] = []
+
+    async def _fake_stream(prompt: str):
+        captured_prompts.append(prompt)
+        yield "ok"
+
+    with patch("app.ai.service.stream_model_text", _fake_stream):
+        stream = await stream_dashboard_follow_up(
+            async_db_session,
+            user_id=user.id,
+            document_kind="analysis",
+            question="What's going on?",
+        )
+        async for _ in stream:
+            pass
+
+    assert captured_prompts
+    prompt = captured_prompts[0]
+    assert "Main health summary" in prompt
+    assert "Anchor overall narrative." in prompt
+    assert "Filter view: analysis" in prompt
+    assert "Analysis-only narrative body." in prompt
+
+
+@pytest.mark.asyncio
+async def test_stream_dashboard_follow_up_anchor_only_when_no_filter_cache(
+    async_db_session: AsyncSession,
+    make_user,
+    make_document,
+):
+    """Dashboard chat scoped to `analysis` with NO overall_analysis cache row
+    should still inject the overall_all anchor but omit the filter view."""
+    user, _ = await make_user(email="dash_chat_anchor_only@example.com")
+    doc = await make_document(user=user, status="completed")
+    doc.document_kind = "analysis"
+    async_db_session.add(
+        AiMemory(
+            user_id=user.id,
+            document_id=doc.id,
+            interpretation_encrypted=encrypt_bytes(b"Per-doc analysis interpretation."),
+            model_version="claude-sonnet-4-6",
+            safety_validated=True,
+        )
+    )
+    await async_db_session.flush()
+
+    await ai_repository.upsert_overall_interpretation(
+        async_db_session,
+        user_id=user.id,
+        interpretation_text="Anchor-only narrative.",
+        model_version="claude-sonnet-4-6",
+        reasoning_json={"source_document_ids": [str(doc.id)], "locale": "en"},
+        scope=ai_repository.OVERALL_SCOPE_ALL,
+    )
+    await async_db_session.flush()
+
+    captured_prompts: list[str] = []
+
+    async def _fake_stream(prompt: str):
+        captured_prompts.append(prompt)
+        yield "ok"
+
+    with patch("app.ai.service.stream_model_text", _fake_stream):
+        stream = await stream_dashboard_follow_up(
+            async_db_session,
+            user_id=user.id,
+            document_kind="analysis",
+            question="What's going on?",
+        )
+        async for _ in stream:
+            pass
+
+    assert captured_prompts
+    prompt = captured_prompts[0]
+    assert "Main health summary" in prompt
+    assert "Anchor-only narrative." in prompt
+    assert "Filter view:" not in prompt

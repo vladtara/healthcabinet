@@ -152,17 +152,38 @@ async def _load_main_summary_for_chat(
     and the chat proceeds without the anchor block. The main-summary context
     is an enhancement, never a requirement for answering.
     """
+    return await _load_overall_summary_for_chat(
+        db, user_id=user_id, scope=ai_repository.OVERALL_SCOPE_ALL
+    )
+
+
+async def _load_overall_summary_for_chat(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    scope: str,
+) -> tuple[str, datetime.datetime | None] | None:
+    """Same shape as _load_main_summary_for_chat but for any aggregate scope."""
     try:
-        row = await ai_repository.get_overall_interpretation(db, user_id=user_id)
+        row = await ai_repository.get_overall_interpretation(
+            db, user_id=user_id, scope=scope
+        )
     except Exception:
-        logger.warning("ai.chat_main_summary_lookup_failed", user_id=str(user_id))
+        logger.warning(
+            "ai.chat_overall_summary_lookup_failed",
+            user_id=str(user_id),
+            scope=scope,
+        )
         return None
     if row is None:
         return None
     try:
         decrypted = await ai_repository.decrypt_overall_interpretation(row)
     except Exception:
-        logger.warning("ai.chat_main_summary_decrypt_failed", user_id=str(user_id))
+        logger.warning(
+            "ai.chat_overall_summary_decrypt_failed",
+            user_id=str(user_id),
+            scope=scope,
+        )
         return None
     if decrypted is None:
         return None
@@ -326,6 +347,7 @@ def _build_follow_up_prompt(
     active_document_id: uuid.UUID | None = None,
     output_language: str = "en",
     main_summary: tuple[str, datetime.datetime | None] | None = None,
+    filter_summary: tuple[str, str, datetime.datetime | None] | None = None,
 ) -> str:
     """Combine context rows and question into a follow-up prompt.
 
@@ -334,6 +356,11 @@ def _build_follow_up_prompt(
     from `ai_memories(scope='overall_all')`. The chat model is instructed to
     treat it as the anchor summary and to reconcile per-document details
     against it.
+
+    When `filter_summary` is provided (as a `(filter_label, text, updated_at)`
+    triple), an additional `[Filter view]` block is inserted after the main
+    summary. The filter view is a subset perspective; on conflict the model
+    is instructed to prefer the main summary.
     """
     context_parts: list[str] = []
     if main_summary is not None:
@@ -344,6 +371,16 @@ def _build_follow_up_prompt(
             "This is the anchor overview of the user's health across all documents; "
             "reconcile any per-document details against it.\n"
             f"{summary_text}"
+        )
+    if filter_summary is not None:
+        filter_label, filter_text, filter_updated = filter_summary
+        filter_clip = filter_text[:_PRIOR_OVERALL_MAX_CHARS]
+        filter_date = filter_updated.date().isoformat() if filter_updated else "unknown date"
+        context_parts.append(
+            f"[Filter view: {filter_label} — {filter_date}]\n"
+            f'Cached overview for the user\'s currently active filter ("{filter_label}"). '
+            "Use it alongside the main summary; when they conflict, prefer the main summary.\n"
+            f"{filter_clip}"
         )
     prev_count = 0
     for row in context_rows:
@@ -630,11 +667,11 @@ async def _generate_and_persist_overall(
     document_kind: DashboardKind,
     output_language: str,
 ) -> DashboardInterpretationResponse:
-    """Call the LLM for the overall note and persist it. Persistence only
-    happens for the default "all" scope — the user keeps exactly one cached
-    main note in sync with invalidations. Non-"all" filter variants still
-    regenerate on demand without caching.
+    """Call the LLM for the overall note and persist it to its per-kind
+    aggregate scope. Each filter keeps exactly one cached row, kept in sync by
+    the upload/delete invalidation hooks.
     """
+    scope = ai_repository.overall_scope_for_kind(document_kind)
     context_rows = await ai_repository.list_user_ai_context(
         db, user_id=user_id, document_kind=document_kind
     )
@@ -664,15 +701,17 @@ async def _generate_and_persist_overall(
         # producing an empty aggregate.
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
-    # Feed the prior overall note back in as continuity context when we have
-    # one. This only applies to the cached "all" scope.
+    # Feed the prior same-scope note back in as continuity context when we
+    # have one, so each filter evolves its own summary rather than restarting
+    # from scratch (and without bleeding cross-filter content).
     prior_overall: tuple[str, datetime.datetime | None] | None = None
-    if document_kind == "all":
-        prior_row = await ai_repository.get_overall_interpretation(db, user_id=user_id)
-        if prior_row is not None:
-            decrypted = await ai_repository.decrypt_overall_interpretation(prior_row)
-            if decrypted is not None:
-                prior_overall = (decrypted[0], prior_row.updated_at)
+    prior_row = await ai_repository.get_overall_interpretation(
+        db, user_id=user_id, scope=scope
+    )
+    if prior_row is not None:
+        decrypted = await ai_repository.decrypt_overall_interpretation(prior_row)
+        if decrypted is not None:
+            prior_overall = (decrypted[0], prior_row.updated_at)
 
     prompt = _build_dashboard_prompt(
         prompt_rows,
@@ -712,19 +751,20 @@ async def _generate_and_persist_overall(
     model_version = get_model_name()
     generated_at = datetime.datetime.now(datetime.UTC)
 
-    if document_kind == "all":
-        reasoning_snapshot: dict[str, object] = {}
-        reasoning_snapshot["source_document_ids"] = [str(d) for d in source_document_ids]
-        reasoning_snapshot["locale"] = output_language
-        memory = await ai_repository.upsert_overall_interpretation(
-            db,
-            user_id=user_id,
-            interpretation_text=text,
-            model_version=model_version,
-            reasoning_json=reasoning_snapshot,
-        )
-        await db.commit()
-        generated_at = memory.updated_at or generated_at
+    reasoning_snapshot: dict[str, object] = {
+        "source_document_ids": [str(d) for d in source_document_ids],
+        "locale": output_language,
+    }
+    memory = await ai_repository.upsert_overall_interpretation(
+        db,
+        user_id=user_id,
+        interpretation_text=text,
+        model_version=model_version,
+        reasoning_json=reasoning_snapshot,
+        scope=scope,
+    )
+    await db.commit()
+    generated_at = memory.updated_at or generated_at
 
     return DashboardInterpretationResponse(
         document_id=None,
@@ -745,49 +785,48 @@ async def generate_dashboard_interpretation(
 ) -> DashboardInterpretationResponse:
     """Cache-first dashboard interpretation.
 
-    For `document_kind == "all"`: return the persisted overall note when it
-    exists, is safety_validated, and matches the requested locale. Otherwise
-    call the LLM, persist, return.
-
-    For other filters: fall through to on-demand generation (no cache) —
-    the caching scope is intentionally limited to the default "all" filter.
+    Returns the persisted aggregate note for the requested filter scope when
+    it exists, is safety_validated, and matches the requested locale. Otherwise
+    calls the LLM, persists the new row under the same scope, and returns it.
 
     Raises NoDashboardAiContextError when the filter yields zero contributing
     per-document rows (empty state at the router layer).
     """
-    if document_kind == "all":
-        cached = await ai_repository.get_overall_interpretation(db, user_id=user_id)
-        if cached is not None and cached.safety_validated:
-            decrypted = await ai_repository.decrypt_overall_interpretation(cached)
-            if decrypted is not None:
-                text, reasoning = decrypted
-                cached_locale = None
-                cached_source_ids: list[uuid.UUID] = []
-                if isinstance(reasoning, dict):
-                    loc = reasoning.get("locale")
-                    if isinstance(loc, str):
-                        cached_locale = loc
-                    raw_ids = reasoning.get("source_document_ids")
-                    if isinstance(raw_ids, list):
-                        for raw_id in raw_ids:
-                            if not isinstance(raw_id, str):
-                                continue
-                            try:
-                                cached_source_ids.append(uuid.UUID(raw_id))
-                            except ValueError:
-                                continue
-                # Locale mismatch → regenerate so the user sees content in the
-                # language they requested rather than a silently-wrong cache.
-                if cached_locale == output_language:
-                    return DashboardInterpretationResponse(
-                        document_id=None,
-                        document_kind=document_kind,
-                        source_document_ids=cached_source_ids,
-                        interpretation=text,
-                        model_version=cached.model_version,
-                        generated_at=cached.updated_at,
-                        reasoning=None,
-                    )
+    scope = ai_repository.overall_scope_for_kind(document_kind)
+    cached = await ai_repository.get_overall_interpretation(
+        db, user_id=user_id, scope=scope
+    )
+    if cached is not None and cached.safety_validated:
+        decrypted = await ai_repository.decrypt_overall_interpretation(cached)
+        if decrypted is not None:
+            text, reasoning = decrypted
+            cached_locale = None
+            cached_source_ids: list[uuid.UUID] = []
+            if isinstance(reasoning, dict):
+                loc = reasoning.get("locale")
+                if isinstance(loc, str):
+                    cached_locale = loc
+                raw_ids = reasoning.get("source_document_ids")
+                if isinstance(raw_ids, list):
+                    for raw_id in raw_ids:
+                        if not isinstance(raw_id, str):
+                            continue
+                        try:
+                            cached_source_ids.append(uuid.UUID(raw_id))
+                        except ValueError:
+                            continue
+            # Locale mismatch → regenerate so the user sees content in the
+            # language they requested rather than a silently-wrong cache.
+            if cached_locale == output_language:
+                return DashboardInterpretationResponse(
+                    document_id=None,
+                    document_kind=document_kind,
+                    source_document_ids=cached_source_ids,
+                    interpretation=text,
+                    model_version=cached.model_version,
+                    generated_at=cached.updated_at,
+                    reasoning=None,
+                )
 
     return await _generate_and_persist_overall(
         db,
@@ -803,13 +842,16 @@ async def force_regenerate_dashboard_interpretation(
     document_kind: DashboardKind,
     output_language: str = "en",
 ) -> DashboardInterpretationResponse:
-    """Always call the LLM and persist (for document_kind='all'). Used by the
-    manual regenerate button. Invalidates the cached row before regenerating
-    so a mid-run failure leaves nothing stale-but-valid behind.
+    """Always call the LLM and persist the aggregate note for the requested
+    filter scope. Used by the manual regenerate button. Invalidates the cached
+    row before regenerating so a mid-run failure leaves nothing stale-but-valid
+    behind.
     """
-    if document_kind == "all":
-        await ai_repository.invalidate_overall_interpretation(db, user_id=user_id)
-        await db.commit()
+    scope = ai_repository.overall_scope_for_kind(document_kind)
+    await ai_repository.invalidate_overall_interpretation(
+        db, user_id=user_id, scope=scope
+    )
+    await db.commit()
     return await _generate_and_persist_overall(
         db,
         user_id=user_id,
@@ -838,6 +880,18 @@ async def stream_dashboard_follow_up(
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
     main_summary = await _load_main_summary_for_chat(db, user_id=user_id)
+    # When the user is filtered, also inject the active-filter's cached
+    # summary so the chat has the filter-scoped narrative available alongside
+    # the main overall anchor. Skip for "all" since the filter scope IS the
+    # main scope and duplication is pointless.
+    filter_summary: tuple[str, str, datetime.datetime | None] | None = None
+    if document_kind != "all":
+        filter_scope = ai_repository.overall_scope_for_kind(document_kind)
+        loaded = await _load_overall_summary_for_chat(
+            db, user_id=user_id, scope=filter_scope
+        )
+        if loaded is not None:
+            filter_summary = (document_kind, loaded[0], loaded[1])
 
     prompt = _build_follow_up_prompt(
         context_rows,
@@ -845,6 +899,7 @@ async def stream_dashboard_follow_up(
         active_document_id=None,
         output_language=output_language,
         main_summary=main_summary,
+        filter_summary=filter_summary,
     )
     model_stream = stream_model_text(prompt)
 

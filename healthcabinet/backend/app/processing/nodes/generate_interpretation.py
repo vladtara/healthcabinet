@@ -49,18 +49,18 @@ async def generate_interpretation(
     except Exception:
         logger.warning("worker.ai_interpretation_failed", document_id=state["document_id_str"])
 
-    # The per-document note just changed, so the user-level overall/main
-    # clinical note is now stale. Invalidate lazily — we do not regenerate
-    # here because the user may still be mid-upload of several documents;
-    # regeneration happens on the next GET /dashboard/interpretation or on
-    # an explicit POST /dashboard/interpretation/regenerate. This is what
-    # saves LLM tokens versus the previous "regenerate every page load"
-    # behaviour.
+    # The per-document note just changed, so every aggregate-scope note
+    # (overall_all / overall_analysis / overall_document) is now stale.
+    # Invalidate lazily — we do not regenerate here because the user may
+    # still be mid-upload of several documents; regeneration happens on the
+    # next GET /dashboard/interpretation or on an explicit
+    # POST /dashboard/interpretation/regenerate. This is what saves LLM
+    # tokens versus the previous "regenerate every page load" behaviour.
     try:
         from app.ai import repository as ai_repository
 
         async with AsyncSession(state["runtime"].db_engine, expire_on_commit=False) as db:
-            await ai_repository.invalidate_overall_interpretation(db, user_id=user_id)
+            await ai_repository.invalidate_all_overall_interpretations(db, user_id=user_id)
             await db.commit()
     except Exception:
         logger.warning(

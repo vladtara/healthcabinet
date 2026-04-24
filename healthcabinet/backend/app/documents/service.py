@@ -367,9 +367,10 @@ async def delete_document(
     s3_key = await repository.get_document_s3_key_optional(db, document_id, user.id)
     await health_repo.delete_document_health_values(db, document_id=document_id, user_id=user.id)
     await repository.delete_document(db, document_id, user.id)
-    # The overall note was computed from the now-deleted document's row.
-    # Mark it stale so the next dashboard view or chat refreshes it.
-    await ai_repo.invalidate_overall_interpretation(db, user_id=user.id)
+    # The overall notes (all filter scopes) were computed from the now-deleted
+    # document's row. Mark every aggregate scope stale so the next dashboard
+    # view or chat refreshes it regardless of which filter the user lands on.
+    await ai_repo.invalidate_all_overall_interpretations(db, user_id=user.id)
     await db.commit()
 
     prefix = f"{user.id}/{document_id}/"
@@ -603,7 +604,7 @@ async def confirm_date_year(
     # stored text may contradict the new timeline, so mark it invalid until
     # a regeneration succeeds. Cheap and idempotent when no prior row exists.
     await ai_repo.invalidate_interpretation(db, user_id=user.id, document_id=document_id)
-    await ai_repo.invalidate_overall_interpretation(db, user_id=user.id)
+    await ai_repo.invalidate_all_overall_interpretations(db, user_id=user.id)
 
     await db.commit()
 
