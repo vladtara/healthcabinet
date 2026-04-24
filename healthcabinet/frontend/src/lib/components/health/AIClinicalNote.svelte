@@ -117,6 +117,17 @@
 	}
 </script>
 
+{#snippet regenButton()}
+	<button
+		class="hc-ai-note-regen"
+		class:spinning={interpretationQuery.isFetching}
+		aria-label={copy.regenerateAria}
+		title={copy.regenerateAria}
+		disabled={interpretationQuery.isFetching}
+		onclick={() => interpretationQuery.refetch()}
+	><span aria-hidden="true">↺</span></button>
+{/snippet}
+
 {#if props.mode === 'document' && props.documentId == null}
 	<div class="hc-ai-note">
 		<p class="hc-ai-note-empty">{copy.empty}</p>
@@ -146,13 +157,7 @@
 	<div class="hc-ai-note">
 		<div class="hc-ai-note-header-row">
 			<p class="hc-ai-note-header">{copy.header}</p>
-			<button
-				class="hc-ai-note-regen"
-				class:spinning={interpretationQuery.isFetching}
-				aria-label={copy.regenerateAria}
-				disabled={interpretationQuery.isFetching}
-				onclick={() => interpretationQuery.refetch()}
-			>↺</button>
+			{@render regenButton()}
 		</div>
 		<p class="text-xs text-muted-foreground">{copy.errorUnable}</p>
 	</div>
@@ -163,13 +168,7 @@
 	<section class="hc-ai-note" aria-label={copy.aria}>
 		<div class="hc-ai-note-header-row">
 			<p class="hc-ai-note-header">{copy.header}</p>
-			<button
-				class="hc-ai-note-regen"
-				class:spinning={interpretationQuery.isFetching}
-				aria-label={copy.regenerateAria}
-				disabled={interpretationQuery.isFetching}
-				onclick={() => interpretationQuery.refetch()}
-			>↺</button>
+			{@render regenButton()}
 		</div>
 		<div class="hc-ai-note-body">{@html marked(data.interpretation)}</div>
 

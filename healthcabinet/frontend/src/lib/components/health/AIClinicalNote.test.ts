@@ -118,6 +118,73 @@ describe('AIClinicalNote', () => {
 		expect(results.violations).toHaveLength(0);
 	});
 
+	// ── Regenerate button ───────────────────────────────────────────────────
+
+	test('regenerate button is present in success state', async () => {
+		mockGetInterpretation.mockResolvedValue(mockInterpretation);
+		const { getByLabelText } = renderNote();
+
+		await waitFor(() => {
+			expect(getByLabelText('Regenerate')).toBeInTheDocument();
+		});
+	});
+
+	test('regenerate button is present in hard-error state', async () => {
+		mockGetInterpretation.mockRejectedValue(new Error('Network error'));
+		const { getByLabelText } = renderNote();
+
+		await waitFor(() => {
+			expect(getByLabelText('Regenerate')).toBeInTheDocument();
+		});
+	});
+
+	test('clicking regenerate button triggers a refetch', async () => {
+		mockGetInterpretation.mockResolvedValue(mockInterpretation);
+		const { getByLabelText } = renderNote();
+
+		await waitFor(() => expect(getByLabelText('Regenerate')).toBeInTheDocument());
+		expect(mockGetInterpretation).toHaveBeenCalledTimes(1);
+
+		getByLabelText('Regenerate').click();
+
+		await waitFor(() => {
+			expect(mockGetInterpretation).toHaveBeenCalledTimes(2);
+		});
+	});
+
+	test('regenerate button is disabled while a refetch is in flight', async () => {
+		let resolveRefetch!: (v: typeof mockInterpretation) => void;
+		mockGetInterpretation
+			.mockResolvedValueOnce(mockInterpretation)
+			.mockReturnValueOnce(new Promise((r) => { resolveRefetch = r; }));
+
+		const { getByLabelText } = renderNote();
+		await waitFor(() => expect(getByLabelText('Regenerate')).toBeInTheDocument());
+
+		getByLabelText('Regenerate').click();
+
+		await waitFor(() => {
+			expect(getByLabelText('Regenerate')).toBeDisabled();
+		});
+
+		resolveRefetch(mockInterpretation);
+	});
+
+	test('shows loading skeleton when regenerating from error state', async () => {
+		mockGetInterpretation
+			.mockRejectedValueOnce(new Error('Network error'))
+			.mockReturnValueOnce(new Promise(() => {})); // refetch stays pending
+
+		const { getByLabelText, container } = renderNote();
+		await waitFor(() => expect(getByLabelText('Regenerate')).toBeInTheDocument());
+
+		getByLabelText('Regenerate').click();
+
+		await waitFor(() => {
+			expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+		});
+	});
+
 	// ── Story 15.3 — dashboard mode ────────────────────────────────────────
 
 	function renderDashboardNote(documentKind: 'all' | 'analysis' | 'document' = 'analysis') {
