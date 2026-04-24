@@ -1,6 +1,6 @@
 import { waitFor } from '@testing-library/svelte';
 import axe from 'axe-core';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import { QueryClient } from '@tanstack/query-core';
 import AIClinicalNoteTestWrapper from './AIClinicalNoteTestWrapper.svelte';
@@ -46,6 +46,10 @@ function renderNote(documentId: string | null = 'doc-1') {
 describe('AIClinicalNote', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	test('renders interpretation text when loaded', async () => {
@@ -155,6 +159,43 @@ describe('AIClinicalNote', () => {
 			expect(getByText(/no AI interpretation for this filter yet/i)).toBeInTheDocument();
 		});
 		expect(queryByText(/interpretation is being generated/i)).toBeNull();
+	});
+
+	test('dashboard mode retries once after a 429 before surfacing an error', async () => {
+		vi.useFakeTimers();
+
+		class ApiError extends Error {
+			status: number;
+			constructor(status: number) {
+				super('http');
+				this.status = status;
+			}
+		}
+
+		mockGetDashboardInterpretation
+			.mockRejectedValueOnce(new ApiError(429))
+			.mockResolvedValueOnce({
+				document_id: null,
+				document_kind: 'analysis',
+				source_document_ids: ['doc-1'],
+				interpretation: 'Retry succeeded.',
+				model_version: 'claude-4',
+				generated_at: '2026-04-20T00:00:00Z',
+				reasoning: null
+			});
+
+		const { getByText } = renderDashboardNote('analysis');
+
+		await waitFor(() => {
+			expect(mockGetDashboardInterpretation).toHaveBeenCalledTimes(1);
+		});
+
+		await vi.advanceTimersByTimeAsync(2000);
+
+		await waitFor(() => {
+			expect(mockGetDashboardInterpretation).toHaveBeenCalledTimes(2);
+			expect(getByText(/retry succeeded/i)).toBeInTheDocument();
+		});
 	});
 
 		test('dashboard mode calls getDashboardInterpretation, not getDocumentInterpretation', async () => {

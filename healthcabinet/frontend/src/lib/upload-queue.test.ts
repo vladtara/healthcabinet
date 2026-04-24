@@ -318,7 +318,10 @@ describe('applyTerminalStatus', () => {
 		expect(invalidateQueries).toHaveBeenCalledTimes(3);
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['ai_dashboard_interpretation'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 	});
 
 	test('partial → invalidates all three dashboard keys', () => {
@@ -334,7 +337,10 @@ describe('applyTerminalStatus', () => {
 
 		expect(q[0].status).toBe('partial');
 		expect(invalidateQueries).toHaveBeenCalledTimes(3);
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['ai_dashboard_interpretation'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 	});
 
 	test('failed → does NOT invalidate any cache keys', () => {
@@ -374,6 +380,10 @@ describe('applyTerminalStatus', () => {
 			([arg]) => (arg as { queryKey: string[] }).queryKey[0] === 'ai_dashboard_interpretation'
 		);
 		expect(dashboardCalls).toHaveLength(2);
+		expect(dashboardCalls).toEqual([
+			[{ queryKey: ['ai_dashboard_interpretation'], refetchType: 'none' }],
+			[{ queryKey: ['ai_dashboard_interpretation'], refetchType: 'none' }]
+		]);
 	});
 });
 

@@ -16,13 +16,21 @@ export function handleUploadSuccess(doc: Document): UploadPageModel {
 }
 
 export function handleProcessingComplete(
-	queryClient: { invalidateQueries: (arg: { queryKey: string[] }) => unknown },
+	queryClient: {
+		invalidateQueries: (arg: {
+			queryKey: string[];
+			refetchType?: 'active' | 'inactive' | 'all' | 'none';
+		}) => unknown;
+	},
 	model: UploadPageModel
 ): UploadPageModel {
 	queryClient.invalidateQueries({ queryKey: ['documents'] });
 	queryClient.invalidateQueries({ queryKey: ['health_values'] });
 	// Story 15.3 — rebuild dashboard AI aggregate from the new persisted row.
-	queryClient.invalidateQueries({ queryKey: ['ai_dashboard_interpretation'] });
+	queryClient.invalidateQueries({
+		queryKey: ['ai_dashboard_interpretation'],
+		refetchType: 'none'
+	});
 	return {
 		...model,
 		uploadState: 'done'
@@ -30,7 +38,12 @@ export function handleProcessingComplete(
 }
 
 export function handleProcessingFailure(
-	queryClient: { invalidateQueries: (arg: { queryKey: string[] }) => unknown },
+	queryClient: {
+		invalidateQueries: (arg: {
+			queryKey: string[];
+			refetchType?: 'active' | 'inactive' | 'all' | 'none';
+		}) => unknown;
+	},
 	model: UploadPageModel,
 	reason: FailureReason = 'failed'
 ): UploadPageModel {
@@ -38,7 +51,10 @@ export function handleProcessingFailure(
 		queryClient.invalidateQueries({ queryKey: ['documents'] });
 		queryClient.invalidateQueries({ queryKey: ['health_values'] });
 		// Story 15.3 — partial still produces an AiMemory row when values extracted.
-		queryClient.invalidateQueries({ queryKey: ['ai_dashboard_interpretation'] });
+		queryClient.invalidateQueries({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 		return {
 			...model,
 			uploadState: 'partial'

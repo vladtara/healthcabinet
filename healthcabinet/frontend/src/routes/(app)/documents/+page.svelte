@@ -60,13 +60,16 @@
 			queryClient.setQueryData(['documents'], (old: Document[] | undefined) =>
 				old?.filter((d: Document) => d.id !== docId) ?? []
 			);
-			queryClient.invalidateQueries({ queryKey: ['documents', docId] });
-			queryClient.invalidateQueries({ queryKey: ['health_values'] });
-			// Story 15.3 — rebuild dashboard AI aggregate after cascade removes AiMemory.
-			queryClient.invalidateQueries({ queryKey: ['ai_dashboard_interpretation'] });
-			selectedDocumentId = null;
-		}
-	}));
+				queryClient.invalidateQueries({ queryKey: ['documents', docId] });
+				queryClient.invalidateQueries({ queryKey: ['health_values'] });
+				// Story 15.3 — rebuild dashboard AI aggregate after cascade removes AiMemory.
+				queryClient.invalidateQueries({
+					queryKey: ['ai_dashboard_interpretation'],
+					refetchType: 'none'
+				});
+				selectedDocumentId = null;
+			}
+		}));
 
 	function statusBadge(status: Document['status']): { symbol: string; text: string; cssClass: string } {
 		switch (status) {
@@ -152,7 +155,8 @@
 							queryClient.invalidateQueries({ queryKey: ['timeline'] });
 							// Story 15.3 — new persisted row may contribute to dashboard AI.
 							queryClient.invalidateQueries({
-								queryKey: ['ai_dashboard_interpretation']
+								queryKey: ['ai_dashboard_interpretation'],
+								refetchType: 'none'
 							});
 						}
 						controller.abort();

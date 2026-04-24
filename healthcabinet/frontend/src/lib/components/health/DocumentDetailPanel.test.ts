@@ -638,12 +638,13 @@ describe('DocumentDetailPanel', () => {
 		await waitFor(() => {
 			expect(screen.queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
 		});
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
-		expect(invalidateQueries).toHaveBeenCalledWith({
-			queryKey: ['ai_dashboard_interpretation']
+			expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
+			expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
+			expect(invalidateQueries).toHaveBeenCalledWith({
+				queryKey: ['ai_dashboard_interpretation'],
+				refetchType: 'none'
+			});
 		});
-	});
 
 	test('Flagged count reflects is_flagged values', async () => {
 		renderPanel({

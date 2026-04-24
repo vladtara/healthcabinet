@@ -90,10 +90,10 @@
 		enabled: filteredDocuments.length > 0,
 		staleTime: 60_000,
 		// Retry once on transient errors (429 rate-limit, 503 unavailable).
-		// Do NOT retry on 4xx client errors (409 filter-empty is permanent).
+		// Do NOT retry on 409 filter-empty responses; one retry is allowed for 429.
 		retry: (failureCount: number, error: unknown) => {
 			const status = (error as { status?: number })?.status;
-			if (typeof status === 'number' && status >= 400 && status < 500) return false;
+			if (status === 409) return false;
 			return failureCount < 1;
 		},
 		retryDelay: () => 2000

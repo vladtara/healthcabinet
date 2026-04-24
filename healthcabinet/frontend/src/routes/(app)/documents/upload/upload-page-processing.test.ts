@@ -49,7 +49,10 @@ describe('upload page processing state helpers', () => {
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
 		// Story 15.3 — rebuild dashboard AI aggregate from the new persisted row.
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['ai_dashboard_interpretation'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 	});
 
 	test('partial processing invalidates documents, health_values, and dashboard AI', () => {
@@ -64,7 +67,10 @@ describe('upload page processing state helpers', () => {
 		expect(invalidateQueries).toHaveBeenCalledTimes(3);
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['ai_dashboard_interpretation'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 	});
 
 	test('failed processing transitions to failed state without cache invalidation', () => {
@@ -103,7 +109,7 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 		applyTerminalStatus({ invalidateQueries }, setQueue, entryId, status, error);
 	}
 
-	test('2 completed + 1 partial + 1 failed → dashboard key invalidated 3 times', () => {
+	test('2 completed + 1 partial + 1 failed → dashboard key invalidated 3 times without eager refetch', () => {
 		const files = [makeFile('a.pdf'), makeFile('b.pdf'), makeFile('c.pdf'), makeFile('d.pdf')];
 		let queue: UploadQueueEntry[] = createUploadQueue(files).map((e) => ({
 			...e,
@@ -128,6 +134,11 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 			([arg]) => (arg as { queryKey: string[] }).queryKey[0] === 'ai_dashboard_interpretation'
 		);
 		expect(dashboardCalls).toHaveLength(3);
+		expect(dashboardCalls).toEqual([
+			[{ queryKey: ['ai_dashboard_interpretation'], refetchType: 'none' }],
+			[{ queryKey: ['ai_dashboard_interpretation'], refetchType: 'none' }],
+			[{ queryKey: ['ai_dashboard_interpretation'], refetchType: 'none' }]
+		]);
 
 		// Failed entry: no invalidation fired for its id.
 		expect(queue.find((e) => e.id === queue[2].id)?.status).toBe('failed');
@@ -172,6 +183,9 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 		expect(invalidateQueries).toHaveBeenCalledTimes(3);
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
 		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
-		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['ai_dashboard_interpretation'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 	});
 });

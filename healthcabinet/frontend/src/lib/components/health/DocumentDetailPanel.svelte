@@ -168,7 +168,10 @@
 			// Invalidate list + dashboard-dependent queries so confirmed dates refresh cached views.
 			await queryClient.invalidateQueries({ queryKey: ['documents'] });
 			await queryClient.invalidateQueries({ queryKey: ['health_values'] });
-			await queryClient.invalidateQueries({ queryKey: ['ai_dashboard_interpretation'] });
+			await queryClient.invalidateQueries({
+				queryKey: ['ai_dashboard_interpretation'],
+				refetchType: 'none'
+			});
 			yearPickerOpen = false;
 		} catch (err) {
 			const apiErr = err as { detail?: string | Array<Record<string, unknown>>; title?: string };

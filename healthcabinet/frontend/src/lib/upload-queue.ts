@@ -24,7 +24,12 @@ export const TERMINAL_STATUSES: ReadonlySet<UploadEntryStatus> = new Set<UploadE
 	'failed'
 ]);
 
-const DASHBOARD_INVALIDATION_KEYS = ['documents', 'health_values', 'ai_dashboard_interpretation'];
+const DASHBOARD_INVALIDATION_KEYS = ['documents', 'health_values'];
+
+type InvalidateQueryArg = {
+	queryKey: string[];
+	refetchType?: 'active' | 'inactive' | 'all' | 'none';
+};
 
 export function isTerminal(status: UploadEntryStatus): boolean {
 	return TERMINAL_STATUSES.has(status);
@@ -85,7 +90,7 @@ export function advanceQueue(queue: UploadQueueEntry[]): UploadQueueEntry[] {
 }
 
 interface QueryClientLike {
-	invalidateQueries: (arg: { queryKey: string[] }) => unknown;
+	invalidateQueries: (arg: InvalidateQueryArg) => unknown;
 }
 
 type QueueMutator = (mutate: (current: UploadQueueEntry[]) => UploadQueueEntry[]) => void;
@@ -168,12 +173,16 @@ export function applyTerminalStatus(
 		error: status === 'failed' ? errorMessage : undefined
 	});
 
-	if (status === 'completed' || status === 'partial') {
-		for (const key of DASHBOARD_INVALIDATION_KEYS) {
-			queryClient.invalidateQueries({ queryKey: [key] });
+		if (status === 'completed' || status === 'partial') {
+			for (const key of DASHBOARD_INVALIDATION_KEYS) {
+				queryClient.invalidateQueries({ queryKey: [key] });
+			}
+			queryClient.invalidateQueries({
+				queryKey: ['ai_dashboard_interpretation'],
+				refetchType: 'none'
+			});
 		}
 	}
-}
 
 /**
  * ProcessingPipeline reports `onEvent` before the terminal event. Call this
