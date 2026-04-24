@@ -1,8 +1,8 @@
 # ── Stage 1: build dependencies ──────────────────────────────────────────────
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:520153e2deb359602c9cffd84e491e3431d76e7bf95a3255c9ce9433b76ab99a AS builder
 
 # Pin uv to a specific version — avoids silent breakage on upstream changes
-COPY --from=ghcr.io/astral-sh/uv:0.11.1 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a /uv /bin/uv
 
 # UV_LINK_MODE=copy: Docker layers don't support hardlinks — must copy files
 # UV_COMPILE_BYTECODE=1: pre-compile .pyc files for faster cold starts
@@ -31,9 +31,9 @@ EXPOSE 8000
 CMD ["./entrypoint.sh"]
 
 # ── Stage 2: dev/test (includes dev dependencies and uv) ──────────────────────
-FROM python:3.12-slim AS dev
+FROM python:3.12-slim@sha256:520153e2deb359602c9cffd84e491e3431d76e7bf95a3255c9ce9433b76ab99a AS dev
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.1 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a /uv /bin/uv
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
@@ -60,7 +60,7 @@ CMD ["./entrypoint.sh"]
 
 
 # ── Stage 3: runtime ─────────────────────────────────────────────────────────
-FROM python:3.12-slim AS runner
+FROM python:3.12-slim@sha256:520153e2deb359602c9cffd84e491e3431d76e7bf95a3255c9ce9433b76ab99a AS runner
 
 WORKDIR /app
 

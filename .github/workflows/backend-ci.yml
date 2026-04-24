@@ -26,12 +26,14 @@ jobs:
       run:
         working-directory: healthcabinet/backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "latest"
+          version: "0.11.7"
 
       - name: Set up Python
         run: uv python install 3.12
@@ -59,7 +61,7 @@ jobs:
         working-directory: healthcabinet/backend
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:4e6e670bb069649261c9c18031f0aded7bb249a5b6664ddec29c013a89310d50
         env:
           POSTGRES_USER: healthcabinet
           POSTGRES_PASSWORD: healthcabinet
@@ -72,7 +74,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: redis:7-alpine
+        image: redis:7-alpine@sha256:7aec734b2bb298a1d769fd8729f13b8514a41bf90fcdd1f38ec52267fbaa8ee6
         ports:
           - 6379:6379
         options: >-
@@ -87,12 +89,14 @@ jobs:
       ENCRYPTION_KEY: dGVzdC1rZXktMzItYnl0ZXMtZm9yLWNpLXRlc3Rpbmc=
       ENVIRONMENT: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "latest"
+          version: "0.11.7"
 
       - name: Set up Python
         run: uv python install 3.12

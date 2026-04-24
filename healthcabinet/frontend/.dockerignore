@@ -1,0 +1,8 @@
+.env
+.env.*
+.svelte-kit
+coverage
+node_modules
+npm-debug.log*
+playwright-report
+test-results

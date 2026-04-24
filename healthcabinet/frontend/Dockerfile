@@ -1,11 +1,11 @@
 # ── deps: install all dependencies (maximises cache reuse on source changes) ──
-FROM node:20-alpine AS deps
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
 # ── dev: full source + all deps — local development and unit testing ──────────
-FROM node:20-alpine AS dev
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -16,14 +16,14 @@ EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "--host"]
 
 # ── builder: compile the SvelteKit app ────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
 # ── runner: minimal production image ──────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS runner
 WORKDIR /app
 
 # Least-privilege: run as non-root user

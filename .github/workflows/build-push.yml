@@ -1,7 +1,7 @@
 name: Build & Push
 
 # Builds production Docker images, scans them with Trivy before pushing,
-# publishes to GitHub Container Registry, and updates the FluxCD kustomization.
+# and publishes them to GitHub Container Registry.
 # Triggered only on pushes to main that touch application or workflow files.
 
 on:
@@ -12,37 +12,87 @@ on:
       - "healthcabinet/frontend/**"
       - ".github/workflows/build-push.yml"
 
-# Serialise runs on main — newer push cancels in-flight older run so a stale
-# SHA can never overwrite a newer kustomization commit in FluxCD.
+# Serialise runs on main so older builds cannot finish after newer ones.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  security-scan:
+    name: Repository Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+
+      - name: Scan repo for high-risk misconfigurations
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-repo-misconfig.sarif
+          scanners: misconfig
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+
+      - name: Upload misconfiguration results
+        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
+        if: always()
+        with:
+          sarif_file: trivy-repo-misconfig.sarif
+          category: trivy-repo-misconfig
+
+      - name: Scan repo for leaked secrets
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-repo-secrets.sarif
+          scanners: secret
+          exit-code: "0"
+
+      - name: Upload secret scan results
+        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
+        if: always()
+        with:
+          sarif_file: trivy-repo-secrets.sarif
+          category: trivy-repo-secrets
+
   build-backend:
     name: Build & Push Backend
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: security-scan
     permissions:
       contents: read
       packages: write
       security-events: write  # upload SARIF findings to GitHub Security
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image (local only — no push yet)
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: ./healthcabinet/backend
           target: runner
@@ -55,8 +105,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Scan with Trivy (block on CRITICAL CVEs)
-        uses: aquasecurity/trivy-action@v0.36.0
+      - name: Scan with Trivy (block on HIGH and CRITICAL CVEs)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/healthcabinet-backend:${{ github.sha }}
           format: sarif
@@ -64,10 +114,10 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
-          severity: CRITICAL
+          severity: HIGH,CRITICAL
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
         if: always()
         with:
           sarif_file: trivy-backend.sarif
@@ -80,26 +130,29 @@ jobs:
     name: Build & Push Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: security-scan
     permissions:
       contents: read
       packages: write
       security-events: write  # upload SARIF findings to GitHub Security
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image (local only — no push yet)
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: ./healthcabinet/frontend
           target: runner
@@ -112,8 +165,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Scan with Trivy (block on CRITICAL CVEs)
-        uses: aquasecurity/trivy-action@v0.36.0
+      - name: Scan with Trivy (block on HIGH and CRITICAL CVEs)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/healthcabinet-frontend:${{ github.sha }}
           format: sarif
@@ -121,10 +174,10 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
-          severity: CRITICAL
+          severity: HIGH,CRITICAL
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
         if: always()
         with:
           sarif_file: trivy-frontend.sarif
@@ -132,41 +185,3 @@ jobs:
 
       - name: Push to GHCR
         run: docker push ghcr.io/${{ github.repository_owner }}/healthcabinet-frontend:${{ github.sha }}
-
-  update-kustomization:
-    name: Update FluxCD Image Tags
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [build-backend, build-frontend]
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install kustomize (verified checksum)
-        env:
-          KUSTOMIZE_VERSION: v5.4.3
-          KUSTOMIZE_SHA256: 3669470b454d865c8184d6bce78df05e977c9aea31c30df3c669317d43bcc7a7
-        run: |
-          curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
-            -o /tmp/kustomize.tar.gz
-          echo "${KUSTOMIZE_SHA256}  /tmp/kustomize.tar.gz" | sha256sum -c -
-          tar -xz -C /tmp -f /tmp/kustomize.tar.gz
-          sudo install /tmp/kustomize /usr/local/bin/kustomize
-
-      - name: Update image tags in kustomization
-        run: |
-          cd healthcabinet/k8s/overlays/prod
-          kustomize edit set image \
-            backend=ghcr.io/${{ github.repository_owner }}/healthcabinet-backend:${{ github.sha }}
-          kustomize edit set image \
-            frontend=ghcr.io/${{ github.repository_owner }}/healthcabinet-frontend:${{ github.sha }}
-
-      - name: Commit and push image tag updates
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "chore: update image tags to ${{ github.sha }}"
-          file_pattern: "healthcabinet/k8s/overlays/prod/kustomization.yaml"
