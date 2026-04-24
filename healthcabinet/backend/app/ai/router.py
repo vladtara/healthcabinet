@@ -154,6 +154,39 @@ async def get_dashboard_interpretation(
         raise HTTPException(status_code=503, detail=str(exc)) from None
 
 
+@router.post(
+    "/dashboard/interpretation/regenerate",
+    response_model=DashboardInterpretationResponse,
+)
+async def regenerate_dashboard_interpretation(
+    document_kind: DashboardKind = Query(
+        ...,
+        description=(
+            "Dashboard filter scope. Only 'all' persists to the cached overall "
+            "note; other kinds regenerate on demand without writing a cache row."
+        ),
+    ),
+    locale: Literal["en", "uk"] = Query(default="en"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> DashboardInterpretationResponse:
+    """Force-regenerate the overall/main clinical note.
+
+    Invalidates the cached row (for 'all'), calls the LLM, persists the new
+    interpretation, and returns it. This is the endpoint behind the manual
+    "Regenerate" button on the dashboard AI clinical note card.
+    """
+    await check_ai_dashboard_rate_limit(str(current_user.id))
+    try:
+        return await ai_service.force_regenerate_dashboard_interpretation(
+            db, user_id=current_user.id, document_kind=document_kind, output_language=locale
+        )
+    except NoDashboardAiContextError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+    except AiServiceUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from None
+
+
 @router.post("/dashboard/chat")
 async def dashboard_chat(
     payload: DashboardChatRequest,

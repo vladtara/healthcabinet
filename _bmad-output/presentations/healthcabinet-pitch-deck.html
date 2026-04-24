@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>HealthCabinet Pitch Deck</title>
+		<style>
+			:root {
+				--bg: #0f1117;
+				--panel: #171b24;
+				--panel-soft: #1d2330;
+				--panel-ink: #0c0f15;
+				--line: #2a3344;
+				--line-strong: #4d5d78;
+				--text: #eef4ff;
+				--muted: #9aabc7;
+				--accent: #3366ff;
+				--accent-soft: #89a8ff;
+				--accent-fade: rgba(51, 102, 255, 0.16);
+				--optimal: #2e8b57;
+				--borderline: #daa520;
+				--concerning: #e07020;
+				--action: #cc3333;
+				--shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				margin: 0;
+				background:
+					radial-gradient(circle at top left, rgba(51, 102, 255, 0.14), transparent 28%),
+					linear-gradient(180deg, #0b0e14 0%, var(--bg) 100%);
+				color: var(--text);
+				font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+			}
+
+			a {
+				color: inherit;
+			}
+
+			.deck-nav {
+				position: sticky;
+				top: 0;
+				z-index: 20;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				padding: 0.9rem 1rem;
+				border-bottom: 1px solid var(--line);
+				background: rgba(10, 12, 18, 0.9);
+				backdrop-filter: blur(10px);
+			}
+
+			.deck-nav a {
+				padding: 0.45rem 0.7rem;
+				border: 1px solid var(--line-strong);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.02);
+				color: var(--muted);
+				font-size: 0.85rem;
+				text-decoration: none;
+			}
+
+			.deck-nav a:hover {
+				color: var(--text);
+				border-color: var(--accent-soft);
+				background: var(--accent-fade);
+			}
+
+			.deck {
+				padding: 1.2rem;
+			}
+
+			.slide {
+				position: relative;
+				display: grid;
+				align-items: stretch;
+				min-height: calc(100vh - 4.6rem);
+				margin: 0 auto 1.2rem;
+				padding: 1.5rem;
+				max-width: 1440px;
+				border: 1px solid var(--line);
+				border-radius: 28px;
+				background:
+					linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+					var(--panel);
+				box-shadow: var(--shadow);
+				overflow: hidden;
+			}
+
+			.slide::before {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background:
+					linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+					linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+				background-size: 32px 32px;
+				pointer-events: none;
+				mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent 90%);
+			}
+
+			.slide-inner {
+				position: relative;
+				z-index: 1;
+				display: grid;
+				gap: 1.2rem;
+				grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+			}
+
+			.slide.full .slide-inner {
+				grid-template-columns: 1fr;
+			}
+
+			.kicker {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.55rem;
+				width: fit-content;
+				padding: 0.35rem 0.75rem;
+				border: 1px solid var(--line-strong);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.03);
+				color: var(--accent-soft);
+				font-size: 0.88rem;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+			}
+
+			h1,
+			h2,
+			h3,
+			p {
+				margin: 0;
+			}
+
+			h1 {
+				font-size: clamp(2.8rem, 6vw, 5.2rem);
+				line-height: 0.95;
+				letter-spacing: -0.05em;
+			}
+
+			h2 {
+				font-size: clamp(2rem, 3vw, 3.2rem);
+				line-height: 1;
+				letter-spacing: -0.04em;
+			}
+
+			.lead {
+				max-width: 60ch;
+				color: var(--muted);
+				font-size: clamp(1.02rem, 1.8vw, 1.35rem);
+				line-height: 1.55;
+			}
+
+			.hero-stack,
+			.content-stack {
+				display: grid;
+				align-content: space-between;
+				gap: 1.2rem;
+			}
+
+			.metric-row,
+			.card-grid,
+			.story-grid,
+			.status-grid,
+			.model-grid,
+			.roadmap-grid {
+				display: grid;
+				gap: 1rem;
+			}
+
+			.metric-row {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.card-grid {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			.story-grid,
+			.status-grid,
+			.model-grid,
+			.roadmap-grid {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.panel,
+			.metric,
+			.story-card,
+			.status-card,
+			.model-card,
+			.roadmap-card,
+			.window,
+			.table-panel {
+				border: 1px solid var(--line);
+				border-radius: 20px;
+				background: var(--panel-soft);
+				box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+			}
+
+			.panel,
+			.story-card,
+			.status-card,
+			.model-card,
+			.roadmap-card {
+				padding: 1.1rem;
+			}
+
+			.metric {
+				padding: 1rem;
+				background:
+					linear-gradient(180deg, rgba(51, 102, 255, 0.1), transparent),
+					var(--panel-soft);
+			}
+
+			.metric-label {
+				color: var(--muted);
+				font-size: 0.78rem;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+			}
+
+			.metric-value {
+				margin-top: 0.5rem;
+				font-size: 1.45rem;
+				font-weight: 800;
+			}
+
+			ul,
+			ol {
+				margin: 0;
+				padding-left: 1.2rem;
+				color: var(--muted);
+				line-height: 1.55;
+				font-size: 1.04rem;
+			}
+
+			li + li {
+				margin-top: 0.55rem;
+			}
+
+			.quote {
+				padding: 1.2rem 1.25rem;
+				border-left: 4px solid var(--accent);
+				background: rgba(255, 255, 255, 0.03);
+				color: var(--text);
+				font-size: 1.1rem;
+				line-height: 1.55;
+			}
+
+			.window {
+				padding: 0;
+				overflow: hidden;
+			}
+
+			.window-bar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 0.75rem 1rem;
+				border-bottom: 1px solid var(--line);
+				background: linear-gradient(180deg, rgba(132, 168, 255, 0.14), rgba(0, 0, 0, 0));
+				font-size: 0.92rem;
+				font-weight: 700;
+			}
+
+			.window-body {
+				display: grid;
+				gap: 0.9rem;
+				padding: 1rem;
+			}
+
+			.window-toolbar {
+				display: flex;
+				gap: 0.55rem;
+				flex-wrap: wrap;
+			}
+
+			.pill {
+				padding: 0.38rem 0.65rem;
+				border: 1px solid var(--line-strong);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.03);
+				color: var(--muted);
+				font-size: 0.82rem;
+				font-weight: 700;
+			}
+
+			.table-panel {
+				overflow: hidden;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.92rem;
+			}
+
+			th,
+			td {
+				padding: 0.78rem 0.9rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+				text-align: left;
+			}
+
+			th {
+				color: var(--muted);
+				font-size: 0.78rem;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				background: rgba(255, 255, 255, 0.03);
+			}
+
+			tr:last-child td {
+				border-bottom: 0;
+			}
+
+			.status {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.45rem;
+				font-weight: 700;
+			}
+
+			.status.optimal {
+				color: var(--optimal);
+			}
+
+			.status.borderline {
+				color: var(--borderline);
+			}
+
+			.status.concerning {
+				color: var(--concerning);
+			}
+
+			.note {
+				padding: 1rem;
+				border-left: 4px solid var(--accent);
+				border-radius: 16px;
+				background: rgba(51, 102, 255, 0.08);
+			}
+
+			.note-title {
+				font-size: 0.86rem;
+				font-weight: 800;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: var(--accent-soft);
+			}
+
+			.note p {
+				margin-top: 0.55rem;
+				color: var(--text);
+				line-height: 1.55;
+			}
+
+			.big-number {
+				font-size: clamp(3.8rem, 7vw, 6rem);
+				font-weight: 900;
+				letter-spacing: -0.06em;
+				color: var(--text);
+			}
+
+			.big-number-caption {
+				margin-top: 0.35rem;
+				color: var(--muted);
+				font-size: 1rem;
+			}
+
+			.accent {
+				color: var(--accent-soft);
+			}
+
+			.footer-tag {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				padding: 0.45rem 0.75rem;
+				border: 1px solid var(--line-strong);
+				border-radius: 14px;
+				background: rgba(255, 255, 255, 0.03);
+				color: var(--muted);
+				font-size: 0.9rem;
+			}
+
+			@media (max-width: 980px) {
+				.slide {
+					min-height: auto;
+				}
+
+				.slide-inner,
+				.slide.full .slide-inner {
+					grid-template-columns: 1fr;
+				}
+
+				.metric-row,
+				.card-grid,
+				.story-grid,
+				.status-grid,
+				.model-grid,
+				.roadmap-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			@media print {
+				body {
+					background: #fff;
+				}
+
+				.deck-nav {
+					display: none;
+				}
+
+				.deck {
+					padding: 0;
+				}
+
+				.slide {
+					margin: 0;
+					min-height: 100vh;
+					border-radius: 0;
+					box-shadow: none;
+					page-break-after: always;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<nav class="deck-nav" aria-label="Slide navigation">
+			<a href="#slide-1">01 Cover</a>
+			<a href="#slide-2">02 Problem</a>
+			<a href="#slide-3">03 User</a>
+			<a href="#slide-4">04 Product</a>
+			<a href="#slide-5">05 Loop</a>
+			<a href="#slide-6">06 Differentiation</a>
+			<a href="#slide-7">07 Trust</a>
+			<a href="#slide-8">08 Build</a>
+			<a href="#slide-9">09 Model</a>
+			<a href="#slide-10">10 Ask</a>
+		</nav>
+
+		<main class="deck">
+			<section class="slide" id="slide-1">
+				<div class="slide-inner">
+					<div class="hero-stack">
+						<div class="content-stack">
+							<div class="kicker">HealthCabinet / Pitch Deck</div>
+							<h1>Your health data,<br /><span class="accent">finally understood.</span></h1>
+							<p class="lead">
+								A personal health intelligence platform that turns scattered lab PDFs and
+								photos into structured biomarker history, trend visibility, and plain-language
+								AI interpretation.
+							</p>
+						</div>
+
+						<div class="metric-row">
+							<div class="metric">
+								<div class="metric-label">Input</div>
+								<div class="metric-value">PDFs + photos</div>
+							</div>
+							<div class="metric">
+								<div class="metric-label">Experience</div>
+								<div class="metric-value">Clinical table-first UI</div>
+							</div>
+							<div class="metric">
+								<div class="metric-label">Trust posture</div>
+								<div class="metric-value">EU + GDPR minded</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="window">
+						<div class="window-bar">
+							<span>HealthCabinet Preview</span>
+							<span>Dashboard</span>
+						</div>
+						<div class="window-body">
+							<div class="window-toolbar">
+								<span class="pill">Import Document</span>
+								<span class="pill">View Trends</span>
+								<span class="pill">Export Data</span>
+							</div>
+							<div class="table-panel">
+								<table aria-label="Example biomarker table">
+									<thead>
+										<tr>
+											<th>Biomarker</th>
+											<th>Value</th>
+											<th>Range</th>
+											<th>Status</th>
+											<th>Trend</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>TSH</td>
+											<td>3.8 mIU/L</td>
+											<td>0.4 - 4.0</td>
+											<td><span class="status optimal">● Optimal</span></td>
+											<td>→ Stable</td>
+										</tr>
+										<tr>
+											<td>Vitamin D</td>
+											<td>22 ng/mL</td>
+											<td>30 - 100</td>
+											<td><span class="status concerning">◆ Concerning</span></td>
+											<td>↓ Declining</td>
+										</tr>
+										<tr>
+											<td>Hemoglobin</td>
+											<td>11.8 g/dL</td>
+											<td>12.0 - 15.5</td>
+											<td><span class="status borderline">⚠ Borderline</span></td>
+											<td>↓ Monitor</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<div class="note">
+								<div class="note-title">AI Clinical Note</div>
+								<p>
+									Your ferritin and hemoglobin pattern suggests a slow downward trend worth
+									tracking. This is informational and should be discussed with your doctor,
+									but the trend is more important than the latest isolated number.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-2">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Problem</div>
+						<h2>Labs produce data.<br />Nobody produces meaning.</h2>
+						<p class="lead">
+							People already have their health information. They just have it in the wrong
+							shape: fragmented files, isolated numbers, and no longitudinal memory.
+						</p>
+						<ol>
+							<li>Results arrive as PDFs, scans, screenshots, and paper printouts.</li>
+							<li>Each document is interpreted in isolation instead of as a pattern over time.</li>
+							<li>Patients google abnormal values and still leave confused.</li>
+							<li>Repeated testers re-live the same workflow every few months.</li>
+						</ol>
+					</div>
+
+					<div class="card-grid">
+						<div class="panel">
+							<div class="big-number">1</div>
+							<div class="big-number-caption">Document snapshot with no durable context</div>
+						</div>
+						<div class="panel">
+							<div class="big-number">0</div>
+							<div class="big-number-caption">Patient-owned memory across labs and time</div>
+						</div>
+						<div class="panel" style="grid-column: 1 / -1;">
+							<div class="quote">
+								“I have the PDF, the flagged numbers, and the doctor’s one-line comment. I
+								still do not know what changed.”
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-3">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Wedge</div>
+						<h2>Start with repeated testers,<br />where memory compounds.</h2>
+						<p class="lead">
+							HealthCabinet is strongest when a user uploads again and again. The product gets
+							better as the history gets denser.
+						</p>
+						<ul>
+							<li>Chronic condition managers who test every quarter</li>
+							<li>Private lab users who self-order panels</li>
+							<li>People who need clarity, not wellness gamification</li>
+						</ul>
+					</div>
+
+					<div class="story-grid">
+						<div class="story-card">
+							<h3>Sofia</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Hashimoto’s patient. Needs trend intelligence across several lab cycles, not
+								one more PDF archive.
+							</p>
+						</div>
+						<div class="story-card">
+							<h3>Maks</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Private self-tester. Wants plain-language interpretation without panic or
+								guesswork.
+							</p>
+						</div>
+						<div class="story-card">
+							<h3>Founder/Admin</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Needs operational visibility, correction workflows, and a clean queue when
+								parsing goes sideways.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-4">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Product</div>
+						<h2>Upload once.<br />Understand immediately.<br />Learn over time.</h2>
+						<ul>
+							<li>Upload a health document as a PDF or photo</li>
+							<li>Extract and normalize biomarker values</li>
+							<li>Display status, ranges, and trends in a dense clinical UI</li>
+							<li>Generate an AI clinical note grounded in the user’s data history</li>
+						</ul>
+						<div class="footer-tag">Table-first UX instead of generic card-based wellness design</div>
+					</div>
+
+					<div class="window">
+						<div class="window-bar">
+							<span>Upload Pipeline</span>
+							<span>Processing</span>
+						</div>
+						<div class="window-body">
+							<div class="panel">
+								<div class="metric-label">Stage</div>
+								<div class="metric-value">Uploading → Reading → Extracting → Generating</div>
+							</div>
+							<div class="panel">
+								<div class="metric-label">Failure handling</div>
+								<div class="metric-value">Partial extraction retained + guided re-upload</div>
+							</div>
+							<div class="panel">
+								<div class="metric-label">Output</div>
+								<div class="metric-value">Structured values + AI note + updated history</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide full" id="slide-5">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Core Loop</div>
+						<h2>Import → understand → trust the platform more.</h2>
+						<div class="roadmap-grid">
+							<div class="roadmap-card">
+								<h3>1. Import</h3>
+								<p class="lead" style="font-size: 1rem;">
+									User drops in a new lab document without caring about source lab, format,
+									or layout.
+								</p>
+							</div>
+							<div class="roadmap-card">
+								<h3>2. Extract</h3>
+								<p class="lead" style="font-size: 1rem;">
+									The pipeline parses, normalizes, and preserves structured health values.
+								</p>
+							</div>
+							<div class="roadmap-card">
+								<h3>3. Interpret</h3>
+								<p class="lead" style="font-size: 1rem;">
+									AI explains the latest state in plain language, with uncertainty surfaced
+									where needed.
+								</p>
+							</div>
+							<div class="roadmap-card">
+								<h3>4. Remember</h3>
+								<p class="lead" style="font-size: 1rem;">
+									The history becomes more valuable after every additional upload.
+								</p>
+							</div>
+							<div class="roadmap-card">
+								<h3>5. Retain</h3>
+								<p class="lead" style="font-size: 1rem;">
+									Users return because the product accumulates context that no single visit
+									can recreate.
+								</p>
+							</div>
+							<div class="roadmap-card">
+								<h3>6. Expand</h3>
+								<p class="lead" style="font-size: 1rem;">
+									Doctor-share workflows, premium AI memory, and deeper intelligence stack on
+									top of the same loop.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-6">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Differentiation</div>
+						<h2>Memory, context, and trust.<br />Not just “AI for labs.”</h2>
+						<p class="lead">
+							The moat is the combination: ingest arbitrary documents, create value before
+							the first upload, and make the product feel like serious medical software.
+						</p>
+					</div>
+
+					<div class="status-grid">
+						<div class="status-card">
+							<h3>Universal document intake</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Handles the messy real-world input people already have instead of waiting for
+								pristine integrations.
+							</p>
+						</div>
+						<div class="status-card">
+							<h3>Context-first onboarding</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Creates a baseline and recommendations before the first document arrives.
+							</p>
+						</div>
+						<div class="status-card">
+							<h3>Cross-upload reasoning</h3>
+							<p class="lead" style="font-size: 1rem;">
+								The product sees trends across time, not only whatever arrived today.
+							</p>
+						</div>
+						<div class="status-card" style="grid-column: 1 / -1;">
+							<h3>Clinical workstation visual language</h3>
+							<p class="lead" style="font-size: 1rem;">
+								HealthCabinet looks like a trustworthy tool, not another pastel wellness app.
+								The interface itself becomes part of the positioning.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-7">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Trust</div>
+						<h2>Sensitive product.<br />Serious handling.</h2>
+						<ul>
+							<li>EU region posture: AWS <code>eu-central-1</code></li>
+							<li>Consent, export, and deletion are part of the product, not backlog garnish</li>
+							<li>AI is framed as informational, not diagnostic</li>
+							<li>Admin review paths exist for extraction edge cases</li>
+						</ul>
+					</div>
+
+					<div class="status-grid">
+						<div class="status-card">
+							<h3>Data handling</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Encryption posture, protected tokens, and EU residency expectations are built
+								into the architecture.
+							</p>
+						</div>
+						<div class="status-card">
+							<h3>AI safety</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Outputs are plain-language and bounded. They explain. They do not prescribe.
+							</p>
+						</div>
+						<div class="status-card">
+							<h3>Operational correction</h3>
+							<p class="lead" style="font-size: 1rem;">
+								Parsing is observable, partial extraction is retained, and admin correction is
+								part of the workflow.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-8">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Build Status</div>
+						<h2>This is not deck theater.<br />There is already product surface.</h2>
+						<ul>
+							<li>Auth, registration, and consent-aware account creation</li>
+							<li>Medical onboarding and profile capture</li>
+							<li>Document upload, status streaming, and partial extraction handling</li>
+							<li>Dashboard trends, AI clinical notes, and admin operations</li>
+						</ul>
+					</div>
+
+					<div class="model-grid">
+						<div class="model-card">
+							<h3>Frontend</h3>
+							<p class="lead" style="font-size: 1rem;">SvelteKit 2, Svelte 5, table-first clinical UI</p>
+						</div>
+						<div class="model-card">
+							<h3>Backend</h3>
+							<p class="lead" style="font-size: 1rem;">FastAPI, SQLAlchemy async, Alembic, Redis</p>
+						</div>
+						<div class="model-card">
+							<h3>AI pipeline</h3>
+							<p class="lead" style="font-size: 1rem;">LangGraph orchestration, Anthropic, ARQ worker</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-9">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Business Model</div>
+						<h2>Freemium first.<br />Premium intelligence second.</h2>
+						<p class="lead">
+							The immediate goal is to prove the upload-to-insight loop. Monetization should
+							layer onto real repeat usage, not distract from it.
+						</p>
+						<ul>
+							<li>Free tier validates demand and trust</li>
+							<li>Paid tier unlocks deeper AI memory and premium workflows</li>
+							<li>Future expansion: family plans, doctor-share exports, storage upgrades</li>
+						</ul>
+					</div>
+
+					<div class="roadmap-grid">
+						<div class="roadmap-card">
+							<h3>Now</h3>
+							<p class="lead" style="font-size: 1rem;">Validate the core upload → extract → interpret loop.</p>
+						</div>
+						<div class="roadmap-card">
+							<h3>Next</h3>
+							<p class="lead" style="font-size: 1rem;">Increase repeat uploads and cross-document value.</p>
+						</div>
+						<div class="roadmap-card">
+							<h3>Later</h3>
+							<p class="lead" style="font-size: 1rem;">Expand AI companion depth and broader EU reach.</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="slide" id="slide-10">
+				<div class="slide-inner">
+					<div class="content-stack">
+						<div class="kicker">Ask</div>
+						<h2>Help validate the product<br />with real users and real documents.</h2>
+						<p class="lead">
+							HealthCabinet is ready for sharper feedback loops: product critique, design
+							refinement, pilot users, and strategic conversations around trustworthy health
+							data UX.
+						</p>
+						<ul>
+							<li>Early users with recurring lab workflows</li>
+							<li>Partners who care about patient-facing health intelligence</li>
+							<li>Design and product feedback on the clinical-workstation direction</li>
+						</ul>
+						<div class="footer-tag">HealthCabinet / personal health intelligence, not generic wellness</div>
+					</div>
+
+					<div class="window">
+						<div class="window-bar">
+							<span>Next Milestones</span>
+							<span>2026</span>
+						</div>
+						<div class="window-body">
+							<div class="panel">
+								<div class="metric-label">Metric that matters first</div>
+								<div class="metric-value">Repeat uploads across separate dates</div>
+							</div>
+							<div class="panel">
+								<div class="metric-label">Product proof</div>
+								<div class="metric-value">Users trust the system enough to return with the next lab</div>
+							</div>
+							<div class="panel">
+								<div class="metric-label">Long-term payoff</div>
+								<div class="metric-value">Compounding health memory that no single visit can recreate</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</body>
+</html>

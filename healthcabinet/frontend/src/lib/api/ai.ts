@@ -93,6 +93,16 @@ export async function getDashboardInterpretation(
 	);
 }
 
+export async function regenerateDashboardInterpretation(
+	documentKind: DashboardFilter,
+	locale: Locale = 'en'
+): Promise<DashboardInterpretationResponse> {
+	return apiFetch<DashboardInterpretationResponse>(
+		`/api/v1/ai/dashboard/interpretation/regenerate?document_kind=${encodeURIComponent(documentKind)}&locale=${encodeURIComponent(locale)}`,
+		{ method: 'POST' }
+	);
+}
+
 export async function streamDashboardChat(
 	payload: DashboardChatRequest,
 	signal?: AbortSignal

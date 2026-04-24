@@ -9,6 +9,7 @@ import { tick } from 'svelte';
 vi.mock('$lib/api/ai', () => ({
 	getDocumentInterpretation: vi.fn(),
 	getDashboardInterpretation: vi.fn(),
+	regenerateDashboardInterpretation: vi.fn(),
 	streamAiChat: vi.fn(),
 	streamDashboardChat: vi.fn(),
 	getAiPatterns: vi.fn()
@@ -20,9 +21,14 @@ vi.mock('$lib/api/client.svelte', () => ({
 	apiStream: vi.fn()
 }));
 
-import { getDashboardInterpretation, getDocumentInterpretation } from '$lib/api/ai';
+import {
+	getDashboardInterpretation,
+	getDocumentInterpretation,
+	regenerateDashboardInterpretation
+} from '$lib/api/ai';
 const mockGetInterpretation = vi.mocked(getDocumentInterpretation);
 const mockGetDashboardInterpretation = vi.mocked(getDashboardInterpretation);
+const mockRegenerateDashboardInterpretation = vi.mocked(regenerateDashboardInterpretation);
 
 const mockInterpretation = {
 	document_id: 'doc-1',
@@ -270,6 +276,40 @@ describe('AIClinicalNote', () => {
 			expect(mockGetDashboardInterpretation).toHaveBeenCalledTimes(2);
 			expect(getByText(/retry succeeded/i)).toBeInTheDocument();
 		});
+	});
+
+	test('dashboard regenerate button calls the POST regenerate endpoint, not a GET refetch', async () => {
+		const first = {
+			document_id: null as null,
+			document_kind: 'all' as const,
+			source_document_ids: ['doc-1'],
+			interpretation: 'Original summary.',
+			model_version: 'claude-4',
+			generated_at: '2026-04-20T00:00:00Z',
+			reasoning: null
+		};
+		const fresh = {
+			...first,
+			interpretation: 'Freshly regenerated summary.',
+			generated_at: '2026-04-21T00:00:00Z'
+		};
+		mockGetDashboardInterpretation.mockResolvedValue(first);
+		mockRegenerateDashboardInterpretation.mockResolvedValue(fresh);
+
+		const { getByLabelText, getByText } = renderDashboardNote('all');
+
+		await waitFor(() => expect(getByText(/Original summary/i)).toBeInTheDocument());
+		expect(mockGetDashboardInterpretation).toHaveBeenCalledTimes(1);
+
+		getByLabelText('Regenerate').click();
+
+		await waitFor(() => {
+			expect(mockRegenerateDashboardInterpretation).toHaveBeenCalledWith('all', expect.any(String));
+		});
+		// GET must not fire again — the regenerate path pushes the response into
+		// the cache via setQueryData, so there's no second GET.
+		expect(mockGetDashboardInterpretation).toHaveBeenCalledTimes(1);
+		await waitFor(() => expect(getByText(/Freshly regenerated summary/i)).toBeInTheDocument());
 	});
 
 	test('dashboard mode calls getDashboardInterpretation, not getDocumentInterpretation', async () => {

@@ -127,6 +127,8 @@ async def list_user_ai_context(
         AiMemory.user_id == user_id,
         AiMemory.safety_validated == True,  # noqa: E712
         AiMemory.interpretation_encrypted.is_not(None),
+        # Exclude aggregate (overall) rows — they are not per-document context.
+        AiMemory.scope.is_(None),
     )
     if document_kind is not None:
         kinds = _kinds_for_filter(document_kind)
@@ -217,6 +219,122 @@ async def list_ai_memories_by_user(
             )
         )
     return AiMemoryExportResult(records=entries, skipped_corrupt_records=skipped)
+
+
+# ---------------------------------------------------------------------------
+# Overall (dashboard-level aggregate) clinical note
+#
+# Stored as an `ai_memories` row with `document_id = NULL` and `scope` set to
+# a string like "overall_all". Uniqueness per (user_id, scope) is enforced by
+# the partial unique index `uq_ai_memories_user_scope` added in migration 017.
+# ---------------------------------------------------------------------------
+
+OVERALL_SCOPE_ALL = "overall_all"
+
+
+async def get_overall_interpretation(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    scope: str = OVERALL_SCOPE_ALL,
+) -> AiMemory | None:
+    """Return the stored overall-note row for this user, if any.
+
+    Returns the row regardless of safety_validated so callers can distinguish
+    "missing" from "stale" — the service layer decides whether to serve the
+    row as-is, regenerate, or use it only as prior context.
+    """
+    result = await db.execute(
+        select(AiMemory).where(
+            AiMemory.user_id == user_id,
+            AiMemory.scope == scope,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def decrypt_overall_interpretation(
+    memory: AiMemory,
+) -> tuple[str, dict[str, object] | None] | None:
+    """Decrypt the interpretation text and reasoning JSON from an overall row.
+
+    Returns None when the row has no interpretation or decryption fails.
+    """
+    if memory.interpretation_encrypted is None:
+        return None
+    try:
+        text = decrypt_bytes(memory.interpretation_encrypted).decode("utf-8")
+    except Exception:
+        logger.warning("ai.overall_decrypt_failed", user_id=str(memory.user_id))
+        return None
+    reasoning: dict[str, object] | None = None
+    if memory.context_json_encrypted is not None:
+        try:
+            reasoning = json.loads(decrypt_bytes(memory.context_json_encrypted).decode("utf-8"))
+        except Exception:
+            logger.warning("ai.overall_reasoning_decrypt_failed", user_id=str(memory.user_id))
+    return text, reasoning
+
+
+async def upsert_overall_interpretation(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    interpretation_text: str,
+    model_version: str,
+    reasoning_json: dict[str, object] | None = None,
+    scope: str = OVERALL_SCOPE_ALL,
+) -> AiMemory:
+    """Insert or update the overall-note row for (user_id, scope)."""
+    encrypted = encrypt_bytes(interpretation_text.encode("utf-8"))
+    encrypted_reasoning: bytes | None = None
+    if reasoning_json is not None:
+        encrypted_reasoning = encrypt_bytes(json.dumps(reasoning_json).encode("utf-8"))
+
+    result = await db.execute(
+        select(AiMemory).where(
+            AiMemory.user_id == user_id,
+            AiMemory.scope == scope,
+        )
+    )
+    memory = result.scalar_one_or_none()
+    if memory is not None:
+        memory.interpretation_encrypted = encrypted
+        memory.context_json_encrypted = encrypted_reasoning
+        memory.model_version = model_version
+        memory.safety_validated = True
+        await db.flush()
+        await db.refresh(memory)
+    else:
+        memory = AiMemory(
+            user_id=user_id,
+            document_id=None,
+            scope=scope,
+            context_json_encrypted=encrypted_reasoning,
+            interpretation_encrypted=encrypted,
+            model_version=model_version,
+            safety_validated=True,
+        )
+        db.add(memory)
+        await db.flush()
+        await db.refresh(memory)
+    return memory
+
+
+async def invalidate_overall_interpretation(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    scope: str = OVERALL_SCOPE_ALL,
+) -> None:
+    """Mark the overall-note row as stale; no-op if no row exists."""
+    result = await db.execute(
+        select(AiMemory).where(
+            AiMemory.user_id == user_id,
+            AiMemory.scope == scope,
+        )
+    )
+    memory = result.scalar_one_or_none()
+    if memory is not None:
+        memory.safety_validated = False
+        await db.flush()
 
 
 async def get_interpretation_and_metadata(

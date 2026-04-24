@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { marked } from 'marked';
 	import {
 		getDocumentInterpretation,
 		getDashboardInterpretation,
+		regenerateDashboardInterpretation,
 		type AiInterpretationResponse,
 		type DashboardInterpretationResponse
 	} from '$lib/api/ai';
@@ -11,6 +12,8 @@
 	import type { DashboardFilter } from '$lib/stores/dashboard-filter.svelte';
 	import { localeStore } from '$lib/stores/locale.svelte';
 	import { t } from '$lib/i18n/messages';
+
+	const queryClient = useQueryClient();
 
 	const copy = $derived(t(localeStore.locale).aiClinicalNote);
 
@@ -56,7 +59,12 @@
 			// the network round-trip entirely — it would only 409 and produce
 			// log noise on every filter-empty mount.
 			enabled: hasContext !== false,
-			staleTime: 60_000,
+			// The backend now serves the overall note from the ai_memories cache
+			// row — GET is a cheap DB read, not an LLM call. Staleness is
+			// driven server-side (doc upload / delete / regenerate), so we let
+			// TanStack Query keep whatever it has instead of background-
+			// refetching after a minute.
+			staleTime: Infinity,
 			// Retry once on transient errors (429 rate-limit, 503 unavailable).
 			// Do NOT retry on 409 filter-empty responses; one retry is allowed for 429.
 			retry: (failureCount: number, error: unknown) => {
@@ -67,6 +75,33 @@
 			retryDelay: () => 2000
 		};
 	});
+
+	let isRegenerating = $state(false);
+
+	async function handleRegenerate() {
+		if (props.mode === 'document') {
+			// Per-document notes are already cached DB rows with no force-regen
+			// endpoint today; keep the existing refetch behaviour.
+			await interpretationQuery.refetch();
+			return;
+		}
+		if (isRegenerating) return;
+		isRegenerating = true;
+		try {
+			const documentKind = props.documentKind;
+			const fresh = await regenerateDashboardInterpretation(documentKind, localeStore.locale);
+			queryClient.setQueryData(
+				['ai_dashboard_interpretation', documentKind, localeStore.locale],
+				fresh
+			);
+		} catch {
+			// Error state surfaces through the normal query lifecycle on the next
+			// read; no need to duplicate it here.
+			await interpretationQuery.refetch();
+		} finally {
+			isRegenerating = false;
+		}
+	}
 
 	function errorStatus(error: unknown): number | null {
 		const status = (error as ApiError)?.status;
@@ -121,11 +156,11 @@
 {#snippet regenButton()}
 	<button
 		class="hc-ai-note-regen"
-		class:spinning={interpretationQuery.isFetching}
+		class:spinning={interpretationQuery.isFetching || isRegenerating}
 		aria-label={copy.regenerateAria}
 		title={copy.regenerateAria}
-		disabled={interpretationQuery.isFetching}
-		onclick={() => interpretationQuery.refetch()}><span aria-hidden="true">↺</span></button
+		disabled={interpretationQuery.isFetching || isRegenerating}
+		onclick={handleRegenerate}><span aria-hidden="true">↺</span></button
 	>
 {/snippet}
 

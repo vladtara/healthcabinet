@@ -137,6 +137,38 @@ async def generate_interpretation(
     return text
 
 
+async def _load_main_summary_for_chat(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+) -> tuple[str, datetime.datetime | None] | None:
+    """Return (summary_text, updated_at) for the user's overall note, or None.
+
+    Invalidated rows (safety_validated=False) are still usable as chat anchor
+    context — the user explicitly asked for this to be available whenever the
+    assistant runs. A later regenerate will refresh it; in the meantime the
+    previous narrative is safer to keep than to drop.
+
+    Best-effort: any error loading or decrypting the overall row is logged
+    and the chat proceeds without the anchor block. The main-summary context
+    is an enhancement, never a requirement for answering.
+    """
+    try:
+        row = await ai_repository.get_overall_interpretation(db, user_id=user_id)
+    except Exception:
+        logger.warning("ai.chat_main_summary_lookup_failed", user_id=str(user_id))
+        return None
+    if row is None:
+        return None
+    try:
+        decrypted = await ai_repository.decrypt_overall_interpretation(row)
+    except Exception:
+        logger.warning("ai.chat_main_summary_decrypt_failed", user_id=str(user_id))
+        return None
+    if decrypted is None:
+        return None
+    return decrypted[0], row.updated_at
+
+
 class NoAiContextError(Exception):
     """Raised when a user has no usable AI context rows for follow-up Q&A."""
 
@@ -293,9 +325,26 @@ def _build_follow_up_prompt(
     question: str,
     active_document_id: uuid.UUID | None = None,
     output_language: str = "en",
+    main_summary: tuple[str, datetime.datetime | None] | None = None,
 ) -> str:
-    """Combine context rows and question into a follow-up prompt."""
+    """Combine context rows and question into a follow-up prompt.
+
+    When `main_summary` is provided, a `[Main health summary]` block is
+    prepended to the context section — this is the user-level overall note
+    from `ai_memories(scope='overall_all')`. The chat model is instructed to
+    treat it as the anchor summary and to reconcile per-document details
+    against it.
+    """
     context_parts: list[str] = []
+    if main_summary is not None:
+        summary_text, summary_updated = main_summary
+        date_label = summary_updated.date().isoformat() if summary_updated else "unknown date"
+        context_parts.append(
+            f"[Main health summary — {date_label}]\n"
+            "This is the anchor overview of the user's health across all documents; "
+            "reconcile any per-document details against it.\n"
+            f"{summary_text}"
+        )
     prev_count = 0
     for row in context_rows:
         row_doc_id = row.get("document_id", "")
@@ -421,8 +470,14 @@ async def stream_follow_up_answer(
     if not context_rows:
         raise NoAiContextError("No usable AI context available for this user")
 
+    main_summary = await _load_main_summary_for_chat(db, user_id=user_id)
+
     prompt = _build_follow_up_prompt(
-        context_rows, question, active_document_id=document_id, output_language=output_language
+        context_rows,
+        question,
+        active_document_id=document_id,
+        output_language=output_language,
+        main_summary=main_summary,
     )
     model_stream = stream_model_text(prompt)
 
@@ -534,12 +589,25 @@ Write a single plain-language overview that:
 """
 
 
+_PRIOR_OVERALL_MAX_CHARS = 1500
+
+
 def _build_dashboard_prompt(
     context_rows: list[dict[str, object]],
     document_kind: DashboardKind,
     output_language: str = "en",
+    prior_overall: tuple[str, datetime.datetime | None] | None = None,
 ) -> str:
     parts: list[str] = []
+    if prior_overall is not None:
+        prior_text, prior_updated = prior_overall
+        prior_clip = prior_text[:_PRIOR_OVERALL_MAX_CHARS]
+        date_label = prior_updated.date().isoformat() if prior_updated else "unknown date"
+        parts.append(
+            f"[Prior overall summary — {date_label}]\n"
+            "Use this as continuity only; evolve it rather than restarting.\n"
+            f"{prior_clip}"
+        )
     for i, row in enumerate(context_rows[:_DASHBOARD_CONTEXT_MAX_DOCS], start=1):
         updated_at = row.get("updated_at")
         date = str(updated_at) if updated_at else "unknown date"
@@ -556,20 +624,16 @@ def _build_dashboard_prompt(
     )
 
 
-async def generate_dashboard_interpretation(
+async def _generate_and_persist_overall(
     db: AsyncSession,
     user_id: uuid.UUID,
     document_kind: DashboardKind,
-    output_language: str = "en",
+    output_language: str,
 ) -> DashboardInterpretationResponse:
-    """Generate an aggregate interpretation from every per-document AiMemory row
-    that matches the filter. Raises NoDashboardAiContextError when the filter
-    yields zero contributing rows.
-
-    The aggregate is NOT persisted — AC 4 says "rebuild from remaining
-    persisted data", so next request recomputes from the current AiMemory set.
-    This avoids a second invalidation path on document delete/upload/reupload/
-    year-confirm.
+    """Call the LLM for the overall note and persist it. Persistence only
+    happens for the default "all" scope — the user keeps exactly one cached
+    main note in sync with invalidations. Non-"all" filter variants still
+    regenerate on demand without caching.
     """
     context_rows = await ai_repository.list_user_ai_context(
         db, user_id=user_id, document_kind=document_kind
@@ -600,7 +664,22 @@ async def generate_dashboard_interpretation(
         # producing an empty aggregate.
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
-    prompt = _build_dashboard_prompt(prompt_rows, document_kind, output_language=output_language)
+    # Feed the prior overall note back in as continuity context when we have
+    # one. This only applies to the cached "all" scope.
+    prior_overall: tuple[str, datetime.datetime | None] | None = None
+    if document_kind == "all":
+        prior_row = await ai_repository.get_overall_interpretation(db, user_id=user_id)
+        if prior_row is not None:
+            decrypted = await ai_repository.decrypt_overall_interpretation(prior_row)
+            if decrypted is not None:
+                prior_overall = (decrypted[0], prior_row.updated_at)
+
+    prompt = _build_dashboard_prompt(
+        prompt_rows,
+        document_kind,
+        output_language=output_language,
+        prior_overall=prior_overall,
+    )
     try:
         raw_text = await call_model_text(prompt)
     except (ModelTemporaryUnavailableError, ModelPermanentError) as exc:
@@ -630,14 +709,112 @@ async def generate_dashboard_interpretation(
             _fb(_DASHBOARD_SAFETY_REJECTION_DETAIL, output_language)
         ) from exc
 
+    model_version = get_model_name()
+    generated_at = datetime.datetime.now(datetime.UTC)
+
+    if document_kind == "all":
+        reasoning_snapshot: dict[str, object] = {}
+        reasoning_snapshot["source_document_ids"] = [str(d) for d in source_document_ids]
+        reasoning_snapshot["locale"] = output_language
+        memory = await ai_repository.upsert_overall_interpretation(
+            db,
+            user_id=user_id,
+            interpretation_text=text,
+            model_version=model_version,
+            reasoning_json=reasoning_snapshot,
+        )
+        await db.commit()
+        generated_at = memory.updated_at or generated_at
+
     return DashboardInterpretationResponse(
         document_id=None,
         document_kind=document_kind,
         source_document_ids=source_document_ids,
         interpretation=text,
-        model_version=get_model_name(),
-        generated_at=datetime.datetime.now(datetime.UTC),
+        model_version=model_version,
+        generated_at=generated_at,
         reasoning=None,
+    )
+
+
+async def generate_dashboard_interpretation(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    document_kind: DashboardKind,
+    output_language: str = "en",
+) -> DashboardInterpretationResponse:
+    """Cache-first dashboard interpretation.
+
+    For `document_kind == "all"`: return the persisted overall note when it
+    exists, is safety_validated, and matches the requested locale. Otherwise
+    call the LLM, persist, return.
+
+    For other filters: fall through to on-demand generation (no cache) —
+    the caching scope is intentionally limited to the default "all" filter.
+
+    Raises NoDashboardAiContextError when the filter yields zero contributing
+    per-document rows (empty state at the router layer).
+    """
+    if document_kind == "all":
+        cached = await ai_repository.get_overall_interpretation(db, user_id=user_id)
+        if cached is not None and cached.safety_validated:
+            decrypted = await ai_repository.decrypt_overall_interpretation(cached)
+            if decrypted is not None:
+                text, reasoning = decrypted
+                cached_locale = None
+                cached_source_ids: list[uuid.UUID] = []
+                if isinstance(reasoning, dict):
+                    loc = reasoning.get("locale")
+                    if isinstance(loc, str):
+                        cached_locale = loc
+                    raw_ids = reasoning.get("source_document_ids")
+                    if isinstance(raw_ids, list):
+                        for raw_id in raw_ids:
+                            if not isinstance(raw_id, str):
+                                continue
+                            try:
+                                cached_source_ids.append(uuid.UUID(raw_id))
+                            except ValueError:
+                                continue
+                # Locale mismatch → regenerate so the user sees content in the
+                # language they requested rather than a silently-wrong cache.
+                if cached_locale == output_language:
+                    return DashboardInterpretationResponse(
+                        document_id=None,
+                        document_kind=document_kind,
+                        source_document_ids=cached_source_ids,
+                        interpretation=text,
+                        model_version=cached.model_version,
+                        generated_at=cached.updated_at,
+                        reasoning=None,
+                    )
+
+    return await _generate_and_persist_overall(
+        db,
+        user_id=user_id,
+        document_kind=document_kind,
+        output_language=output_language,
+    )
+
+
+async def force_regenerate_dashboard_interpretation(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    document_kind: DashboardKind,
+    output_language: str = "en",
+) -> DashboardInterpretationResponse:
+    """Always call the LLM and persist (for document_kind='all'). Used by the
+    manual regenerate button. Invalidates the cached row before regenerating
+    so a mid-run failure leaves nothing stale-but-valid behind.
+    """
+    if document_kind == "all":
+        await ai_repository.invalidate_overall_interpretation(db, user_id=user_id)
+        await db.commit()
+    return await _generate_and_persist_overall(
+        db,
+        user_id=user_id,
+        document_kind=document_kind,
+        output_language=output_language,
     )
 
 
@@ -660,8 +837,14 @@ async def stream_dashboard_follow_up(
     if not context_rows:
         raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
+    main_summary = await _load_main_summary_for_chat(db, user_id=user_id)
+
     prompt = _build_follow_up_prompt(
-        context_rows, question, active_document_id=None, output_language=output_language
+        context_rows,
+        question,
+        active_document_id=None,
+        output_language=output_language,
+        main_summary=main_summary,
     )
     model_stream = stream_model_text(prompt)
 
