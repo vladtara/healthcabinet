@@ -1,5 +1,6 @@
 import { apiFetch, apiStream } from './client.svelte';
 import type { DashboardFilter } from '$lib/stores/dashboard-filter.svelte';
+import type { Locale } from '$lib/stores/locale.svelte';
 
 export type ValueStatus = 'normal' | 'high' | 'low' | 'unknown';
 
@@ -47,7 +48,7 @@ export async function getDocumentInterpretation(
 export interface AiChatRequest {
 	document_id: string;
 	question: string;
-	locale?: string;
+	locale?: Locale;
 }
 
 export async function streamAiChat(payload: AiChatRequest, signal?: AbortSignal): Promise<Response> {
@@ -58,7 +59,7 @@ export async function streamAiChat(payload: AiChatRequest, signal?: AbortSignal)
 	});
 }
 
-export async function getAiPatterns(locale: string = 'en'): Promise<AiPatternsResponse> {
+export async function getAiPatterns(locale: Locale = 'en'): Promise<AiPatternsResponse> {
 	return apiFetch<AiPatternsResponse>(`/api/v1/ai/patterns?locale=${encodeURIComponent(locale)}`);
 }
 
@@ -79,12 +80,12 @@ export interface DashboardInterpretationResponse {
 export interface DashboardChatRequest {
 	document_kind: DashboardFilter;
 	question: string;
-	locale?: string;
+	locale?: Locale;
 }
 
 export async function getDashboardInterpretation(
 	documentKind: DashboardFilter,
-	locale: string = 'en'
+	locale: Locale = 'en'
 ): Promise<DashboardInterpretationResponse> {
 	return apiFetch<DashboardInterpretationResponse>(
 		`/api/v1/ai/dashboard/interpretation?document_kind=${encodeURIComponent(documentKind)}&locale=${encodeURIComponent(locale)}`

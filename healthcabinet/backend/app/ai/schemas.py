@@ -30,7 +30,7 @@ class ReasoningContext(BaseModel):
 class AiChatRequest(BaseModel):
     document_id: uuid.UUID
     question: Annotated[str, Field(min_length=1, max_length=1000)]
-    locale: str = "en"
+    locale: Literal["en", "uk"] = "en"
 
 
 class AiInterpretationResponse(BaseModel):
@@ -44,7 +44,7 @@ class AiInterpretationResponse(BaseModel):
 class DashboardChatRequest(BaseModel):
     document_kind: DashboardKind
     question: Annotated[str, Field(min_length=1, max_length=1000)]
-    locale: str = "en"
+    locale: Literal["en", "uk"] = "en"
 
 
 class DashboardInterpretationResponse(BaseModel):

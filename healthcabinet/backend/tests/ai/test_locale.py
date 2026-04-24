@@ -5,10 +5,13 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pydantic import ValidationError
 
 from app.ai.router import get_dashboard_interpretation
 from app.ai.safety import _DISCLAIMER_BY_LOCALE, inject_disclaimer
 from app.ai.schemas import (
+    AiChatRequest,
+    DashboardChatRequest,
     DashboardInterpretationResponse,
 )
 from app.ai.service import AiServiceUnavailableError
@@ -65,3 +68,27 @@ async def test_inject_disclaimer_uk():
     # Must not contain English disclaimer
     en_disclaimer = _DISCLAIMER_BY_LOCALE["en"]
     assert en_disclaimer not in result
+
+
+def test_ai_chat_request_rejects_unknown_locale():
+    """POST chat schema only accepts the internal locale codes from the spec."""
+    with pytest.raises(ValidationError):
+        AiChatRequest.model_validate(
+            {
+                "document_id": str(uuid.uuid4()),
+                "question": "What does this mean?",
+                "locale": "de",
+            }
+        )
+
+
+def test_dashboard_chat_request_rejects_unknown_locale():
+    """Dashboard chat schema only accepts en/uk locale values."""
+    with pytest.raises(ValidationError):
+        DashboardChatRequest.model_validate(
+            {
+                "document_kind": "all",
+                "question": "Summarize this",
+                "locale": "de",
+            }
+        )
