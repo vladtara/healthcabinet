@@ -41,7 +41,11 @@ describe('MetricCard', () => {
 	});
 
 	test('applies custom class', () => {
-		const { container } = renderComponent(MetricCard, { label: 'Test', value: 0, class: 'my-card' });
+		const { container } = renderComponent(MetricCard, {
+			label: 'Test',
+			value: 0,
+			class: 'my-card'
+		});
 		const el = container.firstElementChild;
 		expect(el?.classList.contains('my-card')).toBe(true);
 	});

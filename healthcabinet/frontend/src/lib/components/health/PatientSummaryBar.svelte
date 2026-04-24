@@ -12,17 +12,23 @@
 
 	const displayName = $derived(
 		profile && email
-			? email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+			? email
+					.split('@')[0]
+					.replace(/[._-]/g, ' ')
+					.replace(/\b\w/g, (c) => c.toUpperCase())
 			: email || '—'
 	);
 
 	const ageDisplay = $derived(profile?.age ?? '—');
 
 	const sexDisplay = $derived(
-		profile?.sex === 'male' ? 'M'
-		: profile?.sex === 'female' ? 'F'
-		: profile?.sex === 'other' ? 'O'
-		: '—'
+		profile?.sex === 'male'
+			? 'M'
+			: profile?.sex === 'female'
+				? 'F'
+				: profile?.sex === 'other'
+					? 'O'
+					: '—'
 	);
 
 	const conditions = $derived(profile?.known_conditions ?? []);
@@ -45,14 +51,21 @@
 			class="hc-summary-conditions-toggle"
 			role="button"
 			tabindex="0"
-			onclick={() => { showConditions = !showConditions; }}
-			onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showConditions = !showConditions; } }}
+			onclick={() => {
+				showConditions = !showConditions;
+			}}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					showConditions = !showConditions;
+				}
+			}}
 		>
 			{conditions.length} ▼
 			{#if showConditions}
 				<span class="hc-summary-conditions-dropdown">
 					{#each conditions as cond}
-						{cond}<br>
+						{cond}<br />
 					{/each}
 				</span>
 			{/if}

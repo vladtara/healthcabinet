@@ -239,9 +239,9 @@ test.describe('document processing upload flow', () => {
 		]);
 
 		// Wait for the batch summary — means both files flowed through.
-		await expect(
-			page.getByRole('heading', { name: 'Batch complete', level: 3 })
-		).toBeVisible({ timeout: 15_000 });
+		await expect(page.getByRole('heading', { name: 'Batch complete', level: 3 })).toBeVisible({
+			timeout: 15_000
+		});
 		await expect(page.getByText(/✓ 1 complete/)).toBeVisible();
 		await expect(page.getByText(/⚠ 1 partial/)).toBeVisible();
 

@@ -24,14 +24,14 @@
 	{#each patternsQuery.data.patterns as pattern, index (patternKey(pattern, index))}
 		<section
 			aria-label={`Health Pattern Observation ${index + 1} of ${patternsQuery.data.patterns.length}`}
-			class="mt-4 border-l-4 border-l-[#E07020] rounded-md bg-card/50 p-4"
+			class="bg-card/50 mt-4 rounded-md border-l-4 border-l-[#E07020] p-4"
 		>
-			<h3 class="mb-2 text-base font-semibold text-foreground">Pattern Observed</h3>
-			<p class="mb-2 text-[15px] leading-relaxed text-foreground">{pattern.description}</p>
-			<p class="mb-1 text-[12px] text-muted-foreground">
+			<h3 class="text-foreground mb-2 text-base font-semibold">Pattern Observed</h3>
+			<p class="text-foreground mb-2 text-[15px] leading-relaxed">{pattern.description}</p>
+			<p class="text-muted-foreground mb-1 text-[12px]">
 				Spans: {pattern.document_dates.join(' · ')}
 			</p>
-			<p class="text-[11px] text-muted-foreground">{pattern.recommendation}</p>
+			<p class="text-muted-foreground text-[11px]">{pattern.recommendation}</p>
 		</section>
 	{/each}
 {/if}

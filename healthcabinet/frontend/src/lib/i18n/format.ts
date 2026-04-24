@@ -18,11 +18,7 @@ function toDate(input: Date | string | number | null | undefined): Date | null {
 	return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function safeFormat(
-	locale: Locale,
-	date: Date,
-	options: Intl.DateTimeFormatOptions
-): string {
+function safeFormat(locale: Locale, date: Date, options: Intl.DateTimeFormatOptions): string {
 	try {
 		return new Intl.DateTimeFormat(toBcp47(locale), options).format(date);
 	} catch (err) {

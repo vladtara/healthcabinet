@@ -84,9 +84,7 @@ def test_build_reasoning_context_assigns_statuses_and_uncertainty():
             "status": "unknown",
         },
     ]
-    assert reasoning["uncertainty_flags"] == [
-        "Insufficient data to interpret HbA1c confidently"
-    ]
+    assert reasoning["uncertainty_flags"] == ["Insufficient data to interpret HbA1c confidently"]
     assert reasoning["prior_documents_referenced"] == []
 
 
@@ -227,7 +225,9 @@ def test_build_follow_up_prompt_degrades_on_malformed_reasoning():
     assert "Your glucose is normal." in prompt
 
 
-def _make_context_row(doc_id: str = "doc-1", interpretation: str = "Your glucose is normal.") -> dict:
+def _make_context_row(
+    doc_id: str = "doc-1", interpretation: str = "Your glucose is normal."
+) -> dict:
     return {
         "document_id": doc_id,
         "interpretation": interpretation,
@@ -360,6 +360,7 @@ async def test_stream_follow_up_answer_builds_prompt_from_full_history():
         yield "Answer text."
 
     import uuid
+
     doc_id = uuid.uuid4()
 
     with (
@@ -640,8 +641,7 @@ async def test_detect_patterns_calls_claude_and_returns_observations():
     assert result.patterns[0].description == "Your TSH has increased across two recent uploads."
     assert result.patterns[0].document_dates == ["2025-01-15", "2025-06-20"]
     assert (
-        result.patterns[0].recommendation
-        == "Discuss this pattern with your healthcare provider."
+        result.patterns[0].recommendation == "Discuss this pattern with your healthcare provider."
     )
 
     prompt = call_model_text_mock.await_args.args[0]
@@ -793,8 +793,7 @@ async def test_detect_patterns_overrides_recommendation_field():
 
     assert len(result.patterns) == 1
     assert (
-        result.patterns[0].recommendation
-        == "Discuss this pattern with your healthcare provider."
+        result.patterns[0].recommendation == "Discuss this pattern with your healthcare provider."
     )
 
 

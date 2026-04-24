@@ -161,9 +161,7 @@ async def submit_correction(
 # ---------------------------------------------------------------------------
 
 
-async def fetch_admin_users(
-    db: AsyncSession, query: str | None = None
-) -> AdminUserListResponse:
+async def fetch_admin_users(db: AsyncSession, query: str | None = None) -> AdminUserListResponse:
     """Fetch admin user list with upload counts."""
     rows = await list_admin_users(db, query)
     items = [
@@ -179,9 +177,7 @@ async def fetch_admin_users(
     return AdminUserListResponse(items=items, total=len(items))
 
 
-async def fetch_admin_user_detail(
-    db: AsyncSession, user_id: uuid.UUID
-) -> AdminUserDetail | None:
+async def fetch_admin_user_detail(db: AsyncSession, user_id: uuid.UUID) -> AdminUserDetail | None:
     """Fetch single user detail. Returns None if not found or not a regular user."""
     from app.admin.repository import get_admin_user_detail
 
@@ -198,9 +194,7 @@ async def fetch_admin_user_detail(
     )
 
 
-async def update_user_status(
-    db: AsyncSession, user_id: uuid.UUID, account_status: str
-) -> bool:
+async def update_user_status(db: AsyncSession, user_id: uuid.UUID, account_status: str) -> bool:
     """Update user account status. Returns True if found, False if not."""
     from app.admin.repository import set_user_account_status
 

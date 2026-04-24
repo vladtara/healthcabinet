@@ -13,6 +13,7 @@ from app.documents.storage import get_s3_client
 from app.users.export_service import build_export_zip
 from app.users.schemas import (
     ConsentHistoryResponse,
+    ConsentLogResponse,
     OnboardingStepRequest,
     ProfileResponse,
     ProfileUpdateRequest,
@@ -92,7 +93,7 @@ async def get_consent_history(
 ) -> ConsentHistoryResponse:
     """Return the authenticated user's consent log history (GDPR transparency)."""
     logs = await list_consent_logs_by_user_desc(db, current_user.id)
-    return ConsentHistoryResponse(items=logs)
+    return ConsentHistoryResponse(items=[ConsentLogResponse.model_validate(log) for log in logs])
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)

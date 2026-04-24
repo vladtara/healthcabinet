@@ -38,7 +38,18 @@
 		return [...rows].sort((a, b) => {
 			const av = a[key];
 			const bv = b[key];
-			const cmp = av == null && bv == null ? 0 : av == null ? -1 : bv == null ? 1 : av < bv ? -1 : av > bv ? 1 : 0;
+			const cmp =
+				av == null && bv == null
+					? 0
+					: av == null
+						? -1
+						: bv == null
+							? 1
+							: av < bv
+								? -1
+								: av > bv
+									? 1
+									: 0;
 			return sortDir === 'asc' ? cmp : -cmp;
 		});
 	});
@@ -67,13 +78,12 @@
 						aria-sort={col.sortable ? ariaSortValue(col.key) : undefined}
 					>
 						{#if col.sortable}
-							<button
-								type="button"
-								class="hc-sort-button"
-								onclick={() => toggleSort(col.key)}
-							>
+							<button type="button" class="hc-sort-button" onclick={() => toggleSort(col.key)}>
 								{col.label}
-								<span class="hc-sort-indicator {sortKey === col.key ? 'hc-sort-active' : ''}" aria-hidden="true">
+								<span
+									class="hc-sort-indicator {sortKey === col.key ? 'hc-sort-active' : ''}"
+									aria-hidden="true"
+								>
 									{#if sortKey === col.key}
 										{sortDir === 'asc' ? '▲' : '▼'}
 									{:else}
@@ -98,7 +108,10 @@
 					tabindex={onRowClick ? 0 : undefined}
 				>
 					{#each columns as col}
-						<td style={col.align ? `text-align: ${col.align}` : undefined} class={col.class ?? undefined}>
+						<td
+							style={col.align ? `text-align: ${col.align}` : undefined}
+							class={col.class ?? undefined}
+						>
 							{#if children}
 								{@render children(row, col)}
 							{:else}

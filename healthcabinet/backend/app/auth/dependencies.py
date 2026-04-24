@@ -42,9 +42,7 @@ async def resolve_access_token(token: str, db: AsyncSession) -> User:
         # OverflowError/OSError: forged iat like 1e20 blows past POSIX timestamp range.
         # TypeError: iat shaped as list/dict/None-after-get survives decode_token but
         # breaks int(). Without these, a crafted token yields 500 instead of 401.
-        token_iat = (
-            datetime.fromtimestamp(int(iat_raw), tz=UTC) if iat_raw is not None else None
-        )
+        token_iat = datetime.fromtimestamp(int(iat_raw), tz=UTC) if iat_raw is not None else None
     except (TypeError, ValueError, OverflowError, OSError) as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

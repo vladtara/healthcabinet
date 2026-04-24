@@ -271,9 +271,7 @@ async def test_sse_refresh_token_rejected(sse_client: AsyncClient):
     """Refresh JWTs are not accepted by the SSE endpoint."""
     doc_id = uuid.uuid4()
 
-    with _patch_auth(
-        side_effect=HTTPException(status_code=401, detail="Expected access token")
-    ):
+    with _patch_auth(side_effect=HTTPException(status_code=401, detail="Expected access token")):
         resp = await sse_client.get(f"/api/v1/documents/{doc_id}/status?token=refresh-token")
 
     assert resp.status_code == 401

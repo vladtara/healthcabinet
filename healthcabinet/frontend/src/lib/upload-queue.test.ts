@@ -34,7 +34,7 @@ function makeDoc(id: string): Document {
 	};
 }
 
-function makeFile(name = 'test.pdf', size = 1024, type = 'application/pdf'): File {
+function makeFile(name = 'test.pdf', type = 'application/pdf'): File {
 	return new File(['pdf-bytes'], name, { type });
 }
 

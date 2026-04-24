@@ -56,8 +56,8 @@ describe('StatCardGrid', () => {
 			action_needed: 0
 		});
 
-		const countValues = Array.from(container.querySelectorAll('.hc-stat-card-count')).map((element) =>
-			element.textContent?.trim()
+		const countValues = Array.from(container.querySelectorAll('.hc-stat-card-count')).map(
+			(element) => element.textContent?.trim()
 		);
 		expect(countValues).toEqual(['0', '0', '0', '0']);
 	});
@@ -66,8 +66,8 @@ describe('StatCardGrid', () => {
 		const { container } = renderComponent(StatCardGrid, {
 			counts: { optimal: 3 }
 		});
-		const countValues = Array.from(container.querySelectorAll('.hc-stat-card-count')).map((element) =>
-			element.textContent?.trim()
+		const countValues = Array.from(container.querySelectorAll('.hc-stat-card-count')).map(
+			(element) => element.textContent?.trim()
 		);
 		expect(countValues).toEqual(['3', '0', '0', '0']);
 	});
@@ -81,8 +81,8 @@ describe('StatCardGrid', () => {
 				action_needed: Number.POSITIVE_INFINITY
 			}
 		});
-		const countValues = Array.from(container.querySelectorAll('.hc-stat-card-count')).map((element) =>
-			element.textContent?.trim()
+		const countValues = Array.from(container.querySelectorAll('.hc-stat-card-count')).map(
+			(element) => element.textContent?.trim()
 		);
 		expect(countValues).toEqual(['0', '0', '3', '0']);
 	});

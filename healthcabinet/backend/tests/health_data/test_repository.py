@@ -55,11 +55,17 @@ async def test_replace_document_health_values_encrypts_and_round_trips(
         document_id=document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
 
     stored = (
-        await async_db_session.execute(select(HealthValue).where(HealthValue.document_id == document.id))
+        await async_db_session.execute(
+            select(HealthValue).where(HealthValue.document_id == document.id)
+        )
     ).scalar_one()
     assert stored.value_encrypted != b"91.0"
 
@@ -101,8 +107,14 @@ async def test_replace_document_health_values_is_atomic_on_failure(
         await async_db_session.rollback()
 
     stored = (
-        await async_db_session.execute(select(HealthValue).where(HealthValue.document_id == document.id))
-    ).scalars().all()
+        (
+            await async_db_session.execute(
+                select(HealthValue).where(HealthValue.document_id == document.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
     assert stored == []
 
 
@@ -120,14 +132,22 @@ async def test_list_timeline_values_is_user_scoped(
         document_id=owner_document.id,
         user_id=owner.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     await replace_document_health_values(
         async_db_session,
         document_id=other_document.id,
         user_id=other_user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=88.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=88.0
+            )
+        ],
     )
 
     result = await list_timeline_values(
@@ -153,14 +173,22 @@ async def test_list_timeline_values_groups_multiple_documents_by_canonical_name(
         document_id=first_document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     await replace_document_health_values(
         async_db_session,
         document_id=second_document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Blood Glucose", canonical_biomarker_name="glucose", value=89.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Blood Glucose", canonical_biomarker_name="glucose", value=89.0
+            )
+        ],
     )
 
     result = await list_timeline_values(
@@ -185,7 +213,11 @@ async def test_replace_document_health_values_rejects_mismatched_user(
             document_id=document.id,
             user_id=other_user.id,
             measured_at=None,
-            values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+            values=[
+                _normalized_value(
+                    biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+                )
+            ],
         )
 
 
@@ -202,7 +234,11 @@ async def test_replace_document_health_values_rejects_nonexistent_document(
             document_id=uuid.uuid4(),
             user_id=user.id,
             measured_at=None,
-            values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+            values=[
+                _normalized_value(
+                    biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+                )
+            ],
         )
 
 
@@ -219,7 +255,11 @@ async def test_delete_document_health_values_removes_stale_values(
         document_id=document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
 
     result_before = await list_values_by_user(async_db_session, user_id=user.id)
@@ -243,7 +283,11 @@ async def test_list_values_by_user_skips_corrupt_rows(
         document_id=document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     await async_db_session.execute(
         HealthValue.__table__.update()
@@ -274,19 +318,27 @@ async def test_list_values_by_document_returns_scoped_values(
         document_id=doc_a.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     await replace_document_health_values(
         async_db_session,
         document_id=doc_b.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Cholesterol", canonical_biomarker_name="cholesterol_total", value=180.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Cholesterol",
+                canonical_biomarker_name="cholesterol_total",
+                value=180.0,
+            )
+        ],
     )
 
-    result = await list_values_by_document(
-        async_db_session, document_id=doc_a.id, user_id=user.id
-    )
+    result = await list_values_by_document(async_db_session, document_id=doc_a.id, user_id=user.id)
     assert len(result.records) == 1
     assert result.records[0].canonical_biomarker_name == "glucose"
     assert result.skipped_corrupt_records == 0
@@ -308,12 +360,14 @@ async def test_list_values_by_document_user_isolation(
         document_id=doc.id,
         user_id=owner.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
 
-    result = await list_values_by_document(
-        async_db_session, document_id=doc.id, user_id=other.id
-    )
+    result = await list_values_by_document(async_db_session, document_id=doc.id, user_id=other.id)
     assert result.records == []
 
 
@@ -335,7 +389,11 @@ async def test_flag_health_value_sets_is_flagged_and_flagged_at(
         document_id=document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     health_value_id = rows[0].id
 
@@ -360,7 +418,11 @@ async def test_flag_health_value_idempotent_preserves_flagged_at(
         document_id=document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     health_value_id = rows[0].id
 
@@ -389,27 +451,25 @@ async def test_flag_health_value_owner_only(
         document_id=document.id,
         user_id=owner.id,
         measured_at=None,
-        values=[_normalized_value(biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0)],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose", canonical_biomarker_name="glucose", value=91.0
+            )
+        ],
     )
     health_value_id = rows[0].id
 
     with pytest.raises(HealthValueNotFoundError):
-        await flag_health_value(
-            async_db_session, health_value_id=health_value_id, user_id=other.id
-        )
+        await flag_health_value(async_db_session, health_value_id=health_value_id, user_id=other.id)
 
 
 @pytest.mark.asyncio
-async def test_flag_health_value_unknown_id(
-    async_db_session: AsyncSession, make_user
-):
+async def test_flag_health_value_unknown_id(async_db_session: AsyncSession, make_user):
     """Flagging a nonexistent health value raises HealthValueNotFoundError."""
     user, _ = await make_user(email="flag-unknown@test.com")
 
     with pytest.raises(HealthValueNotFoundError):
-        await flag_health_value(
-            async_db_session, health_value_id=uuid.uuid4(), user_id=user.id
-        )
+        await flag_health_value(async_db_session, health_value_id=uuid.uuid4(), user_id=user.id)
 
 
 @pytest.mark.asyncio
@@ -425,13 +485,15 @@ async def test_flag_health_value_does_not_alter_encrypted_value_or_confidence(
         document_id=document.id,
         user_id=user.id,
         measured_at=None,
-        values=[_normalized_value(
-            biomarker_name="Glucose",
-            canonical_biomarker_name="glucose",
-            value=91.0,
-            confidence=0.95,
-            needs_review=False,
-        )],
+        values=[
+            _normalized_value(
+                biomarker_name="Glucose",
+                canonical_biomarker_name="glucose",
+                value=91.0,
+                confidence=0.95,
+                needs_review=False,
+            )
+        ],
     )
     health_value_id = rows[0].id
     before = rows[0].value_encrypted
@@ -441,9 +503,7 @@ async def test_flag_health_value_does_not_alter_encrypted_value_or_confidence(
     )
 
     stored = (
-        await async_db_session.execute(
-            select(HealthValue).where(HealthValue.id == health_value_id)
-        )
+        await async_db_session.execute(select(HealthValue).where(HealthValue.id == health_value_id))
     ).scalar_one()
 
     assert stored.value_encrypted == before
@@ -558,10 +618,14 @@ async def test_update_document_measured_at_is_user_scoped(
 
     # User A's rows carry the resolved timestamp.
     rows_a = (
-        await async_db_session.execute(
-            select(HealthValue).where(HealthValue.document_id == doc_a.id)
+        (
+            await async_db_session.execute(
+                select(HealthValue).where(HealthValue.document_id == doc_a.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(rows_a) == 2
     for row in rows_a:
         assert row.measured_at is not None
@@ -570,10 +634,14 @@ async def test_update_document_measured_at_is_user_scoped(
 
     # User B's row is untouched — measured_at still null.
     rows_b = (
-        await async_db_session.execute(
-            select(HealthValue).where(HealthValue.document_id == doc_b.id)
+        (
+            await async_db_session.execute(
+                select(HealthValue).where(HealthValue.document_id == doc_b.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(rows_b) == 1
     assert rows_b[0].measured_at is None
 
@@ -609,9 +677,13 @@ async def test_update_document_measured_at_mismatched_user_updates_zero_rows(
     assert rowcount == 0
 
     rows = (
-        await async_db_session.execute(
-            select(HealthValue).where(HealthValue.document_id == doc.id)
+        (
+            await async_db_session.execute(
+                select(HealthValue).where(HealthValue.document_id == doc.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(rows) == 1
     assert rows[0].measured_at is None

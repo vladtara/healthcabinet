@@ -34,9 +34,9 @@ describe('Register page', () => {
 
 	test('gdpr consent checkbox uses the migrated visible checkbox primitive', () => {
 		const { getByRole } = renderComponent(RegisterPage);
-		expect(
-			getByRole('checkbox', { name: /i consent to health data processing/i })
-		).toHaveClass('hc-checkbox');
+		expect(getByRole('checkbox', { name: /i consent to health data processing/i })).toHaveClass(
+			'hc-checkbox'
+		);
 	});
 
 	test('email blur shows inline error for invalid format', async () => {
@@ -91,7 +91,9 @@ describe('Register page', () => {
 
 	test('renders subtitle text', () => {
 		const { getByText } = renderComponent(RegisterPage);
-		expect(getByText(/securely store, understand, and track your health data/i)).toBeInTheDocument();
+		expect(
+			getByText(/securely store, understand, and track your health data/i)
+		).toBeInTheDocument();
 	});
 
 	test('renders trust badges below dialog', () => {

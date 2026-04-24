@@ -14,7 +14,16 @@
 		isDeleting: boolean;
 	}
 
-	const { queryClient, documentId, onClose, onDelete, onKeepPartial, onReupload, isKeepingPartial, isDeleting }: Props = $props();
+	const {
+		queryClient,
+		documentId,
+		onClose,
+		onDelete,
+		onKeepPartial,
+		onReupload,
+		isKeepingPartial,
+		isDeleting
+	}: Props = $props();
 </script>
 
 <QueryClientProvider client={queryClient}>

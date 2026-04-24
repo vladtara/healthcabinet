@@ -40,9 +40,7 @@ describe('WindowFrame', () => {
 		const maximizeButton = container.querySelector(
 			'button[aria-label="Maximize"]'
 		) as HTMLButtonElement;
-		const closeButton = container.querySelector(
-			'button[aria-label="Close"]'
-		) as HTMLButtonElement;
+		const closeButton = container.querySelector('button[aria-label="Close"]') as HTMLButtonElement;
 
 		expect(controls).toBeInTheDocument();
 		expect(minimizeButton).toBeInTheDocument();
@@ -55,7 +53,11 @@ describe('WindowFrame', () => {
 
 	test('calls onClose when close button is clicked', async () => {
 		const onClose = vi.fn();
-		const { container } = renderComponent(WindowFrame, { title: 'Test', showControls: true, onClose });
+		const { container } = renderComponent(WindowFrame, {
+			title: 'Test',
+			showControls: true,
+			onClose
+		});
 		const closeBtn = container.querySelector('button[aria-label="Close"]') as HTMLButtonElement;
 		closeBtn.click();
 		expect(onClose).toHaveBeenCalledOnce();

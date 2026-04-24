@@ -378,9 +378,7 @@ async def has_user_documents(
     user_id: uuid.UUID,
 ) -> bool:
     """Return True if the user has at least one document row (any status)."""
-    result = await db.execute(
-        select(func.count()).where(Document.user_id == user_id)
-    )
+    result = await db.execute(select(func.count()).where(Document.user_id == user_id))
     return result.scalar_one() > 0
 
 
@@ -393,9 +391,7 @@ async def has_document_health_values(
     INTERNAL USE ONLY — called by the ARQ worker to detect retry scenarios
     where prior partial values must be preserved on failure.
     """
-    result = await db.execute(
-        select(func.count()).where(HealthValue.document_id == document_id)
-    )
+    result = await db.execute(select(func.count()).where(HealthValue.document_id == document_id))
     count = result.scalar_one()
     return count > 0
 

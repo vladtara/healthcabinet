@@ -31,7 +31,14 @@ const mockInterpretation = {
 	generated_at: '2026-04-04T12:00:00Z',
 	reasoning: {
 		values_referenced: [
-			{ name: 'TSH', value: 5.8, unit: 'mIU/L', ref_low: 0.4, ref_high: 4.0, status: 'high' as const }
+			{
+				name: 'TSH',
+				value: 5.8,
+				unit: 'mIU/L',
+				ref_low: 0.4,
+				ref_high: 4.0,
+				status: 'high' as const
+			}
 		],
 		uncertainty_flags: ['Limited historical data'],
 		prior_documents_referenced: []
@@ -92,7 +99,7 @@ describe('AIClinicalNote', () => {
 
 	test('reasoning toggle expands and collapses', async () => {
 		mockGetInterpretation.mockResolvedValue(mockInterpretation);
-		const { getByText, container } = renderNote();
+		const { getByText } = renderNote();
 
 		await waitFor(() => {
 			expect(getByText('Show reasoning')).toBeInTheDocument();
@@ -154,9 +161,11 @@ describe('AIClinicalNote', () => {
 
 	test('regenerate button is disabled while a refetch is in flight', async () => {
 		let resolveRefetch!: (v: typeof mockInterpretation) => void;
-		mockGetInterpretation
-			.mockResolvedValueOnce(mockInterpretation)
-			.mockReturnValueOnce(new Promise((r) => { resolveRefetch = r; }));
+		mockGetInterpretation.mockResolvedValueOnce(mockInterpretation).mockReturnValueOnce(
+			new Promise((r) => {
+				resolveRefetch = r;
+			})
+		);
 
 		const { getByLabelText } = renderNote();
 		await waitFor(() => expect(getByLabelText('Regenerate')).toBeInTheDocument());
@@ -192,16 +201,16 @@ describe('AIClinicalNote', () => {
 		return render(AIClinicalNoteTestWrapper, { props: { queryClient, documentKind } });
 	}
 
-		test('dashboard mode renders aggregate interpretation text', async () => {
-			mockGetDashboardInterpretation.mockResolvedValue({
-				document_id: null,
-				document_kind: 'analysis',
-				source_document_ids: ['doc-1', 'doc-2'],
-				interpretation: 'Across your lab results, values look stable.',
-				model_version: 'claude-4',
-				generated_at: '2026-04-20T00:00:00Z',
-				reasoning: null
-			});
+	test('dashboard mode renders aggregate interpretation text', async () => {
+		mockGetDashboardInterpretation.mockResolvedValue({
+			document_id: null,
+			document_kind: 'analysis',
+			source_document_ids: ['doc-1', 'doc-2'],
+			interpretation: 'Across your lab results, values look stable.',
+			model_version: 'claude-4',
+			generated_at: '2026-04-20T00:00:00Z',
+			reasoning: null
+		});
 
 		const { getByText } = renderDashboardNote('analysis');
 
@@ -239,17 +248,15 @@ describe('AIClinicalNote', () => {
 			}
 		}
 
-		mockGetDashboardInterpretation
-			.mockRejectedValueOnce(new ApiError(429))
-			.mockResolvedValueOnce({
-				document_id: null,
-				document_kind: 'analysis',
-				source_document_ids: ['doc-1'],
-				interpretation: 'Retry succeeded.',
-				model_version: 'claude-4',
-				generated_at: '2026-04-20T00:00:00Z',
-				reasoning: null
-			});
+		mockGetDashboardInterpretation.mockRejectedValueOnce(new ApiError(429)).mockResolvedValueOnce({
+			document_id: null,
+			document_kind: 'analysis',
+			source_document_ids: ['doc-1'],
+			interpretation: 'Retry succeeded.',
+			model_version: 'claude-4',
+			generated_at: '2026-04-20T00:00:00Z',
+			reasoning: null
+		});
 
 		const { getByText } = renderDashboardNote('analysis');
 
@@ -265,16 +272,16 @@ describe('AIClinicalNote', () => {
 		});
 	});
 
-		test('dashboard mode calls getDashboardInterpretation, not getDocumentInterpretation', async () => {
-			mockGetDashboardInterpretation.mockResolvedValue({
-				document_id: null,
-				document_kind: 'all',
-				source_document_ids: ['doc-1'],
-				interpretation: 'All docs summary.',
-				model_version: null,
-				generated_at: '2026-04-20T00:00:00Z',
-				reasoning: null
-			});
+	test('dashboard mode calls getDashboardInterpretation, not getDocumentInterpretation', async () => {
+		mockGetDashboardInterpretation.mockResolvedValue({
+			document_id: null,
+			document_kind: 'all',
+			source_document_ids: ['doc-1'],
+			interpretation: 'All docs summary.',
+			model_version: null,
+			generated_at: '2026-04-20T00:00:00Z',
+			reasoning: null
+		});
 
 		renderDashboardNote('all');
 

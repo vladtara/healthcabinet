@@ -63,29 +63,28 @@
 >
 	<span aria-hidden="true" style="font-size: 18px; grid-row: 1;">📄</span>
 	<div style="grid-row: 1; min-width: 0;">
-		<p title={entry.file.name} style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">
+		<p
+			title={entry.file.name}
+			style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;"
+		>
 			{entry.file.name}
 		</p>
 		<p style="margin: 0; font-size: 11px; color: var(--text-muted, #8a8f98);">
 			{formatFileSize(entry.file.size)}
 		</p>
 	</div>
-	<span
-		class={statusClass}
-		style={statusStyle}
-	>
+	<span class={statusClass} style={statusStyle}>
 		{statusLabel}
 	</span>
 	<div style="grid-row: 1; display: flex; gap: 6px;">
 		{#if showResultLink && entry.documentId}
-			<a href={`/documents/${entry.documentId}`} style="text-decoration: underline; font-size: 12px;">{copy.entryViewResult}</a>
+			<a
+				href={`/documents/${entry.documentId}`}
+				style="text-decoration: underline; font-size: 12px;">{copy.entryViewResult}</a
+			>
 		{/if}
 		{#if showRetryAction}
-			<button
-				type="button"
-				onclick={() => onRetry?.(entry.id)}
-				style="font-size: 12px;"
-			>
+			<button type="button" onclick={() => onRetry?.(entry.id)} style="font-size: 12px;">
 				{copy.entryRetryThisFile}
 			</button>
 		{/if}

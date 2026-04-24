@@ -19,7 +19,11 @@ describe('StatusRow', () => {
 	});
 
 	test('renders status dot and text label when status provided', () => {
-		const { container } = renderComponent(StatusRow, { label: 'TSH', value: '5.82', status: 'borderline' });
+		const { container } = renderComponent(StatusRow, {
+			label: 'TSH',
+			value: '5.82',
+			status: 'borderline'
+		});
 		const dot = container.querySelector('.hc-status-dot');
 		expect(dot).toBeInTheDocument();
 		expect(dot?.classList.contains('hc-status-dot-borderline')).toBe(true);
@@ -27,7 +31,11 @@ describe('StatusRow', () => {
 	});
 
 	test('renders optimal status dot and label', () => {
-		const { container } = renderComponent(StatusRow, { label: 'T3', value: '120', status: 'optimal' });
+		const { container } = renderComponent(StatusRow, {
+			label: 'T3',
+			value: '120',
+			status: 'optimal'
+		});
 		const dot = container.querySelector('.hc-status-dot');
 		expect(dot?.classList.contains('hc-status-dot-optimal')).toBe(true);
 		expect(container.textContent).toContain('Optimal');

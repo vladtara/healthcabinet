@@ -22,10 +22,10 @@ const mockPageData = {
 	url: new URL('http://test/admin/documents/00000000-0000-0000-0000-000000000001')
 };
 const mockPageStore = vi.hoisted(() => {
-	let subscriber: (value: typeof mockPageData) => void;
+	let _subscriber: (value: typeof mockPageData) => void;
 	return {
 		subscribe: (fn: (value: typeof mockPageData) => void) => {
-			subscriber = fn;
+			_subscriber = fn;
 			fn(mockPageData);
 			return () => {};
 		}
@@ -106,9 +106,7 @@ describe('Admin document correction page', () => {
 			role: 'admin',
 			tier: 'paid'
 		};
-		mockPageData.url = new URL(
-			'http://test/admin/documents/00000000-0000-0000-0000-000000000001'
-		);
+		mockPageData.url = new URL('http://test/admin/documents/00000000-0000-0000-0000-000000000001');
 	});
 
 	test('page container uses hc-admin-correction-page class', async () => {
@@ -192,9 +190,7 @@ describe('Admin document correction page', () => {
 
 		// Cholesterol confidence 0.45 < 0.7 → warning badge with "45%"
 		const warningBadges = container.querySelectorAll('.hc-badge.hc-badge-warning');
-		const confidenceBadge = Array.from(warningBadges).find((el) =>
-			el.textContent?.includes('45%')
-		);
+		const confidenceBadge = Array.from(warningBadges).find((el) => el.textContent?.includes('45%'));
 		expect(confidenceBadge).toBeTruthy();
 	});
 
@@ -247,9 +243,7 @@ describe('Admin document correction page', () => {
 		expect(firstValueInput).toHaveClass('hc-input', 'hc-admin-correction-input-value');
 		expect(firstReasonInput).toHaveClass('hc-input', 'hc-admin-correction-input-reason');
 		expect(firstValueInput.getAttribute('aria-label')).toBe('New value for Cholesterol');
-		expect(firstReasonInput.getAttribute('aria-label')).toBe(
-			'Correction reason for Cholesterol'
-		);
+		expect(firstReasonInput.getAttribute('aria-label')).toBe('Correction reason for Cholesterol');
 	});
 
 	test('submit buttons use btn-primary and are disabled when reason is empty', async () => {

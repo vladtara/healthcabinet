@@ -25,6 +25,21 @@ export default [
 			parserOptions: {
 				parser: ts.parser
 			}
+		},
+		rules: {
+			'svelte/valid-compile': ['error', { ignoreWarnings: true }]
+		}
+	},
+	{
+		rules: {
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					varsIgnorePattern: '^_',
+					argsIgnorePattern: '^_',
+					ignoreRestSiblings: true
+				}
+			]
 		}
 	},
 	{

@@ -63,7 +63,8 @@
 
 	$effect(() => {
 		if (open && panelEl && !wasOpen) {
-			previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+			previouslyFocused =
+				document.activeElement instanceof HTMLElement ? document.activeElement : null;
 			entered = false;
 			const frame = requestAnimationFrame(() => {
 				entered = true;
@@ -87,8 +88,7 @@
 {#if open}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<div class="hc-slide-over-backdrop" onclick={handleBackdropClick}>
-	</div>
+	<div class="hc-slide-over-backdrop" onclick={handleBackdropClick}></div>
 	<div
 		bind:this={panelEl}
 		class={`hc-slide-over hc-window ${entered ? 'hc-slide-over-enter' : ''} ${className ?? ''}`.trim()}

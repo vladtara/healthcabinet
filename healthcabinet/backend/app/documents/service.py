@@ -419,18 +419,30 @@ _PARTIAL_DATE_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 _MONTH_NAMES: dict[str, int] = {
-    "jan": 1, "january": 1,
-    "feb": 2, "february": 2,
-    "mar": 3, "march": 3,
-    "apr": 4, "april": 4,
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
     "may": 5,
-    "jun": 6, "june": 6,
-    "jul": 7, "july": 7,
-    "aug": 8, "august": 8,
-    "sep": 9, "sept": 9, "september": 9,
-    "oct": 10, "october": 10,
-    "nov": 11, "november": 11,
-    "dec": 12, "december": 12,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
 }
 
 
@@ -544,9 +556,7 @@ async def confirm_date_year(
         # Defensive — should not happen because needs_date_confirmation is set
         # in lockstep with partial_measured_at_text, but if somehow present we
         # cannot safely compose a timestamp, so reject.
-        raise DocumentYearConfirmationInvalidError(
-            "Document is missing stored partial date text"
-        )
+        raise DocumentYearConfirmationInvalidError("Document is missing stored partial date text")
 
     parsed = _parse_partial_date(doc.partial_measured_at_text)
     if parsed is None:
@@ -589,9 +599,7 @@ async def confirm_date_year(
     # measurements at an unresolved date, and we just resolved the date. The
     # stored text may contradict the new timeline, so mark it invalid until
     # a regeneration succeeds. Cheap and idempotent when no prior row exists.
-    await ai_repo.invalidate_interpretation(
-        db, user_id=user.id, document_id=document_id
-    )
+    await ai_repo.invalidate_interpretation(db, user_id=user.id, document_id=document_id)
 
     await db.commit()
 

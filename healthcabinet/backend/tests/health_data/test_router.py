@@ -1,6 +1,7 @@
 """HTTP tests for health value retrieval routes."""
 
 from collections.abc import AsyncGenerator
+from datetime import UTC
 
 import pytest
 import pytest_asyncio
@@ -311,9 +312,7 @@ async def test_flag_health_value_response_includes_is_flagged_and_flagged_at_in_
         headers=_auth_headers(user.id),
     )
 
-    list_response = await health_client.get(
-        "/api/v1/health-values", headers=_auth_headers(user.id)
-    )
+    list_response = await health_client.get("/api/v1/health-values", headers=_auth_headers(user.id))
 
     assert list_response.status_code == 200
     values = list_response.json()
@@ -744,7 +743,7 @@ async def test_get_health_value_timeline_returns_ordered_values(
     health_client: AsyncClient, async_db_session: AsyncSession, make_user, make_document
 ):
     """Timeline returns values oldest-first for a given canonical biomarker."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from app.health_data.repository import replace_document_health_values
 
@@ -752,8 +751,8 @@ async def test_get_health_value_timeline_returns_ordered_values(
     doc1 = await make_document(user=user, status="completed")
     doc2 = await make_document(user=user, status="completed")
 
-    t1 = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    t2 = datetime(2026, 3, 1, tzinfo=timezone.utc)
+    t1 = datetime(2026, 1, 1, tzinfo=UTC)
+    t2 = datetime(2026, 3, 1, tzinfo=UTC)
 
     await replace_document_health_values(
         async_db_session,
@@ -830,9 +829,7 @@ async def test_get_health_value_timeline_empty_returns_empty_list(
 # ---------------------------------------------------------------------------
 
 
-async def _seed_kind_dataset(
-    db: AsyncSession, make_user, make_document
-):
+async def _seed_kind_dataset(db: AsyncSession, make_user, make_document):
     """Seed one user with 3 documents (analysis/document/unknown) each with 1 value."""
     from app.health_data.repository import replace_document_health_values
 

@@ -159,8 +159,11 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		// pending, which would make every subsequent test await a stuck
 		// promise and time out. This cast is idiomatic for clearing private
 		// state on a module-level singleton during tests.
-		(authStore as unknown as { restoreSessionPromise: Promise<BootstrapState> | null }).restoreSessionPromise = null;
-		(authStore as unknown as { tryRefreshPromise: Promise<boolean> | null }).tryRefreshPromise = null;
+		(
+			authStore as unknown as { restoreSessionPromise: Promise<BootstrapState> | null }
+		).restoreSessionPromise = null;
+		(authStore as unknown as { tryRefreshPromise: Promise<boolean> | null }).tryRefreshPromise =
+			null;
 		mockMe.mockResolvedValue({ id: '1', email: 'user@example.com', role: 'user', tier: 'free' });
 	});
 
@@ -168,8 +171,11 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		authStore.clearAccessToken();
 		authStore.setUser(null);
 		authStore.bootstrapState = 'unknown';
-		(authStore as unknown as { restoreSessionPromise: Promise<BootstrapState> | null }).restoreSessionPromise = null;
-		(authStore as unknown as { tryRefreshPromise: Promise<boolean> | null }).tryRefreshPromise = null;
+		(
+			authStore as unknown as { restoreSessionPromise: Promise<BootstrapState> | null }
+		).restoreSessionPromise = null;
+		(authStore as unknown as { tryRefreshPromise: Promise<boolean> | null }).tryRefreshPromise =
+			null;
 	});
 
 	test('starts in "unknown" before any restore attempt', () => {
@@ -181,7 +187,10 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		// state before resolution.
 		let resolveRefresh: (value: string | null) => void = () => {};
 		mockRefreshToken.mockImplementation(
-			() => new Promise<string | null>((resolve) => { resolveRefresh = resolve; })
+			() =>
+				new Promise<string | null>((resolve) => {
+					resolveRefresh = resolve;
+				})
 		);
 
 		const restorePromise = authStore.restoreSession();
@@ -203,7 +212,10 @@ describe('AuthStore bootstrap / restoreSession', () => {
 	test('unknown -> restoring -> anonymous when refresh cookie is expired/missing', async () => {
 		let resolveRefresh: (value: string | null) => void = () => {};
 		mockRefreshToken.mockImplementation(
-			() => new Promise<string | null>((resolve) => { resolveRefresh = resolve; })
+			() =>
+				new Promise<string | null>((resolve) => {
+					resolveRefresh = resolve;
+				})
 		);
 
 		const restorePromise = authStore.restoreSession();
@@ -222,7 +234,10 @@ describe('AuthStore bootstrap / restoreSession', () => {
 	test('concurrent restoreSession() calls are deduplicated into a single in-flight promise', async () => {
 		let resolveRefresh: (value: string | null) => void = () => {};
 		mockRefreshToken.mockImplementation(
-			() => new Promise<string | null>((resolve) => { resolveRefresh = resolve; })
+			() =>
+				new Promise<string | null>((resolve) => {
+					resolveRefresh = resolve;
+				})
 		);
 
 		// Simulate `(app)`, `(admin)`, and `(onboarding)` layouts all calling
@@ -326,9 +341,11 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		// that's the only scenario where a stale refresh can deliver a token
 		// AFTER a definitive anonymous resolution. Simulate that pending-restore
 		// state so this test exercises the guard branch (not the T-A1 path).
-		(authStore as unknown as {
-			restoreSessionPromise: Promise<BootstrapState> | null;
-		}).restoreSessionPromise = Promise.resolve('anonymous' as BootstrapState);
+		(
+			authStore as unknown as {
+				restoreSessionPromise: Promise<BootstrapState> | null;
+			}
+		).restoreSessionPromise = Promise.resolve('anonymous' as BootstrapState);
 
 		authStore.setAccessToken('leaked-from-in-flight-refresh');
 
@@ -348,9 +365,11 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		// No restoreSessionPromise — the interactive-login code path is
 		// synchronous wrt the store (login form POSTs, receives the token,
 		// calls setAccessToken()). There is no concurrent refresh in flight.
-		(authStore as unknown as {
-			restoreSessionPromise: Promise<BootstrapState> | null;
-		}).restoreSessionPromise = null;
+		(
+			authStore as unknown as {
+				restoreSessionPromise: Promise<BootstrapState> | null;
+			}
+		).restoreSessionPromise = null;
 
 		authStore.setAccessToken('fresh-login-token');
 
@@ -363,9 +382,11 @@ describe('AuthStore bootstrap / restoreSession', () => {
 	// is the only combination that still trips the guard.
 	test('setAccessToken still discards a stale token when bootstrapState="anonymous" AND a restore was in-flight', () => {
 		authStore.bootstrapState = 'anonymous';
-		(authStore as unknown as {
-			restoreSessionPromise: Promise<BootstrapState> | null;
-		}).restoreSessionPromise = Promise.resolve('anonymous' as BootstrapState);
+		(
+			authStore as unknown as {
+				restoreSessionPromise: Promise<BootstrapState> | null;
+			}
+		).restoreSessionPromise = Promise.resolve('anonymous' as BootstrapState);
 
 		authStore.setAccessToken('stale-refresh-token');
 
@@ -380,7 +401,10 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		// re-authenticate after the anonymous signal is definitive.
 		let resolveRefresh: (value: string | null) => void = () => {};
 		mockRefreshToken.mockImplementation(
-			() => new Promise<string | null>((resolve) => { resolveRefresh = resolve; })
+			() =>
+				new Promise<string | null>((resolve) => {
+					resolveRefresh = resolve;
+				})
 		);
 
 		const restorePromise = authStore.restoreSession();
@@ -405,7 +429,10 @@ describe('AuthStore bootstrap / restoreSession', () => {
 		// singleton contract must hold regardless of the refresh outcome.
 		let resolveRefresh: (value: string | null) => void = () => {};
 		mockRefreshToken.mockImplementation(
-			() => new Promise<string | null>((resolve) => { resolveRefresh = resolve; })
+			() =>
+				new Promise<string | null>((resolve) => {
+					resolveRefresh = resolve;
+				})
 		);
 
 		const p1 = authStore.restoreSession();

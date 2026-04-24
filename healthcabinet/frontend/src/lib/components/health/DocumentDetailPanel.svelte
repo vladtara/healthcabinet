@@ -23,7 +23,15 @@
 		isDeleting: boolean;
 	}
 
-	const { documentId, onClose, onDelete, onKeepPartial, onReupload, isKeepingPartial, isDeleting }: Props = $props();
+	const {
+		documentId,
+		onClose,
+		onDelete,
+		onKeepPartial,
+		onReupload,
+		isKeepingPartial,
+		isDeleting
+	}: Props = $props();
 
 	const queryClient = useQueryClient();
 
@@ -58,22 +66,44 @@
 		if (hv.value >= hv.reference_range_low && hv.value <= hv.reference_range_high) {
 			return { text: copy.panelHealthStatusOptimal, cssClass: 'hc-status-optimal' };
 		}
-		const lowDelta = hv.reference_range_low > 0 ? (hv.reference_range_low - hv.value) / hv.reference_range_low : 0;
-		const highDelta = hv.reference_range_high > 0 ? (hv.value - hv.reference_range_high) / hv.reference_range_high : 0;
+		const lowDelta =
+			hv.reference_range_low > 0 ? (hv.reference_range_low - hv.value) / hv.reference_range_low : 0;
+		const highDelta =
+			hv.reference_range_high > 0
+				? (hv.value - hv.reference_range_high) / hv.reference_range_high
+				: 0;
 		const maxDelta = Math.max(lowDelta, highDelta);
-		if (maxDelta <= 0.1) return { text: copy.panelHealthStatusBorderline, cssClass: 'hc-status-borderline' };
-		if (maxDelta <= 0.3) return { text: copy.panelHealthStatusConcerning, cssClass: 'hc-status-concerning' };
+		if (maxDelta <= 0.1)
+			return { text: copy.panelHealthStatusBorderline, cssClass: 'hc-status-borderline' };
+		if (maxDelta <= 0.3)
+			return { text: copy.panelHealthStatusConcerning, cssClass: 'hc-status-concerning' };
 		return { text: copy.panelHealthStatusAction, cssClass: 'hc-status-action' };
 	}
 
-	function statusBadge(status: DocumentDetail['status']): { symbol: string; text: string; cssClass: string } {
+	function statusBadge(status: DocumentDetail['status']): {
+		symbol: string;
+		text: string;
+		cssClass: string;
+	} {
 		switch (status) {
 			case 'completed':
-				return { symbol: '●', text: copy.panelDocStatusCompleted, cssClass: 'hc-doc-status-completed' };
+				return {
+					symbol: '●',
+					text: copy.panelDocStatusCompleted,
+					cssClass: 'hc-doc-status-completed'
+				};
 			case 'processing':
-				return { symbol: '◉', text: copy.panelDocStatusProcessing, cssClass: 'hc-doc-status-processing' };
+				return {
+					symbol: '◉',
+					text: copy.panelDocStatusProcessing,
+					cssClass: 'hc-doc-status-processing'
+				};
 			case 'partial':
-				return { symbol: '⚠', text: copy.panelDocStatusPartial, cssClass: 'hc-doc-status-partial' };
+				return {
+					symbol: '⚠',
+					text: copy.panelDocStatusPartial,
+					cssClass: 'hc-doc-status-partial'
+				};
 			case 'failed':
 				return { symbol: '✕', text: copy.panelDocStatusFailed, cssClass: 'hc-doc-status-failed' };
 			case 'pending':
@@ -130,7 +160,10 @@
 			return { kind: 'single', label: formatDate(firstDate.toISOString()) };
 		}
 		if (firstDate && lastDate) {
-			return { kind: 'range', label: `${formatDate(firstDate.toISOString())} – ${formatDate(lastDate.toISOString())}` };
+			return {
+				kind: 'range',
+				label: `${formatDate(firstDate.toISOString())} – ${formatDate(lastDate.toISOString())}`
+			};
 		}
 		return { kind: 'empty' };
 	}
@@ -237,12 +270,9 @@
 
 <section class="hc-dash-section hc-detail-inline" aria-label={copy.panelAria}>
 	<!-- Close button always visible — allows dismissal during loading/error states -->
-	<button
-		type="button"
-		class="hc-detail-close-btn"
-		aria-label={copy.panelClose}
-		onclick={onClose}
-	>×</button>
+	<button type="button" class="hc-detail-close-btn" aria-label={copy.panelClose} onclick={onClose}
+		>×</button
+	>
 
 	{#if detailQuery.isLoading}
 		<div class="hc-dash-section-body hc-detail-loading">
@@ -268,16 +298,33 @@
 				{detail.filename}
 			</span>
 			<div class="hc-detail-header-actions">
-				<button type="button" onclick={() => (showDeleteConfirm = true)} class="hc-detail-delete-btn">🗑 {copy.panelDeleteButton}</button>
+				<button
+					type="button"
+					onclick={() => (showDeleteConfirm = true)}
+					class="hc-detail-delete-btn">🗑 {copy.panelDeleteButton}</button
+				>
 			</div>
 		</div>
 
 		<div class="hc-dash-section-body hc-detail-body-inline">
 			<!-- Left: Metadata -->
 			<div class="hc-detail-meta-grid">
-				<div class="hc-detail-meta-item"><span class="hc-detail-meta-label">{copy.panelMetaType}:</span> {detail.file_type === 'application/pdf' ? 'PDF' : detail.file_type.startsWith('image/') ? `${copy.panelTypeImage} (${detail.file_type.split('/')[1].toUpperCase()})` : detail.file_type}</div>
-				<div class="hc-detail-meta-item"><span class="hc-detail-meta-label">{copy.panelMetaKind}:</span> {DOCUMENT_KIND_LABEL[detail.document_kind]}</div>
-				<div class="hc-detail-meta-item"><span class="hc-detail-meta-label">{copy.panelMetaImported}:</span> {formatDate(detail.created_at)}</div>
+				<div class="hc-detail-meta-item">
+					<span class="hc-detail-meta-label">{copy.panelMetaType}:</span>
+					{detail.file_type === 'application/pdf'
+						? 'PDF'
+						: detail.file_type.startsWith('image/')
+							? `${copy.panelTypeImage} (${detail.file_type.split('/')[1].toUpperCase()})`
+							: detail.file_type}
+				</div>
+				<div class="hc-detail-meta-item">
+					<span class="hc-detail-meta-label">{copy.panelMetaKind}:</span>
+					{DOCUMENT_KIND_LABEL[detail.document_kind]}
+				</div>
+				<div class="hc-detail-meta-item">
+					<span class="hc-detail-meta-label">{copy.panelMetaImported}:</span>
+					{formatDate(detail.created_at)}
+				</div>
 				<div class="hc-detail-meta-item hc-detail-result-date">
 					<span class="hc-detail-meta-label">{copy.panelMetaResultDate}:</span>
 					{#if resultDate.kind === 'single' || resultDate.kind === 'range'}
@@ -286,13 +333,13 @@
 						{#if !yearPickerOpen}
 							<span class="hc-detail-row-warning">
 								<span aria-hidden="true">⚠</span>
-								{resultDate.partialText ?? copy.panelDateMissing}{resultDate.partialText ? copy.panelYearSuffix : ''}
+								{resultDate.partialText ?? copy.panelDateMissing}{resultDate.partialText
+									? copy.panelYearSuffix
+									: ''}
 							</span>
-							<button
-								type="button"
-								class="hc-detail-inline-action"
-								onclick={openYearPicker}
-							>{copy.panelConfirmYear}</button>
+							<button type="button" class="hc-detail-inline-action" onclick={openYearPicker}
+								>{copy.panelConfirmYear}</button
+							>
 						{:else}
 							<span class="hc-year-picker">
 								<span class="hc-detail-row-warning">
@@ -311,35 +358,46 @@
 										{/each}
 									</select>
 								</label>
-								<button
-									type="button"
-									onclick={saveYear}
-									disabled={yearPickerSaving}
-								>{yearPickerSaving ? copy.panelSaving : copy.panelSave}</button>
-								<button
-									type="button"
-									onclick={cancelYearPicker}
-									disabled={yearPickerSaving}
-								>{copy.panelCancel}</button>
+								<button type="button" onclick={saveYear} disabled={yearPickerSaving}
+									>{yearPickerSaving ? copy.panelSaving : copy.panelSave}</button
+								>
+								<button type="button" onclick={cancelYearPicker} disabled={yearPickerSaving}
+									>{copy.panelCancel}</button
+								>
 							</span>
 							{#if yearPickerError}
-								<span class="hc-detail-row-warning hc-year-picker-error" role="alert">{yearPickerError}</span>
+								<span class="hc-detail-row-warning hc-year-picker-error" role="alert"
+									>{yearPickerError}</span
+								>
 							{/if}
 						{/if}
 					{:else}
 						<span>—</span>
 					{/if}
 				</div>
-				<div class="hc-detail-meta-item"><span class="hc-detail-meta-label">{copy.panelMetaSize}:</span> {formatFileSize(detail.file_size_bytes)}</div>
-				<div class="hc-detail-meta-item"><span class="hc-detail-meta-label">{copy.panelMetaStatus}:</span> <span class={badge.cssClass}>{badge.symbol} {badge.text}</span></div>
-				<div class="hc-detail-meta-item"><span class="hc-detail-meta-label">{copy.panelMetaValuesExtracted}:</span> {detail.health_values.length}</div>
+				<div class="hc-detail-meta-item">
+					<span class="hc-detail-meta-label">{copy.panelMetaSize}:</span>
+					{formatFileSize(detail.file_size_bytes)}
+				</div>
+				<div class="hc-detail-meta-item">
+					<span class="hc-detail-meta-label">{copy.panelMetaStatus}:</span>
+					<span class={badge.cssClass}>{badge.symbol} {badge.text}</span>
+				</div>
+				<div class="hc-detail-meta-item">
+					<span class="hc-detail-meta-label">{copy.panelMetaValuesExtracted}:</span>
+					{detail.health_values.length}
+				</div>
 				<div class="hc-detail-meta-item">
 					<span class="hc-detail-meta-label">{copy.panelMetaFlagged}:</span>
-					<span class={flaggedCount === 0 ? 'hc-detail-count-zero' : 'hc-detail-count-flagged'}>{flaggedCount}</span>
+					<span class={flaggedCount === 0 ? 'hc-detail-count-zero' : 'hc-detail-count-flagged'}
+						>{flaggedCount}</span
+					>
 				</div>
 				<div class="hc-detail-meta-item">
 					<span class="hc-detail-meta-label">{copy.panelMetaNeedsReview}:</span>
-					<span class={needsReviewCount === 0 ? 'hc-detail-count-zero' : 'hc-detail-count-review'}>{needsReviewCount}</span>
+					<span class={needsReviewCount === 0 ? 'hc-detail-count-zero' : 'hc-detail-count-review'}
+						>{needsReviewCount}</span
+					>
 				</div>
 
 				<!-- Recovery card (partial without keep_partial, or failed) -->
@@ -347,7 +405,7 @@
 					<PartialExtractionCard
 						status={detail.status === 'failed' ? 'failed' : 'partial'}
 						documentId={detail.id}
-						onReupload={onReupload}
+						{onReupload}
 						onKeepPartial={detail.status === 'partial' ? onKeepPartial : undefined}
 						{isKeepingPartial}
 					/>
@@ -396,7 +454,9 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="hc-detail-confirm-overlay"
-		onclick={(e: MouseEvent) => { if (e.target === e.currentTarget) showDeleteConfirm = false; }}
+		onclick={(e: MouseEvent) => {
+			if (e.target === e.currentTarget) showDeleteConfirm = false;
+		}}
 		onkeydown={() => {}}
 	>
 		<div
@@ -406,19 +466,24 @@
 			aria-labelledby="delete-dialog-title"
 			bind:this={confirmDialogRef}
 		>
-			<div class="hc-dash-section-header" id="delete-dialog-title">{copy.panelConfirmDeleteTitle}</div>
+			<div class="hc-dash-section-header" id="delete-dialog-title">
+				{copy.panelConfirmDeleteTitle}
+			</div>
 			<div class="hc-dash-section-body hc-detail-confirm-body">
 				<p>{copy.panelConfirmDeleteBefore}</p>
 				<p class="hc-detail-confirm-filename">{detailQuery.data.filename}</p>
 				<p>{copy.panelConfirmDeleteAfter}</p>
 				<div class="hc-detail-confirm-buttons">
-					<button type="button" onclick={() => (showDeleteConfirm = false)}>{copy.panelCancel}</button>
+					<button type="button" onclick={() => (showDeleteConfirm = false)}
+						>{copy.panelCancel}</button
+					>
 					<button
 						type="button"
 						class="hc-detail-confirm-delete"
 						onclick={handleConfirmDelete}
 						disabled={isDeleting}
-					>{isDeleting ? copy.panelConfirmDeleting : copy.panelConfirmDelete}</button>
+						>{isDeleting ? copy.panelConfirmDeleting : copy.panelConfirmDelete}</button
+					>
 				</div>
 			</div>
 		</div>

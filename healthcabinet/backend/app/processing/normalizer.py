@@ -85,7 +85,9 @@ def _convert_reference_range(
 
 def normalize_health_value(value: ExtractedHealthValue) -> NormalizedHealthValue:
     canonical_name, matched_alias = canonicalize_biomarker_name(value.biomarker_name)
-    normalized_value, normalized_unit, conversion_confidence = _convert_value(value.value, value.unit)
+    normalized_value, normalized_unit, conversion_confidence = _convert_value(
+        value.value, value.unit
+    )
 
     confidence = min(value.confidence, conversion_confidence)
     if not matched_alias:

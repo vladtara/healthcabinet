@@ -1,10 +1,5 @@
 import { apiFetch, apiStream } from '$lib/api/client.svelte';
-import type {
-	DeleteResponse,
-	Document,
-	DocumentDetail,
-	KeepPartialResponse
-} from '$lib/types/api';
+import type { DeleteResponse, Document, DocumentDetail, KeepPartialResponse } from '$lib/types/api';
 
 export interface DocumentStatusEvent {
 	event: string;
@@ -100,7 +95,7 @@ export async function uploadDocument(file: File): Promise<Document> {
 	formData.append('file', file);
 	return apiFetch<Document>('/api/v1/documents/upload', {
 		method: 'POST',
-		body: formData,
+		body: formData
 	});
 }
 
@@ -115,7 +110,7 @@ export async function reuploadDocument(documentId: string, file: File): Promise<
 	formData.append('file', file);
 	return apiFetch<Document>(`/api/v1/documents/${documentId}/reupload`, {
 		method: 'POST',
-		body: formData,
+		body: formData
 	});
 }
 
@@ -139,10 +134,7 @@ export async function keepPartialResults(documentId: string): Promise<KeepPartia
  *  - every health value's `measured_at` populated with the resolved timestamp
  *  - recomputed terminal status (completed unless low-confidence values remain)
  */
-export async function confirmDateYear(
-	documentId: string,
-	year: number
-): Promise<DocumentDetail> {
+export async function confirmDateYear(documentId: string, year: number): Promise<DocumentDetail> {
 	return apiFetch<DocumentDetail>(`/api/v1/documents/${documentId}/confirm-date-year`, {
 		method: 'POST',
 		body: JSON.stringify({ year })

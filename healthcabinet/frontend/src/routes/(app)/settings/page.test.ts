@@ -37,9 +37,7 @@ vi.mock('$lib/stores/auth.svelte', () => ({
 
 vi.mock('@tanstack/svelte-query', () => ({
 	createMutation: vi.fn(() => ({
-		subscribe(
-			run: (value: { mutate: ReturnType<typeof vi.fn>; isPending: boolean }) => void
-		) {
+		subscribe(run: (value: { mutate: ReturnType<typeof vi.fn>; isPending: boolean }) => void) {
 			run({ mutate: mockMutate, isPending: mockIsPending });
 			return () => {};
 		}
@@ -128,9 +126,7 @@ describe('Settings page', () => {
 		expect(checkboxes?.length).toBe(12);
 
 		// Initially none are checked
-		const checked = Array.from(checkboxes ?? []).filter(
-			(cb) => (cb as HTMLInputElement).checked
-		);
+		const checked = Array.from(checkboxes ?? []).filter((cb) => (cb as HTMLInputElement).checked);
 		expect(checked.length).toBe(0);
 
 		// Click the first checkbox (Type 2 Diabetes)
@@ -164,9 +160,9 @@ describe('Settings page', () => {
 
 	test('family history renders as checkbox grid with presets', () => {
 		const { container } = renderComponent(SettingsPage);
-		const familyFieldset = Array.from(
-			container.querySelectorAll('fieldset.hc-fieldset')
-		).find((fs) => fs.querySelector('legend')?.textContent?.trim() === 'Family History');
+		const familyFieldset = Array.from(container.querySelectorAll('fieldset.hc-fieldset')).find(
+			(fs) => fs.querySelector('legend')?.textContent?.trim() === 'Family History'
+		);
 		expect(familyFieldset).toBeInTheDocument();
 
 		const checkboxes = familyFieldset?.querySelectorAll(
@@ -194,9 +190,9 @@ describe('Settings page', () => {
 		} as never);
 
 		const { container } = renderComponent(SettingsPage);
-		const familyFieldset = Array.from(
-			container.querySelectorAll('fieldset.hc-fieldset')
-		).find((fs) => fs.querySelector('legend')?.textContent?.trim() === 'Family History');
+		const familyFieldset = Array.from(container.querySelectorAll('fieldset.hc-fieldset')).find(
+			(fs) => fs.querySelector('legend')?.textContent?.trim() === 'Family History'
+		);
 
 		await waitFor(() => {
 			const checked = familyFieldset?.querySelectorAll(
@@ -300,7 +296,7 @@ describe('Settings page', () => {
 	});
 
 	test('export success banner appears after clicking Download My Data', async () => {
-		const { getByRole, container } = renderComponent(SettingsPage);
+		const { getByRole } = renderComponent(SettingsPage);
 		const exportBtn = getByRole('button', { name: /download my data/i });
 		await fireEvent.click(exportBtn);
 
@@ -318,7 +314,7 @@ describe('Settings page', () => {
 			detail: 'Export generation failed'
 		});
 
-		const { getByRole, container } = renderComponent(SettingsPage);
+		const { getByRole } = renderComponent(SettingsPage);
 		const exportBtn = getByRole('button', { name: /download my data/i });
 		await fireEvent.click(exportBtn);
 
@@ -450,9 +446,7 @@ describe('Settings page', () => {
 
 		const { container } = renderComponent(SettingsPage);
 		await waitFor(() => {
-			const policyLink = container.querySelector<HTMLAnchorElement>(
-				'.hc-consent-policy-link'
-			);
+			const policyLink = container.querySelector<HTMLAnchorElement>('.hc-consent-policy-link');
 			expect(policyLink).not.toBeNull();
 			const href = policyLink!.getAttribute('href') ?? '';
 			// Assert exact path (not just startsWith) so a typo in the route name
@@ -661,9 +655,9 @@ describe('Settings page', () => {
 		// Baseline — English
 		const heading = getByRole('heading', { level: 1 });
 		expect(heading).toHaveTextContent('Medical Profile');
-		const legendsEn = Array.from(
-			container.querySelectorAll('fieldset.hc-fieldset > legend')
-		).map((l) => l.textContent?.trim());
+		const legendsEn = Array.from(container.querySelectorAll('fieldset.hc-fieldset > legend')).map(
+			(l) => l.textContent?.trim()
+		);
 		expect(legendsEn).toContain('Basic Information');
 		expect(legendsEn).toContain('Data Export');
 
@@ -672,9 +666,9 @@ describe('Settings page', () => {
 		await new Promise((r) => setTimeout(r, 0));
 
 		expect(heading).toHaveTextContent('Медичний профіль');
-		const legendsUk = Array.from(
-			container.querySelectorAll('fieldset.hc-fieldset > legend')
-		).map((l) => l.textContent?.trim());
+		const legendsUk = Array.from(container.querySelectorAll('fieldset.hc-fieldset > legend')).map(
+			(l) => l.textContent?.trim()
+		);
 		expect(legendsUk).toContain('Основна інформація');
 		expect(legendsUk).toContain('Експорт даних');
 		expect(legendsUk).toContain('Видалення акаунту');
@@ -789,9 +783,7 @@ describe('Settings page', () => {
 			timeZone: 'UTC'
 		}).format(new Date('2026-01-15T10:30:00Z'));
 
-		expect(container.querySelector('.hc-consent-type')).toHaveTextContent(
-			'Обробка медичних даних'
-		);
+		expect(container.querySelector('.hc-consent-type')).toHaveTextContent('Обробка медичних даних');
 		expect(container.querySelector('.hc-consent-meta')?.textContent).toContain(expectedDate);
 		expect(container.querySelector('.hc-consent-meta')?.textContent).toContain('10:30 UTC');
 		expect(container.querySelector('.hc-consent-policy-link')).toHaveAttribute(

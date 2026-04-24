@@ -8,7 +8,7 @@
 	let { children }: Props = $props();
 </script>
 
-<div class="hc-auth-layout flex min-h-screen flex-col items-center justify-center bg-background">
+<div class="hc-auth-layout bg-background flex min-h-screen flex-col items-center justify-center">
 	<div class="hc-auth-locale-corner">
 		<LocaleToggle />
 	</div>

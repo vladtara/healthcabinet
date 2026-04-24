@@ -200,7 +200,6 @@ describe('Documents cabinet API helpers', () => {
 
 		await expect(deleteDocument('nonexistent')).rejects.toThrow('Not found');
 	});
-
 });
 
 describe('Documents cabinet page behavior', () => {
@@ -427,7 +426,10 @@ describe('Documents cabinet page component (mounted)', () => {
 		];
 		const queryClient = makeQueryClient();
 		queryClient.setQueryData(['documents'], docs);
-		queryClient.setQueryData(['documents', 'doc-1'], makeDetail({ id: 'doc-1', filename: 'blood_test.pdf' }));
+		queryClient.setQueryData(
+			['documents', 'doc-1'],
+			makeDetail({ id: 'doc-1', filename: 'blood_test.pdf' })
+		);
 		vi.mocked(apiFetch).mockResolvedValue(docs);
 
 		const setDataSpy = vi.spyOn(queryClient, 'setQueryData');
@@ -581,12 +583,12 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
 
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// Recovery card must be shown
-		expect(
-			screen.getByText(/we couldn't read everything clearly/i)
-		).toBeInTheDocument();
+		expect(screen.getByText(/we couldn't read everything clearly/i)).toBeInTheDocument();
 
 		// Re-upload is primary CTA
 		expect(screen.getByRole('button', { name: /re-upload document/i })).toBeInTheDocument();
@@ -614,7 +616,9 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
 
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// Failure message and re-upload CTA must be shown
 		expect(screen.getByText(/extraction failed/i)).toBeInTheDocument();
@@ -643,7 +647,9 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
 
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// Recovery card must be hidden when user has kept partial results
 		expect(screen.queryByText(/we couldn't read everything clearly/i)).not.toBeInTheDocument();
@@ -667,7 +673,9 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 
 		await waitFor(() => expect(screen.getByText('blood_test.pdf')).toBeInTheDocument());
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// All three photo tips must be displayed
 		expect(screen.getByText('Good lighting')).toBeInTheDocument();
@@ -707,7 +715,9 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 
 		await waitFor(() => expect(screen.getByText('blood_test.pdf')).toBeInTheDocument());
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		const keepBtn = screen.getByRole('button', { name: /keep partial results/i });
 		await fireEvent.click(keepBtn);
@@ -746,20 +756,22 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 		});
 
 		const setDataCalls: Array<[unknown[], unknown]> = [];
-		const setDataSpy = vi.spyOn(queryClient, 'setQueryData').mockImplementation(
-			(key: unknown, updater: unknown) => {
+		const setDataSpy = vi
+			.spyOn(queryClient, 'setQueryData')
+			.mockImplementation((key: unknown, updater: unknown) => {
 				setDataCalls.push([key as unknown[], updater]);
 				// Actually apply the update so the cache reflects reality.
 				// @ts-expect-error calling original with typed args
 				QueryClient.prototype.setQueryData.call(queryClient, key, updater);
-			}
-		);
+			});
 
 		render(DocumentsPageTestWrapper, { props: { queryClient } });
 
 		await waitFor(() => expect(screen.getByText('blood_test.pdf')).toBeInTheDocument());
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// Re-spy without mockImplementation to let setQueryData work normally.
 		setDataSpy.mockRestore();
@@ -834,7 +846,9 @@ describe('Documents cabinet page — recovery UX (Story 2.5)', () => {
 
 		await waitFor(() => expect(screen.getByText('blood_test.pdf')).toBeInTheDocument());
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// No recovery card for completed documents
 		expect(screen.queryByText(/we couldn't read everything clearly/i)).not.toBeInTheDocument();
@@ -907,7 +921,9 @@ describe('Documents cabinet page — health status in detail panel', () => {
 
 		await waitFor(() => expect(screen.getByText('blood_test.pdf')).toBeInTheDocument());
 		await fireEvent.click(screen.getByRole('button', { name: /view blood_test\.pdf/i }));
-		await waitFor(() => expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByRole('region', { name: /document details/i })).toBeInTheDocument()
+		);
 
 		// Glucose 95 within 70-100 => Optimal
 		expect(screen.getByText(/Optimal/)).toBeInTheDocument();

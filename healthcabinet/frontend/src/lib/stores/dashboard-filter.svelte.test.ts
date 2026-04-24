@@ -58,9 +58,7 @@ describe('dashboardFilterStore', () => {
 
 	test('setFilter rejects garbage at runtime (type-system bypass)', () => {
 		// Simulate a caller with a loose cast or a corrupted upstream value.
-		(dashboardFilterStore as unknown as { setFilter: (v: unknown) => void }).setFilter(
-			'banana'
-		);
+		(dashboardFilterStore as unknown as { setFilter: (v: unknown) => void }).setFilter('banana');
 		expect(dashboardFilterStore.filter).toBe('analysis');
 		expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
 	});

@@ -20,7 +20,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models import User
 from app.core.database import get_db
 from app.core.security import create_access_token, create_refresh_token
-from app.health_data.models import HealthValue
 from app.main import app
 
 # ---------------------------------------------------------------------------
@@ -95,8 +94,15 @@ class TestAdminUserList:
         assert str(admin.id) not in by_id
         # T2: Health data fields must NOT leak through user list
         for item in data["items"]:
-            for forbidden in ("health_values", "documents", "ai_memories", "user_profiles",
-                              "interpretations", "biomarker_values", "extracted_values"):
+            for forbidden in (
+                "health_values",
+                "documents",
+                "ai_memories",
+                "user_profiles",
+                "interpretations",
+                "biomarker_values",
+                "extracted_values",
+            ):
                 assert forbidden not in item
 
     async def test_search_by_email(
@@ -209,8 +215,15 @@ class TestAdminUserDetail:
         assert "registration_date" in data
         assert "last_login" in data
         # T2: No health data fields in detail
-        for forbidden in ("health_values", "documents", "ai_memories", "user_profiles",
-                          "interpretations", "biomarker_values", "extracted_values"):
+        for forbidden in (
+            "health_values",
+            "documents",
+            "ai_memories",
+            "user_profiles",
+            "interpretations",
+            "biomarker_values",
+            "extracted_values",
+        ):
             assert forbidden not in data
 
     async def test_nonexistent_user_returns_404(
@@ -529,8 +542,12 @@ class TestFlaggedReportList:
 
         # Unreviewed flagged value
         hv_flagged = await make_health_value(
-            user=user, document=doc, value=999.0, is_flagged=True,
-            biomarker_name="Glucose", canonical_biomarker_name="glucose",
+            user=user,
+            document=doc,
+            value=999.0,
+            is_flagged=True,
+            biomarker_name="Glucose",
+            canonical_biomarker_name="glucose",
         )
         # Set flagged_at manually
         hv_flagged.flagged_at = datetime.now(UTC)
@@ -539,8 +556,12 @@ class TestFlaggedReportList:
 
         # Reviewed flagged value — should NOT appear
         hv_reviewed = await make_health_value(
-            user=user, document=doc, value=888.0, is_flagged=True,
-            biomarker_name="Potassium", canonical_biomarker_name="potassium",
+            user=user,
+            document=doc,
+            value=888.0,
+            is_flagged=True,
+            biomarker_name="Potassium",
+            canonical_biomarker_name="potassium",
         )
         hv_reviewed.flagged_at = datetime.now(UTC)
         hv_reviewed.flag_reviewed_at = datetime.now(UTC)
@@ -550,8 +571,11 @@ class TestFlaggedReportList:
 
         # Non-flagged value — should NOT appear
         await make_health_value(
-            user=user, document=doc, value=5.0,
-            biomarker_name="Cholesterol", canonical_biomarker_name="cholesterol_total",
+            user=user,
+            document=doc,
+            value=5.0,
+            biomarker_name="Cholesterol",
+            canonical_biomarker_name="cholesterol_total",
         )
 
         resp = await admin_client.get("/api/v1/admin/flags", headers=admin_headers(admin))
@@ -629,8 +653,12 @@ class TestMarkFlagReviewed:
         user, _ = await make_user(email="mr_user@example.com")
         doc = await make_document(user=user, status="completed")
         hv = await make_health_value(
-            user=user, document=doc, value=999.0, is_flagged=True,
-            biomarker_name="Glucose", canonical_biomarker_name="glucose",
+            user=user,
+            document=doc,
+            value=999.0,
+            is_flagged=True,
+            biomarker_name="Glucose",
+            canonical_biomarker_name="glucose",
         )
         hv.flagged_at = datetime.now(UTC)
         async_db_session.add(hv)
@@ -664,8 +692,12 @@ class TestMarkFlagReviewed:
         user, _ = await make_user(email="idem_user@example.com")
         doc = await make_document(user=user, status="completed")
         hv = await make_health_value(
-            user=user, document=doc, value=999.0, is_flagged=True,
-            biomarker_name="Glucose", canonical_biomarker_name="glucose",
+            user=user,
+            document=doc,
+            value=999.0,
+            is_flagged=True,
+            biomarker_name="Glucose",
+            canonical_biomarker_name="glucose",
         )
         hv.flagged_at = datetime.now(UTC)
         async_db_session.add(hv)
@@ -711,7 +743,10 @@ class TestMarkFlagReviewed:
         user, _ = await make_user(email="nfl_user@example.com")
         doc = await make_document(user=user, status="completed")
         hv = await make_health_value(
-            user=user, document=doc, value=5.0, is_flagged=False,
+            user=user,
+            document=doc,
+            value=5.0,
+            is_flagged=False,
         )
 
         resp = await admin_client.post(
@@ -743,8 +778,13 @@ class TestErrorQueueExcludesReviewedFlags:
         # Document with one flagged value (reviewed)
         doc = await make_document(user=user, status="completed", filename="reviewed_flag.pdf")
         hv = await make_health_value(
-            user=user, document=doc, value=999.0, confidence=0.95,
-            is_flagged=True, biomarker_name="Glucose", canonical_biomarker_name="glucose",
+            user=user,
+            document=doc,
+            value=999.0,
+            confidence=0.95,
+            is_flagged=True,
+            biomarker_name="Glucose",
+            canonical_biomarker_name="glucose",
         )
         hv.flagged_at = datetime.now(UTC)
         hv.flag_reviewed_at = datetime.now(UTC)
@@ -772,8 +812,13 @@ class TestErrorQueueExcludesReviewedFlags:
 
         doc = await make_document(user=user, status="completed", filename="unreviewed_flag.pdf")
         hv = await make_health_value(
-            user=user, document=doc, value=999.0, confidence=0.95,
-            is_flagged=True, biomarker_name="Glucose", canonical_biomarker_name="glucose",
+            user=user,
+            document=doc,
+            value=999.0,
+            confidence=0.95,
+            is_flagged=True,
+            biomarker_name="Glucose",
+            canonical_biomarker_name="glucose",
         )
         hv.flagged_at = datetime.now(UTC)
         async_db_session.add(hv)
@@ -794,25 +839,17 @@ class TestErrorQueueExcludesReviewedFlags:
 class TestAdminAuthGuards:
     """Non-admin and unauthenticated requests are rejected."""
 
-    async def test_non_admin_403_on_user_list(
-        self, admin_client: AsyncClient, make_user
-    ):
+    async def test_non_admin_403_on_user_list(self, admin_client: AsyncClient, make_user):
         user, _ = await make_user(email="reg_ul@example.com")
         resp = await admin_client.get("/api/v1/admin/users", headers=user_headers(user))
         assert resp.status_code == 403
 
-    async def test_non_admin_403_on_user_detail(
-        self, admin_client: AsyncClient, make_user
-    ):
+    async def test_non_admin_403_on_user_detail(self, admin_client: AsyncClient, make_user):
         user, _ = await make_user(email="reg_ud@example.com")
-        resp = await admin_client.get(
-            f"/api/v1/admin/users/{user.id}", headers=user_headers(user)
-        )
+        resp = await admin_client.get(f"/api/v1/admin/users/{user.id}", headers=user_headers(user))
         assert resp.status_code == 403
 
-    async def test_non_admin_403_on_status_update(
-        self, admin_client: AsyncClient, make_user
-    ):
+    async def test_non_admin_403_on_status_update(self, admin_client: AsyncClient, make_user):
         user, _ = await make_user(email="reg_su@example.com")
         resp = await admin_client.patch(
             f"/api/v1/admin/users/{user.id}/status",
@@ -821,16 +858,12 @@ class TestAdminAuthGuards:
         )
         assert resp.status_code == 403
 
-    async def test_non_admin_403_on_flags(
-        self, admin_client: AsyncClient, make_user
-    ):
+    async def test_non_admin_403_on_flags(self, admin_client: AsyncClient, make_user):
         user, _ = await make_user(email="reg_fl@example.com")
         resp = await admin_client.get("/api/v1/admin/flags", headers=user_headers(user))
         assert resp.status_code == 403
 
-    async def test_non_admin_403_on_flag_review(
-        self, admin_client: AsyncClient, make_user
-    ):
+    async def test_non_admin_403_on_flag_review(self, admin_client: AsyncClient, make_user):
         user, _ = await make_user(email="reg_fr@example.com")
         fake_id = uuid.uuid4()
         resp = await admin_client.post(
@@ -876,8 +909,10 @@ class TestAdminRevokeSessions:
         # Backdate iat so the revocation cutoff (now, floored to second) is strictly
         # after this token. A helper would hide the claim shape; the test documents it.
         import jwt as _jwt
+
         from app.core.config import settings as _settings
         from app.core.security import ALGORITHM
+
         past = datetime.now(UTC) - timedelta(seconds=5)
         pre_token = _jwt.encode(
             {
@@ -920,8 +955,10 @@ class TestAdminRevokeSessions:
         admin = await _make_admin(make_user, async_db_session, "rev_r_admin@example.com")
         user, _ = await make_user(email="rev_r_user@example.com")
         import jwt as _jwt
-        from app.core.security import ALGORITHM
+
         from app.core.config import settings as _settings
+        from app.core.security import ALGORITHM
+
         past = datetime.now(UTC) - timedelta(seconds=5)
         old_refresh = _jwt.encode(
             {
@@ -992,9 +1029,7 @@ class TestAdminRevokeSessions:
         invariant is that admin B's active sessions survive the attempt.
         """
         admin = await _make_admin(make_user, async_db_session, "rev_ad_admin@example.com")
-        other_admin = await _make_admin(
-            make_user, async_db_session, "rev_ad_target@example.com"
-        )
+        other_admin = await _make_admin(make_user, async_db_session, "rev_ad_target@example.com")
         other_admin_token = create_access_token(str(other_admin.id))
 
         resp = await admin_client.post(
@@ -1196,9 +1231,7 @@ class TestRevocationEdgeCases:
         ('account suspended'). Swapping the order would leak 403 to stale tokens and
         break the cookie-clear path."""
         user, password = await make_user(email="rev_susp@example.com")
-        old_token = _forge_token(
-            str(user.id), iat=datetime.now(UTC) - timedelta(seconds=5)
-        )
+        old_token = _forge_token(str(user.id), iat=datetime.now(UTC) - timedelta(seconds=5))
         user.tokens_invalid_before = datetime.now(UTC).replace(microsecond=0)
         user.account_status = "suspended"
         async_db_session.add(user)

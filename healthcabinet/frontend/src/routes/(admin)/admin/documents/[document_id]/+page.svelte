@@ -26,7 +26,7 @@
 				}
 				return getDocumentForCorrection(id);
 			},
-			enabled: id !== null,
+			enabled: id !== null
 		};
 	});
 
@@ -36,7 +36,7 @@
 			month: 'short',
 			day: 'numeric',
 			hour: '2-digit',
-			minute: '2-digit',
+			minute: '2-digit'
 		});
 	}
 
@@ -102,7 +102,7 @@
 		try {
 			const request: CorrectionRequest = {
 				new_value: newValueNum,
-				reason: state.reason.trim(),
+				reason: state.reason.trim()
 			};
 			await submitCorrection(id, healthValueId, request);
 			submitSuccess[healthValueId] = true;
@@ -131,17 +131,11 @@
 
 	<header class="hc-admin-correction-header">
 		<h1 class="hc-admin-correction-title">Document Correction</h1>
-		<p class="hc-admin-correction-subtitle">
-			Review and correct extracted health values
-		</p>
+		<p class="hc-admin-correction-subtitle">Review and correct extracted health values</p>
 	</header>
 
 	{#if detailQuery.isPending}
-		<div
-			class="hc-admin-correction-skeleton"
-			role="status"
-			aria-label="Loading document"
-		>
+		<div class="hc-admin-correction-skeleton" role="status" aria-label="Loading document">
 			{#each Array(3) as _}
 				<div class="hc-admin-correction-skeleton-row"></div>
 			{/each}
@@ -211,10 +205,13 @@
 						>
 							<td>
 								<p class="hc-admin-correction-biomarker-name">{value.biomarker_name}</p>
-								<p class="hc-admin-correction-biomarker-canonical">{value.canonical_biomarker_name}</p>
+								<p class="hc-admin-correction-biomarker-canonical">
+									{value.canonical_biomarker_name}
+								</p>
 							</td>
 							<td class="hc-admin-correction-value-cell">
-								{value.value} {value.unit ?? ''}
+								{value.value}
+								{value.unit ?? ''}
 							</td>
 							<td class="hc-admin-correction-align-center">
 								{#if value.confidence < 0.7}

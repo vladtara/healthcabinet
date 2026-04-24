@@ -32,12 +32,13 @@
 			isKeepingPartial = true;
 		},
 		onSuccess: (_data: unknown, docId: string) => {
-			queryClient.setQueryData(['documents'], (old: Document[] | undefined) =>
-				old?.map((d: Document) => (d.id === docId ? { ...d, keep_partial: true } : d)) ?? []
-			);
 			queryClient.setQueryData(
-				['documents', docId],
-				(old: DocumentDetail | undefined) => (old ? { ...old, keep_partial: true } : old)
+				['documents'],
+				(old: Document[] | undefined) =>
+					old?.map((d: Document) => (d.id === docId ? { ...d, keep_partial: true } : d)) ?? []
+			);
+			queryClient.setQueryData(['documents', docId], (old: DocumentDetail | undefined) =>
+				old ? { ...old, keep_partial: true } : old
 			);
 			queryClient.invalidateQueries({ queryKey: ['documents', docId] });
 		},
@@ -57,21 +58,26 @@
 	const deleteMutation = createMutation(() => ({
 		mutationFn: (docId: string) => deleteDocument(docId),
 		onSuccess: (_data: unknown, docId: string) => {
-			queryClient.setQueryData(['documents'], (old: Document[] | undefined) =>
-				old?.filter((d: Document) => d.id !== docId) ?? []
+			queryClient.setQueryData(
+				['documents'],
+				(old: Document[] | undefined) => old?.filter((d: Document) => d.id !== docId) ?? []
 			);
-				queryClient.invalidateQueries({ queryKey: ['documents', docId] });
-				queryClient.invalidateQueries({ queryKey: ['health_values'] });
-				// Story 15.3 — rebuild dashboard AI aggregate after cascade removes AiMemory.
-				queryClient.invalidateQueries({
-					queryKey: ['ai_dashboard_interpretation'],
-					refetchType: 'none'
-				});
-				selectedDocumentId = null;
-			}
-		}));
+			queryClient.invalidateQueries({ queryKey: ['documents', docId] });
+			queryClient.invalidateQueries({ queryKey: ['health_values'] });
+			// Story 15.3 — rebuild dashboard AI aggregate after cascade removes AiMemory.
+			queryClient.invalidateQueries({
+				queryKey: ['ai_dashboard_interpretation'],
+				refetchType: 'none'
+			});
+			selectedDocumentId = null;
+		}
+	}));
 
-	function statusBadge(status: Document['status']): { symbol: string; text: string; cssClass: string } {
+	function statusBadge(status: Document['status']): {
+		symbol: string;
+		text: string;
+		cssClass: string;
+	} {
 		switch (status) {
 			case 'completed':
 				return { symbol: '●', text: copy.statusCompleted, cssClass: 'hc-doc-status-completed' };
@@ -145,8 +151,7 @@
 				(event) => {
 					errorCount = 0;
 					const status = event.event?.split('.').pop();
-					const isTerminal =
-						status === 'completed' || status === 'partial' || status === 'failed';
+					const isTerminal = status === 'completed' || status === 'partial' || status === 'failed';
 					if (isTerminal) {
 						queryClient.invalidateQueries({ queryKey: ['documents'] });
 						queryClient.invalidateQueries({ queryKey: ['documents', docId] });
@@ -246,11 +251,20 @@
 									class:hc-doc-row-selected={selectedDocumentId === doc.id}
 									aria-current={selectedDocumentId === doc.id ? 'true' : undefined}
 									tabindex="0"
-									onclick={() => { selectedDocumentId = doc.id; }}
-									onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectedDocumentId = doc.id; } }}
+									onclick={() => {
+										selectedDocumentId = doc.id;
+									}}
+									onkeydown={(e: KeyboardEvent) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											selectedDocumentId = doc.id;
+										}
+									}}
 								>
 									<td class="hc-doc-icon" aria-hidden="true">{fileTypeIcon(doc.file_type)}</td>
-									<td style="font-size: 12px; color: var(--text-secondary); font-family: monospace;">{doc.id.substring(0, 8)}</td>
+									<td style="font-size: 12px; color: var(--text-secondary); font-family: monospace;"
+										>{doc.id.substring(0, 8)}</td
+									>
 									<td class="hc-doc-name">{doc.filename}</td>
 									<td>{formatDate(doc.created_at)}</td>
 									<td>
@@ -265,8 +279,11 @@
 											type="button"
 											title={copy.viewDetail}
 											aria-label="{copy.viewFilenameAria} {doc.filename}"
-											onclick={(e: MouseEvent) => { e.stopPropagation(); selectedDocumentId = doc.id; }}
-										>👁</button>
+											onclick={(e: MouseEvent) => {
+												e.stopPropagation();
+												selectedDocumentId = doc.id;
+											}}>👁</button
+										>
 									</td>
 								</tr>
 							{/each}

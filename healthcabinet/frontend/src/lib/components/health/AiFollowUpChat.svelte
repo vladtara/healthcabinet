@@ -56,6 +56,7 @@
 	// Reset local state whenever the user navigates to a different document
 	// and cancel any in-flight stream (mirrors ProcessingPipeline.svelte EventSource cleanup)
 	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		documentId; // reactive dependency
 		question = '';
 		isStreaming = false;
@@ -89,9 +90,9 @@
 
 		try {
 			const response = await streamAiChat(
-			{ document_id: documentId, question: trimmed, locale: localeStore.locale },
-			signal
-		);
+				{ document_id: documentId, question: trimmed, locale: localeStore.locale },
+				signal
+			);
 
 			if (!response.ok) {
 				const err = await response.json().catch(() => ({ status: response.status }));
@@ -145,11 +146,17 @@
 	{#if interpretationQuery.data}
 		<section
 			aria-label={copy.followUpAria}
-			class="mt-4 border-l-4 border-l-[#3366FF] bg-card/50 rounded-md p-4"
+			class="bg-card/50 mt-4 rounded-md border-l-4 border-l-[#3366FF] p-4"
 		>
-			<h3 class="text-base font-semibold mb-3 text-foreground">{copy.followUpHeader}</h3>
+			<h3 class="text-foreground mb-3 text-base font-semibold">{copy.followUpHeader}</h3>
 
-			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-3">
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleSubmit();
+				}}
+				class="space-y-3"
+			>
 				<label for="follow-up-question" class="sr-only">{copy.followUpHeader}</label>
 				<Textarea
 					id="follow-up-question"
@@ -159,11 +166,7 @@
 					aria-label={copy.followUpQuestionAria}
 					class="resize-none"
 				/>
-				<Button
-					type="submit"
-					disabled={isStreaming || !question.trim()}
-					class="w-auto"
-				>
+				<Button type="submit" disabled={isStreaming || !question.trim()} class="w-auto">
 					{isStreaming ? copy.followUpGettingAnswer : copy.followUpAskButton}
 				</Button>
 			</form>
@@ -174,17 +177,17 @@
 					<div
 						aria-busy="true"
 						aria-label={copy.followUpLoadingAria}
-						class="animate-pulse rounded-md h-16 bg-card border border-border"
+						class="bg-card border-border h-16 animate-pulse rounded-md border"
 					></div>
 				{:else if streamedAnswer}
-					<div class="text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
+					<div class="text-foreground text-[15px] leading-relaxed whitespace-pre-wrap">
 						{streamedAnswer}
 					</div>
 				{/if}
 			</div>
 
 			{#if errorMessage}
-				<p role="alert" class="mt-3 text-[13px] text-destructive">{errorMessage}</p>
+				<p role="alert" class="text-destructive mt-3 text-[13px]">{errorMessage}</p>
 			{/if}
 		</section>
 	{/if}

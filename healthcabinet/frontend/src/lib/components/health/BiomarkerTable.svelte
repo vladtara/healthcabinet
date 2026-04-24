@@ -24,40 +24,59 @@
 
 	function statusSymbol(status: string): string {
 		switch (status) {
-			case 'optimal': return '●';
-			case 'borderline': return '⚠';
-			case 'concerning': return '◆';
-			case 'action_needed': return '▲';
-			default: return '—';
+			case 'optimal':
+				return '●';
+			case 'borderline':
+				return '⚠';
+			case 'concerning':
+				return '◆';
+			case 'action_needed':
+				return '▲';
+			default:
+				return '—';
 		}
 	}
 
 	function statusLabel(status: string): string {
 		switch (status) {
-			case 'optimal': return 'Optimal';
-			case 'borderline': return 'Borderline';
-			case 'concerning': return 'Concerning';
-			case 'action_needed': return 'Action';
-			default: return 'Unknown';
+			case 'optimal':
+				return 'Optimal';
+			case 'borderline':
+				return 'Borderline';
+			case 'concerning':
+				return 'Concerning';
+			case 'action_needed':
+				return 'Action';
+			default:
+				return 'Unknown';
 		}
 	}
 
 	function statusClass(status: string): string {
 		switch (status) {
-			case 'optimal': return 'hc-v2-status-optimal';
-			case 'borderline': return 'hc-v2-status-borderline';
-			case 'concerning': return 'hc-v2-status-concerning';
-			case 'action_needed': return 'hc-v2-status-action';
-			default: return '';
+			case 'optimal':
+				return 'hc-v2-status-optimal';
+			case 'borderline':
+				return 'hc-v2-status-borderline';
+			case 'concerning':
+				return 'hc-v2-status-concerning';
+			case 'action_needed':
+				return 'hc-v2-status-action';
+			default:
+				return '';
 		}
 	}
 
 	function rowBorderClass(status: string): string {
 		switch (status) {
-			case 'borderline': return 'hc-v2-row-borderline';
-			case 'concerning': return 'hc-v2-row-concerning';
-			case 'action_needed': return 'hc-v2-row-action';
-			default: return '';
+			case 'borderline':
+				return 'hc-v2-row-borderline';
+			case 'concerning':
+				return 'hc-v2-row-concerning';
+			case 'action_needed':
+				return 'hc-v2-row-action';
+			default:
+				return '';
 		}
 	}
 
@@ -113,10 +132,17 @@
 				{@const isExpanded = expandedName === hv.canonical_biomarker_name}
 				{@const arrow = trendArrow(timeline)}
 				<tr
-					class="hc-row-interactive {rowBorderClass(hv.status)} {isExpanded ? 'hc-v2-row-expanded' : ''}"
+					class="hc-row-interactive {rowBorderClass(hv.status)} {isExpanded
+						? 'hc-v2-row-expanded'
+						: ''}"
 					onclick={() => toggleExpand(hv.canonical_biomarker_name)}
 					tabindex="0"
-					onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(hv.canonical_biomarker_name); } }}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							toggleExpand(hv.canonical_biomarker_name);
+						}
+					}}
 				>
 					<td class="hc-v2-expand-icon">{isExpanded ? '−' : '+'}</td>
 					<td class="hc-v2-biomarker-name">{hv.biomarker_name}</td>
@@ -129,8 +155,8 @@
 						{#if timeline.length > 0}
 							<span class="hc-v2-sparkline">
 								{#each timeline as point, pi}
-									{@const maxVal = Math.max(...timeline.map(t => t.value))}
-									{@const minVal = Math.min(...timeline.map(t => t.value))}
+									{@const maxVal = Math.max(...timeline.map((t) => t.value))}
+									{@const minVal = Math.min(...timeline.map((t) => t.value))}
 									{@const range = maxVal - minVal || 1}
 									{@const heightPct = ((point.value - minVal) / range) * 70 + 30}
 									<span
@@ -163,8 +189,12 @@
 											<tr>
 												<td>{formatDate(point.measured_at ?? point.created_at)}</td>
 												<td class="hc-v2-value-cell">{point.value}</td>
-												<td class={statusClass(point.status)}>{statusSymbol(point.status)} {statusLabel(point.status)}</td>
-												<td style="color: var(--text-secondary);">Document {point.document_id.substring(0, 8)}</td>
+												<td class={statusClass(point.status)}
+													>{statusSymbol(point.status)} {statusLabel(point.status)}</td
+												>
+												<td style="color: var(--text-secondary);"
+													>Document {point.document_id.substring(0, 8)}</td
+												>
 											</tr>
 										{/each}
 									</tbody>

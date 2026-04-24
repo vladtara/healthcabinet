@@ -80,10 +80,9 @@ describe('recommendation-catalog', () => {
 
 		test('every backend test_name is present in the uk catalog (even if identical acronym)', () => {
 			for (const name of BACKEND_TEST_NAMES) {
-				expect(
-					_catalogKeysForTests.testNames,
-					`missing uk catalog entry for "${name}"`
-				).toContain(name);
+				expect(_catalogKeysForTests.testNames, `missing uk catalog entry for "${name}"`).toContain(
+					name
+				);
 				expect(translateTestName('uk', name).length).toBeGreaterThan(0);
 			}
 		});
@@ -91,9 +90,7 @@ describe('recommendation-catalog', () => {
 		test('prose test_name values actually change under uk', () => {
 			// Acronyms like 'HbA1c' stay identical by design — sample a clearly-
 			// prose entry so a regression that drops the uk catalog is caught.
-			expect(translateTestName('uk', 'TSH + Free T4 Panel')).not.toBe(
-				'TSH + Free T4 Panel'
-			);
+			expect(translateTestName('uk', 'TSH + Free T4 Panel')).not.toBe('TSH + Free T4 Panel');
 			expect(translateTestName('uk', 'Lipid Panel')).not.toBe('Lipid Panel');
 		});
 
@@ -148,10 +145,9 @@ describe('recommendation-catalog', () => {
 
 		test('every backend rationale is present in the uk catalog', () => {
 			for (const rat of BACKEND_RATIONALES) {
-				expect(
-					_catalogKeysForTests.rationales,
-					`missing uk catalog entry for "${rat}"`
-				).toContain(rat);
+				expect(_catalogKeysForTests.rationales, `missing uk catalog entry for "${rat}"`).toContain(
+					rat
+				);
 				expect(translateRationale('uk', rat).length).toBeGreaterThan(0);
 			}
 		});
@@ -162,9 +158,7 @@ describe('recommendation-catalog', () => {
 					'uk',
 					'Monitors thyroid hormone levels to guide treatment and dose adjustments.'
 				)
-			).not.toBe(
-				'Monitors thyroid hormone levels to guide treatment and dose adjustments.'
-			);
+			).not.toBe('Monitors thyroid hormone levels to guide treatment and dose adjustments.');
 		});
 
 		test('falls back to English input and warns when the key is unknown', () => {

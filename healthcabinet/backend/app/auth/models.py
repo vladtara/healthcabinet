@@ -19,9 +19,7 @@ class User(Base):
     account_status: Mapped[str] = mapped_column(
         String, nullable=False, server_default="active", default="active"
     )  # 'active' | 'suspended'
-    last_login_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Any access/refresh token whose `iat` is strictly before this instant is treated as
     # revoked. Admins bump this via POST /admin/users/{id}/revoke-sessions to force-logout
     # a user without suspending the account. NULL means no revocation has ever occurred.

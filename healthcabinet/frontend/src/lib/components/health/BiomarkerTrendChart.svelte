@@ -101,12 +101,8 @@
 	);
 
 	// Reference band
-	const refBandY1 = $derived(
-		referenceRangeHigh != null ? toY(referenceRangeHigh) : PAD_TOP
-	);
-	const refBandY2 = $derived(
-		referenceRangeLow != null ? toY(referenceRangeLow) : PAD_TOP + PLOT_H
-	);
+	const refBandY1 = $derived(referenceRangeHigh != null ? toY(referenceRangeHigh) : PAD_TOP);
+	const refBandY2 = $derived(referenceRangeLow != null ? toY(referenceRangeLow) : PAD_TOP + PLOT_H);
 	const refBandHeight = $derived(Math.abs(refBandY2 - refBandY1));
 	const refBandTop = $derived(Math.min(refBandY1, refBandY2));
 	const showRefBand = $derived(referenceRangeLow != null || referenceRangeHigh != null);
@@ -181,8 +177,8 @@
 						text-anchor="end"
 						dominant-baseline="middle"
 						class="fill-muted-foreground text-[10px]"
-						font-size="10"
-					>{tick.label}</text>
+						font-size="10">{tick.label}</text
+					>
 				{/each}
 
 				<!-- X-axis date labels -->
@@ -193,8 +189,8 @@
 							y={CHART_H - PAD_BOTTOM + 14}
 							text-anchor="middle"
 							class="fill-muted-foreground text-[10px]"
-							font-size="10"
-						>{formatDateLabel(p.date)}</text>
+							font-size="10">{formatDateLabel(p.date)}</text
+						>
 					{/if}
 				{/each}
 
@@ -207,8 +203,8 @@
 						dominant-baseline="middle"
 						transform="rotate(-90, {PAD_LEFT - 36}, {PAD_TOP + PLOT_H / 2})"
 						class="fill-muted-foreground text-[10px]"
-						font-size="10"
-					>{unit}</text>
+						font-size="10">{unit}</text
+					>
 				{/if}
 
 				<!-- Trend line -->
@@ -227,7 +223,9 @@
 			</figcaption>
 		{:else}
 			<!-- Disabled state: < 2 data points -->
-			<div class="relative flex h-[200px] items-center justify-center overflow-hidden rounded-lg border border-border bg-card">
+			<div
+				class="border-border bg-card relative flex h-[200px] items-center justify-center overflow-hidden rounded-lg border"
+			>
 				<!-- Decorative static placeholder lines (no real axes) -->
 				<svg
 					viewBox="0 0 560 200"
@@ -240,7 +238,7 @@
 					<line x1="48" y1="16" x2="48" y2="164" stroke="currentColor" stroke-width="1" />
 				</svg>
 				<div class="relative z-10 px-4 text-center">
-					<p class="text-sm text-muted-foreground">Upload another document to unlock trends</p>
+					<p class="text-muted-foreground text-sm">Upload another document to unlock trends</p>
 				</div>
 			</div>
 			<figcaption class="sr-only">{biomarkerName} trend chart — not enough data</figcaption>

@@ -118,8 +118,12 @@ export async function apiStream(
 		if (typeof window !== 'undefined' && !isRedirectingToLogin) {
 			isRedirectingToLogin = true;
 			goto('/login')
-				.catch(() => { isRedirectingToLogin = false; })
-				.finally(() => { isRedirectingToLogin = false; });
+				.catch(() => {
+					isRedirectingToLogin = false;
+				})
+				.finally(() => {
+					isRedirectingToLogin = false;
+				});
 		}
 		throw { type: 'about:blank', title: 'Unauthorized', status: 401 } satisfies ApiError;
 	}
@@ -137,7 +141,11 @@ export async function apiFetch<T>(
 	// Only inject Content-Type when the caller hasn't set one and the body is not FormData.
 	// When body is FormData the browser must set Content-Type itself to include the
 	// multipart boundary; manually setting it would break the boundary and the upload.
-	if (!('Content-Type' in headers) && !('content-type' in headers) && !(options.body instanceof FormData)) {
+	if (
+		!('Content-Type' in headers) &&
+		!('content-type' in headers) &&
+		!(options.body instanceof FormData)
+	) {
 		headers['Content-Type'] = 'application/json';
 	}
 
@@ -179,8 +187,12 @@ export async function apiFetch<T>(
 		if (typeof window !== 'undefined' && !isRedirectingToLogin) {
 			isRedirectingToLogin = true;
 			goto('/login')
-				.catch(() => { isRedirectingToLogin = false; })
-				.finally(() => { isRedirectingToLogin = false; });
+				.catch(() => {
+					isRedirectingToLogin = false;
+				})
+				.finally(() => {
+					isRedirectingToLogin = false;
+				});
 		}
 		throw { type: 'about:blank', title: 'Unauthorized', status: 401 } satisfies ApiError;
 	}

@@ -60,7 +60,9 @@ def test_serialize_validation_errors_stringifies_non_primitive_ctx_values():
     ]
 
 
-async def test_global_exception_handler_redacts_detail_and_keeps_request_id(add_test_route, monkeypatch):
+async def test_global_exception_handler_redacts_detail_and_keeps_request_id(
+    add_test_route, monkeypatch
+):
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
     path = f"/__tests__/boom-{uuid.uuid4()}"
 

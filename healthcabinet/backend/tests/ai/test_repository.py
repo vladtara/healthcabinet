@@ -105,9 +105,7 @@ async def test_reasoning_roundtrip_encrypted(
         reasoning_json=reasoning,
     )
 
-    result = await async_db_session.execute(
-        select(AiMemory).where(AiMemory.id == memory.id)
-    )
+    result = await async_db_session.execute(select(AiMemory).where(AiMemory.id == memory.id))
     stored_memory = result.scalar_one()
 
     assert isinstance(stored_memory.context_json_encrypted, bytes)
@@ -198,10 +196,7 @@ async def test_list_user_ai_context_skips_corrupt_rows(
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-async def _seed_three_kinds(
-    db: AsyncSession, make_user, make_document, *, email: str
-):
-    from app.core.encryption import encrypt_bytes as _enc
+async def _seed_three_kinds(db: AsyncSession, make_user, make_document, *, email: str):
 
     user, _ = await make_user(email=email)
 
@@ -218,7 +213,9 @@ async def _seed_three_kinds(
             AiMemory(
                 user_id=user.id,
                 document_id=doc.id,
-                interpretation_encrypted=__import__("app.core.encryption", fromlist=["encrypt_bytes"]).encrypt_bytes(label.encode()),
+                interpretation_encrypted=__import__(
+                    "app.core.encryption", fromlist=["encrypt_bytes"]
+                ).encrypt_bytes(label.encode()),
                 model_version="claude-sonnet-4-6",
                 safety_validated=True,
             )

@@ -5,10 +5,6 @@
 
 <div role="region" aria-label="Notifications" aria-live="polite" class="hc-toast-container">
 	{#each feedbackStore.toasts as toast (toast.id)}
-		<Toast
-			type={toast.type}
-			message={toast.message}
-			onDismiss={() => dismissToast(toast.id)}
-		/>
+		<Toast type={toast.type} message={toast.message} onDismiss={() => dismissToast(toast.id)} />
 	{/each}
 </div>

@@ -68,9 +68,7 @@ async def _setup_user_with_data(
     )
 
     # AI interpretation
-    await upsert_ai_interpretation(
-        db, user.id, doc.id, "Your cholesterol is normal.", "claude-3.5"
-    )
+    await upsert_ai_interpretation(db, user.id, doc.id, "Your cholesterol is normal.", "claude-3.5")
 
     # Consent log
     await create_consent_log(db, user.id, "health_data_processing", "1.0")

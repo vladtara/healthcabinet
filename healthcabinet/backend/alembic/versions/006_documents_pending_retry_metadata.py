@@ -26,7 +26,9 @@ depends_on: Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("documents", sa.Column("pending_s3_key_encrypted", sa.LargeBinary(), nullable=True))
+    op.add_column(
+        "documents", sa.Column("pending_s3_key_encrypted", sa.LargeBinary(), nullable=True)
+    )
     op.add_column("documents", sa.Column("pending_filename", sa.Text(), nullable=True))
     op.add_column("documents", sa.Column("pending_file_size_bytes", sa.BigInteger(), nullable=True))
     op.add_column("documents", sa.Column("pending_file_type", sa.Text(), nullable=True))

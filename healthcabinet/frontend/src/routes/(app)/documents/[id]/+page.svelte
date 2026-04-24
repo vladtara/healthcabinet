@@ -71,7 +71,11 @@
 		</div>
 
 		{#if doc.status === 'processing' || doc.status === 'pending'}
-			<ProcessingPipeline documentId={doc.id} onComplete={handleProcessingComplete} onFailed={handleProcessingFailed} />
+			<ProcessingPipeline
+				documentId={doc.id}
+				onComplete={handleProcessingComplete}
+				onFailed={handleProcessingFailed}
+			/>
 		{:else}
 			{#if doc.health_values.length > 0}
 				<section class="hc-doc-detail-values-section">

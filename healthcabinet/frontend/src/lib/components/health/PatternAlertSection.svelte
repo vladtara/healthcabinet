@@ -14,7 +14,11 @@
 			.map((d) => {
 				const parsed = new Date(d);
 				if (Number.isNaN(parsed.getTime())) return d;
-				return parsed.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+				return parsed.toLocaleDateString('en-US', {
+					month: 'short',
+					year: 'numeric',
+					timeZone: 'UTC'
+				});
 			})
 			.join(', ');
 	}
@@ -29,9 +33,9 @@
 			<div class="hc-dash-section-body">
 				{#each [0, 1] as i}
 					<div class="hc-pattern-alert animate-pulse" aria-hidden="true" data-skeleton={i}>
-						<div class="mb-2 h-4 w-4/5 rounded bg-muted"></div>
-						<div class="mb-1 h-3 w-2/5 rounded bg-muted"></div>
-						<div class="h-3 w-3/5 rounded bg-muted"></div>
+						<div class="bg-muted mb-2 h-4 w-4/5 rounded"></div>
+						<div class="bg-muted mb-1 h-3 w-2/5 rounded"></div>
+						<div class="bg-muted h-3 w-3/5 rounded"></div>
 					</div>
 				{/each}
 			</div>
@@ -44,7 +48,7 @@
 				<span aria-hidden="true">📈</span> Pattern Alerts
 			</div>
 			<div class="hc-dash-section-body" style="text-align: center;">
-				<p class="text-xs text-muted-foreground">Unable to load pattern alerts.</p>
+				<p class="text-muted-foreground text-xs">Unable to load pattern alerts.</p>
 			</div>
 		</div>
 	</section>
@@ -55,7 +59,7 @@
 				<span aria-hidden="true">📈</span> Pattern Alerts
 			</div>
 			<div class="hc-dash-section-body">
-				{#each patterns as pattern, i}
+				{#each patterns as pattern}
 					<div class="hc-pattern-alert">
 						<p class="hc-pattern-alert-desc">{pattern.description}</p>
 						{#if pattern.document_dates.length > 0}

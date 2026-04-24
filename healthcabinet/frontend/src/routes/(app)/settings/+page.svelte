@@ -50,7 +50,6 @@
 	let weightKg = $state<number | null>(null);
 	let selectedConditions = $state<string[]>([]);
 	let medications = $state('');
-	let familyHistory = $state('');
 	let otherCondition = $state('');
 	// Success/error banner sentinels — resolved against locale at render so a
 	// mid-flight locale toggle retranslates the banner without losing the state.
@@ -130,9 +129,7 @@
 	function formatConsentType(type: string): string {
 		return (
 			copy.consentTypes[type as keyof typeof copy.consentTypes] ??
-			type
-			.replace(/_/g, ' ')
-			.replace(/\b\w/g, (c) => c.toUpperCase())
+			type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 		);
 	}
 
@@ -201,13 +198,14 @@
 			if (profile.known_conditions?.length) selectedConditions = [...profile.known_conditions];
 			if (profile.medications?.length) medications = profile.medications.join(', ');
 			if (profile.family_history) {
-				const parts = profile.family_history.split(',').map((s: string) => s.trim()).filter(Boolean);
+				const parts = profile.family_history
+					.split(',')
+					.map((s: string) => s.trim())
+					.filter(Boolean);
 				const matched = new Set<string>();
 				const unmatched: string[] = [];
 				for (const part of parts) {
-					const preset = PRESET_FAMILY_HISTORY.find(
-						(p) => p.toLowerCase() === part.toLowerCase()
-					);
+					const preset = PRESET_FAMILY_HISTORY.find((p) => p.toLowerCase() === part.toLowerCase());
 					if (preset && !matched.has(preset)) {
 						matched.add(preset);
 					} else if (!preset) {
@@ -378,7 +376,11 @@
 		try {
 			await deleteMyAccount();
 			deleteDialogOpen = false;
-			try { await authStore.logout(); } catch { /* best-effort cookie clear */ }
+			try {
+				await authStore.logout();
+			} catch {
+				/* best-effort cookie clear */
+			}
 			goto('/?deleted=true');
 		} catch (error) {
 			const backend = readBackendErrorDetail(error);
@@ -429,18 +431,15 @@
 						aria-describedby={errors.age ? 'age-error' : undefined}
 					/>
 					{#if errors.age}
-						<p id="age-error" class="hc-profile-field-error" role="alert">{errorMessage(errors.age)}</p>
+						<p id="age-error" class="hc-profile-field-error" role="alert">
+							{errorMessage(errors.age)}
+						</p>
 					{/if}
 				</div>
 
 				<div class="hc-profile-field-group">
 					<label class="hc-label" for="sex">{copy.sexLabel}</label>
-					<select
-						id="sex"
-						class="hc-input"
-						style="width:100%"
-						bind:value={sex}
-					>
+					<select id="sex" class="hc-input" style="width:100%" bind:value={sex}>
 						<option value="" disabled>{presets.sex.select}</option>
 						<option value="female">{presets.sex.female}</option>
 						<option value="male">{presets.sex.male}</option>
@@ -522,7 +521,9 @@
 					onkeydown={handleOtherConditionKeydown}
 					aria-label={copy.conditionOtherAria}
 				/>
-				<button type="button" class="btn-standard" onclick={addOtherCondition}>{copy.conditionAdd}</button>
+				<button type="button" class="btn-standard" onclick={addOtherCondition}
+					>{copy.conditionAdd}</button
+				>
 			</div>
 
 			{#if selectedConditions.some((c) => !PRESET_CONDITIONS.includes(c))}
@@ -580,8 +581,12 @@
 			</div>
 
 			{#if legacyFamilyHistory}
-				<p class="hc-profile-field-error" style="color: var(--text-secondary); margin-top: 8px; font-size: 13px;">
-					{copy.familyAdditionalNotes} {legacyFamilyHistory}
+				<p
+					class="hc-profile-field-error"
+					style="color: var(--text-secondary); margin-top: 8px; font-size: 13px;"
+				>
+					{copy.familyAdditionalNotes}
+					{legacyFamilyHistory}
 				</p>
 			{/if}
 		</fieldset>
@@ -621,12 +626,7 @@
 			{/if}
 
 			<div class="hc-profile-export-row">
-				<button
-					type="button"
-					class="btn-standard"
-					onclick={handleExport}
-					disabled={exportLoading}
-				>
+				<button type="button" class="btn-standard" onclick={handleExport} disabled={exportLoading}>
 					{exportLoading ? copy.exportGenerating : copy.exportDownload}
 				</button>
 			</div>

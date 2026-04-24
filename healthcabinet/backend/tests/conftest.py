@@ -1,10 +1,11 @@
+import contextlib
 import os
-import redis.asyncio as aioredis
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from pathlib import Path
 
 import pytest_asyncio
+import redis.asyncio as aioredis
 from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -66,10 +67,8 @@ async def _flush_redis() -> AsyncGenerator[None, None]:
         pass  # Fail-open: Redis is optional for the test suite
     yield
     if client is not None:
-        try:
+        with contextlib.suppress(Exception):
             await client.aclose()
-        except Exception:
-            pass
 
 
 @pytest_asyncio.fixture(scope="session")

@@ -32,10 +32,7 @@
 	// Turn a validation reasonCode into locale-aware copy at render time so the
 	// rejected-files banner re-translates when the user toggles EN/UA after a
 	// rejection has already landed.
-	function resolveValidationReason(
-		code: ValidationReasonCode,
-		upload: Messages['upload']
-	): string {
+	function resolveValidationReason(code: ValidationReasonCode, upload: Messages['upload']): string {
 		return code === 'unsupportedType' ? upload.errorUnsupportedType : upload.errorTooLarge;
 	}
 
@@ -251,11 +248,7 @@
 					{/if}
 
 					<div class="hc-import-pipeline">
-						<ProcessingPipeline
-							{documentId}
-							onComplete={handleComplete}
-							onFailed={handleFailed}
-						/>
+						<ProcessingPipeline {documentId} onComplete={handleComplete} onFailed={handleFailed} />
 					</div>
 
 					<div class="hc-import-actions hc-import-actions-end">
@@ -272,21 +265,13 @@
 						<button type="button" onclick={navigateBack}>{copy.close}</button>
 					</div>
 				{:else if uploadState === 'partial' && documentId}
-					<PartialExtractionCard
-						status="partial"
-						{documentId}
-						onReupload={handleReupload}
-					/>
+					<PartialExtractionCard status="partial" {documentId} onReupload={handleReupload} />
 
 					<div class="hc-import-actions hc-import-actions-end">
 						<button type="button" onclick={navigateBack}>{copy.close}</button>
 					</div>
 				{:else if uploadState === 'failed' && documentId}
-					<PartialExtractionCard
-						status="failed"
-						{documentId}
-						onReupload={handleReupload}
-					/>
+					<PartialExtractionCard status="failed" {documentId} onReupload={handleReupload} />
 
 					<div class="hc-import-actions hc-import-actions-end">
 						<button type="button" onclick={navigateBack}>{copy.close}</button>

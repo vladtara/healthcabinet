@@ -58,7 +58,14 @@
 	// localized string is derived below so the aria-live region retranslates
 	// on locale flip. `custom` carries a backend-supplied string verbatim
 	// (AC 5 — server text passes through untranslated).
-	type StatusKey = 'processing' | 'partial-fallback' | 'failed-fallback' | 'conn-lost' | 'session-expired' | 'stage-label' | 'custom';
+	type StatusKey =
+		| 'processing'
+		| 'partial-fallback'
+		| 'failed-fallback'
+		| 'conn-lost'
+		| 'session-expired'
+		| 'stage-label'
+		| 'custom';
 
 	function createInitialStages(): StageState[] {
 		return STAGE_IDS.map((id) => ({ id, status: 'pending' as const }));

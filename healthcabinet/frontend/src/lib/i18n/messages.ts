@@ -152,7 +152,8 @@ const en = {
 		emptyAnalysis: 'No analyses yet — upload a lab result to populate this view',
 		emptyDocument: 'No plain documents yet — upload one to populate this view',
 		biomarkerEmptyDefault: 'No biomarker values are available for this filter yet',
-		biomarkerEmptyDocument: 'Plain documents do not contain extracted biomarker values for this view',
+		biomarkerEmptyDocument:
+			'Plain documents do not contain extracted biomarker values for this view',
 		statusFieldDocumentsOne: 'Document',
 		statusFieldDocumentsFew: 'Documents',
 		statusFieldDocumentsMany: 'Documents',
@@ -439,23 +440,23 @@ const en = {
 		// only the values change per locale. Templates resolve via `t(locale).presets.*[en] ?? en`.
 		conditions: {
 			'Type 2 Diabetes': 'Type 2 Diabetes',
-			'Hypertension': 'Hypertension',
-			'Hypothyroidism': 'Hypothyroidism',
+			Hypertension: 'Hypertension',
+			Hypothyroidism: 'Hypothyroidism',
 			"Hashimoto's": "Hashimoto's",
-			'Hyperthyroidism': 'Hyperthyroidism',
+			Hyperthyroidism: 'Hyperthyroidism',
 			'High Cholesterol': 'High Cholesterol',
-			'Asthma': 'Asthma',
-			'PCOS': 'PCOS',
-			'Anemia': 'Anemia',
+			Asthma: 'Asthma',
+			PCOS: 'PCOS',
+			Anemia: 'Anemia',
 			'Cardiovascular Disease': 'Cardiovascular Disease',
 			'Kidney Disease': 'Kidney Disease',
 			'Liver Disease': 'Liver Disease'
 		},
 		familyHistory: {
 			'Heart Disease': 'Heart Disease',
-			'Diabetes': 'Diabetes',
+			Diabetes: 'Diabetes',
 			'Thyroid Disease': 'Thyroid Disease',
-			'Cancer': 'Cancer',
+			Cancer: 'Cancer',
 			'High Blood Pressure': 'High Blood Pressure',
 			'Autoimmune Disease': 'Autoimmune Disease'
 		},
@@ -536,8 +537,7 @@ const en = {
 			'Your export includes: uploaded documents, extracted health values, AI interpretations, admin corrections, consent history, and account summary.',
 		dataExportFormatNote:
 			'Delivered as a ZIP file with CSV data files and original documents. Both machine-readable and human-readable.',
-		dataExportTimingNote:
-			'Export generation may take a few moments depending on your data volume.',
+		dataExportTimingNote: 'Export generation may take a few moments depending on your data volume.',
 		exportSuccess: 'Export downloaded',
 		exportErrorFallback: 'Failed to generate export. Please try again.',
 		exportGenerating: 'Generating export...',
@@ -710,7 +710,8 @@ const uk: Messages = {
 		emptyAnalysis: 'Ще немає аналізів — завантажте результат, щоб заповнити цей вигляд',
 		emptyDocument: 'Ще немає звичайних документів — завантажте один, щоб заповнити цей вигляд',
 		biomarkerEmptyDefault: 'Для цього фільтра ще немає значень біомаркерів',
-		biomarkerEmptyDocument: 'Звичайні документи не містять витягнутих біомаркерів для цього вигляду',
+		biomarkerEmptyDocument:
+			'Звичайні документи не містять витягнутих біомаркерів для цього вигляду',
 		statusFieldDocumentsOne: 'Документ',
 		statusFieldDocumentsFew: 'Документи',
 		statusFieldDocumentsMany: 'Документів',
@@ -770,7 +771,8 @@ const uk: Messages = {
 		send: 'Надіслати ▶',
 		sendingIndicator: '…',
 		hintTip: 'Порада: запитайте про конкретні біомаркери, тенденції або про що спитати лікаря',
-		hintNoContext: 'Чат стане доступним, коли за цим фільтром буде хоча б один інтерпретований документ',
+		hintNoContext:
+			'Чат стане доступним, коли за цим фільтром буде хоча б один інтерпретований документ',
 		errorGeneric: 'Не вдалося отримати відповідь. Спробуйте ще раз.',
 		errorNetwork: 'Сталася помилка мережі. Спробуйте ще раз.',
 		errorStreaming: 'Потокове передавання не підтримується в цьому середовищі.',
@@ -801,8 +803,7 @@ const uk: Messages = {
 		loading: 'Завантаження документів…',
 		loadError: 'Не вдалося завантажити документи. Спробуйте ще раз.',
 		emptyTitle: 'Ще немає документів',
-		emptySub:
-			'Завантажте свій перший медичний документ, щоб почати роботу з аналізом на базі ШІ.',
+		emptySub: 'Завантажте свій перший медичний документ, щоб почати роботу з аналізом на базі ШІ.',
 		emptyUploadCta: 'Завантажити медичний документ',
 		statusCompleted: 'Завершено',
 		statusProcessing: 'Обробка',
@@ -997,23 +998,23 @@ const uk: Messages = {
 	presets: {
 		conditions: {
 			'Type 2 Diabetes': 'Діабет 2 типу',
-			'Hypertension': 'Гіпертонія',
-			'Hypothyroidism': 'Гіпотиреоз',
+			Hypertension: 'Гіпертонія',
+			Hypothyroidism: 'Гіпотиреоз',
 			"Hashimoto's": 'Хвороба Хашимото',
-			'Hyperthyroidism': 'Гіпертиреоз',
+			Hyperthyroidism: 'Гіпертиреоз',
 			'High Cholesterol': 'Високий холестерин',
-			'Asthma': 'Астма',
-			'PCOS': 'СПКЯ',
-			'Anemia': 'Анемія',
+			Asthma: 'Астма',
+			PCOS: 'СПКЯ',
+			Anemia: 'Анемія',
 			'Cardiovascular Disease': 'Серцево-судинні захворювання',
 			'Kidney Disease': 'Захворювання нирок',
 			'Liver Disease': 'Захворювання печінки'
 		},
 		familyHistory: {
 			'Heart Disease': 'Хвороби серця',
-			'Diabetes': 'Діабет',
+			Diabetes: 'Діабет',
 			'Thyroid Disease': 'Захворювання щитоподібної залози',
-			'Cancer': 'Рак',
+			Cancer: 'Рак',
 			'High Blood Pressure': 'Високий кровʼяний тиск',
 			'Autoimmune Disease': 'Автоімунне захворювання'
 		},

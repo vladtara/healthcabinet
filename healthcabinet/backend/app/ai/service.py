@@ -227,6 +227,7 @@ def _is_valid_iso_date(s: str) -> bool:
     except ValueError:
         return False
 
+
 _PATTERN_DETECTION_PROMPT_TEMPLATE = """You are a helpful health information assistant. A user has {count} lab result documents with the following AI interpretations:
 
 {context_section}
@@ -276,9 +277,7 @@ def _extract_json_array(text: str) -> list[dict[str, object]]:
         start = cleaned.find("[")
         end = cleaned.rfind("]") + 1
         if start == -1 or end <= start:
-            raise ValueError(
-                f"No JSON array found in AI model response: {cleaned[:80]!r}"
-            ) from err
+            raise ValueError(f"No JSON array found in AI model response: {cleaned[:80]!r}") from err
         parsed = json.loads(cleaned[start:end])
 
     if not isinstance(parsed, list):
@@ -437,7 +436,9 @@ async def stream_follow_up_answer(
             user_id=str(user_id),
             document_id=str(document_id),
         )
-        raise AiServiceUnavailableError(_fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language)) from exc
+        raise AiServiceUnavailableError(
+            _fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language)
+        ) from exc
 
     async def _validate_and_encode(
         delta: str,
@@ -674,7 +675,9 @@ async def stream_dashboard_follow_up(
             user_id=str(user_id),
             document_kind=document_kind,
         )
-        raise AiServiceUnavailableError(_fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language)) from exc
+        raise AiServiceUnavailableError(
+            _fb(_FOLLOW_UP_UNAVAILABLE_DETAIL, output_language)
+        ) from exc
 
     # If the model returned zero deltas, treat as unavailable rather than
     # emitting just a leading-space disclaimer with no content.

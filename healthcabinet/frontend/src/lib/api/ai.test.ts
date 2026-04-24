@@ -6,8 +6,7 @@ import {
 	getDashboardInterpretation,
 	getDocumentInterpretation,
 	streamAiChat,
-	streamDashboardChat,
-	getAiPatterns
+	streamDashboardChat
 } from './ai';
 
 vi.mock('$lib/api/client.svelte', () => ({
@@ -35,18 +34,18 @@ describe('AI API client (Story 15.3)', () => {
 		expect(mockApiFetch).toHaveBeenCalledWith('/api/v1/ai/documents/doc-1/interpretation');
 	});
 
-		test('getDashboardInterpretation encodes the kind and hits the dashboard endpoint', async () => {
-			mockApiFetch.mockResolvedValueOnce({
-				document_id: null,
-				document_kind: 'analysis',
-				source_document_ids: [],
-				interpretation: '',
-				model_version: null,
-				generated_at: '2026-04-20T00:00:00Z',
-				reasoning: null
-			});
-			await getDashboardInterpretation('analysis');
-			expect(mockApiFetch).toHaveBeenCalledWith(
+	test('getDashboardInterpretation encodes the kind and hits the dashboard endpoint', async () => {
+		mockApiFetch.mockResolvedValueOnce({
+			document_id: null,
+			document_kind: 'analysis',
+			source_document_ids: [],
+			interpretation: '',
+			model_version: null,
+			generated_at: '2026-04-20T00:00:00Z',
+			reasoning: null
+		});
+		await getDashboardInterpretation('analysis');
+		expect(mockApiFetch).toHaveBeenCalledWith(
 			'/api/v1/ai/dashboard/interpretation?document_kind=analysis&locale=en'
 		);
 	});

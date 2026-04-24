@@ -11,14 +11,12 @@ const { mockAuthStore } = vi.hoisted(() => ({
 			email: 'test@example.com',
 			role: 'user' as const,
 			tier: 'free' as const
-		} as
-			| {
-					id: string;
-					email: string;
-					role: 'user' | 'admin';
-					tier: 'free' | 'paid';
-			  }
-			| null
+		} as {
+			id: string;
+			email: string;
+			role: 'user' | 'admin';
+			tier: 'free' | 'paid';
+		} | null
 	}
 }));
 

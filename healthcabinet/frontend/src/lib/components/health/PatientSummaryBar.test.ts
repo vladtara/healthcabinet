@@ -7,11 +7,18 @@ function renderSummaryBar(props: Record<string, unknown> = {}) {
 	return renderComponent(PatientSummaryBar, {
 		email: 'sofia@example.com',
 		profile: {
-			id: 'p-1', user_id: 'u-1', age: 34, sex: 'female',
-			height_cm: 165, weight_kg: 60,
-			known_conditions: ['Hashimoto\'s', 'Anemia'],
-			medications: [], family_history: null,
-			onboarding_step: 3, created_at: '2026-01-01', updated_at: '2026-01-01'
+			id: 'p-1',
+			user_id: 'u-1',
+			age: 34,
+			sex: 'female',
+			height_cm: 165,
+			weight_kg: 60,
+			known_conditions: ["Hashimoto's", 'Anemia'],
+			medications: [],
+			family_history: null,
+			onboarding_step: 3,
+			created_at: '2026-01-01',
+			updated_at: '2026-01-01'
 		},
 		documentCount: 4,
 		biomarkerCount: 18,

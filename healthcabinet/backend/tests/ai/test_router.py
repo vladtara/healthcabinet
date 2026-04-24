@@ -306,6 +306,7 @@ async def test_get_interpretation_reasoning_null_when_reasoning_schema_mismatche
     assert data["interpretation"] == "Your glucose is normal. "
     assert data["reasoning"] is None
 
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Tests for POST /api/v1/ai/chat (AC: #1, #3, #4)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -498,7 +499,10 @@ async def test_chat_with_ai_raises_503_when_ai_provider_is_temporarily_unavailab
         )
 
     assert exc_info.value.status_code == 503
-    assert exc_info.value.detail == "AI follow-up is temporarily unavailable. Please try again in a moment."
+    assert (
+        exc_info.value.detail
+        == "AI follow-up is temporarily unavailable. Please try again in a moment."
+    )
 
 
 @pytest.mark.asyncio
@@ -658,7 +662,10 @@ async def test_get_dashboard_interpretation_all_aggregates_across_kinds_excludes
     assert source_ids == {str(a_doc_a.id), str(a_doc_b.id), str(d_doc.id)}
     assert str(u_doc.id) not in source_ids
     # Disclaimer appended by the existing safety pipeline.
-    assert "diagnosis" in data["interpretation"].lower() or "educational" in data["interpretation"].lower()
+    assert (
+        "diagnosis" in data["interpretation"].lower()
+        or "educational" in data["interpretation"].lower()
+    )
 
 
 @pytest.mark.asyncio
@@ -809,9 +816,7 @@ async def test_get_dashboard_interpretation_rebuilds_after_document_delete_casca
     await async_db_session.execute(
         sa_delete(AiMemoryModel).where(AiMemoryModel.document_id == a_doc_a.id)
     )
-    await async_db_session.execute(
-        sa_delete(DocumentModel).where(DocumentModel.id == a_doc_a.id)
-    )
+    await async_db_session.execute(sa_delete(DocumentModel).where(DocumentModel.id == a_doc_a.id))
     await async_db_session.flush()
 
     with patch(
@@ -1051,9 +1056,7 @@ async def test_post_dashboard_chat_requires_auth(ai_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_post_dashboard_chat_rejects_unknown_kind(
-    ai_client: AsyncClient, user_with_document
-):
+async def test_post_dashboard_chat_rejects_unknown_kind(ai_client: AsyncClient, user_with_document):
     user, _ = user_with_document
     response = await ai_client.post(
         "/api/v1/ai/dashboard/chat",

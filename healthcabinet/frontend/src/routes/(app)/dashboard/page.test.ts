@@ -45,7 +45,11 @@ vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
 }));
 
-import { getDashboardBaseline, getHealthValues, getHealthValueTimeline } from '$lib/api/health-values';
+import {
+	getDashboardBaseline,
+	getHealthValues,
+	getHealthValueTimeline
+} from '$lib/api/health-values';
 import { listDocuments } from '$lib/api/documents';
 import { getDashboardInterpretation, getDocumentInterpretation } from '$lib/api/ai';
 import { getProfile } from '$lib/api/users';
@@ -490,7 +494,9 @@ describe('Dashboard page', () => {
 
 		expect(queryByTestId('dashboard-filter-empty')).toBeNull();
 		expect(getByTestId('dashboard-biomarker-empty')).toBeInTheDocument();
-		expect(getByText(/plain documents do not contain extracted biomarker values/i)).toBeInTheDocument();
+		expect(
+			getByText(/plain documents do not contain extracted biomarker values/i)
+		).toBeInTheDocument();
 		expect(getByText(/follow-up with your clinician/i)).toBeInTheDocument();
 		expect(queryByTestId('dashboard-chat-no-context-hint')).toBeNull();
 

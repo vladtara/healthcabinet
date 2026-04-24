@@ -22,9 +22,7 @@ async def get_user_by_id_for_update(db: AsyncSession, user_id: uuid.UUID) -> Use
     lock forces refresh to wait until the revocation commits, closing the race at
     the cost of briefly serializing concurrent refreshes for a single user.
     """
-    result = await db.execute(
-        select(User).where(User.id == user_id).with_for_update()
-    )
+    result = await db.execute(select(User).where(User.id == user_id).with_for_update())
     return result.scalar_one_or_none()
 
 
@@ -52,21 +50,15 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def list_consent_logs_by_user(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[ConsentLog]:
+async def list_consent_logs_by_user(db: AsyncSession, user_id: uuid.UUID) -> list[ConsentLog]:
     """Return all consent log entries for a user, ordered by consented_at."""
     result = await db.execute(
-        select(ConsentLog)
-        .where(ConsentLog.user_id == user_id)
-        .order_by(ConsentLog.consented_at)
+        select(ConsentLog).where(ConsentLog.user_id == user_id).order_by(ConsentLog.consented_at)
     )
     return list(result.scalars().all())
 
 
-async def list_consent_logs_by_user_desc(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[ConsentLog]:
+async def list_consent_logs_by_user_desc(db: AsyncSession, user_id: uuid.UUID) -> list[ConsentLog]:
     """Return all consent log entries for a user, ordered by consented_at descending."""
     result = await db.execute(
         select(ConsentLog)

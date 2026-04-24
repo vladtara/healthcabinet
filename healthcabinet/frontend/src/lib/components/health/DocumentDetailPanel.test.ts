@@ -440,7 +440,11 @@ describe('DocumentDetailPanel', () => {
 		renderPanel({
 			detail: makeDetail({
 				health_values: [
-					makeHealthValue({ id: 'hv-no-range', reference_range_low: null, reference_range_high: null })
+					makeHealthValue({
+						id: 'hv-no-range',
+						reference_range_low: null,
+						reference_range_high: null
+					})
 				]
 			})
 		});
@@ -638,13 +642,13 @@ describe('DocumentDetailPanel', () => {
 		await waitFor(() => {
 			expect(screen.queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
 		});
-			expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
-			expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
-			expect(invalidateQueries).toHaveBeenCalledWith({
-				queryKey: ['ai_dashboard_interpretation'],
-				refetchType: 'none'
-			});
+		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['documents'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['health_values'] });
+		expect(invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
 		});
+	});
 
 	test('Flagged count reflects is_flagged values', async () => {
 		renderPanel({

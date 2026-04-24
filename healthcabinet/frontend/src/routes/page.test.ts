@@ -125,11 +125,9 @@ describe('Landing page', () => {
 		const { goto } = await import('$app/navigation');
 		vi.mocked(goto).mockResolvedValue(undefined as never);
 
-		vi.spyOn(
-			await import('$lib/stores/auth.svelte'),
-			'authStore',
-			'get'
-		).mockReturnValue({ isAuthenticated: true } as never);
+		vi.spyOn(await import('$lib/stores/auth.svelte'), 'authStore', 'get').mockReturnValue({
+			isAuthenticated: true
+		} as never);
 
 		renderComponent(LandingPage);
 		await vi.waitFor(() => {

@@ -1,4 +1,3 @@
-import { render } from '@testing-library/svelte';
 import axe from 'axe-core';
 import { describe, expect, test } from 'vitest';
 import { renderComponent } from '$lib/test-utils/render';

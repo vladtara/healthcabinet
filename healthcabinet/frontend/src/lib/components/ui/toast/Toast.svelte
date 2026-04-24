@@ -25,10 +25,6 @@
 	<span class="hc-toast-icon" aria-hidden="true">{icons[type]}</span>
 	<span class="hc-toast-message">{message}</span>
 	{#if onDismiss}
-		<button
-			class="hc-toast-dismiss"
-			onclick={onDismiss}
-			aria-label={copy.dismiss}
-		>×</button>
+		<button class="hc-toast-dismiss" onclick={onDismiss} aria-label={copy.dismiss}>×</button>
 	{/if}
 </div>

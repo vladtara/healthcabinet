@@ -71,7 +71,9 @@ def _to_response(record: repository.HealthValueRecord) -> HealthValueResponse:
         is_flagged=record.is_flagged,
         flagged_at=record.flagged_at,
         created_at=record.created_at,
-        status=_compute_status(record.value, record.reference_range_low, record.reference_range_high),
+        status=_compute_status(
+            record.value, record.reference_range_low, record.reference_range_high
+        ),
     )
 
 
@@ -80,9 +82,7 @@ async def list_health_values(
     user: User,
     document_kind: repository.DashboardKind | None = None,
 ) -> list[HealthValueResponse]:
-    result = await repository.list_values_by_user(
-        db, user_id=user.id, document_kind=document_kind
-    )
+    result = await repository.list_values_by_user(db, user_id=user.id, document_kind=document_kind)
     if result.skipped_corrupt_records:
         logger.warning(
             "health_data.corrupt_rows_skipped",
@@ -257,9 +257,7 @@ def _generate_baseline_recommendations(
             continue
         # P1: word-boundary matching prevents "thyroid" matching "parathyroid"
         if any(
-            re.search(rf"\b{re.escape(kw)}\b", cond)
-            for kw in keywords
-            for cond in conditions_lower
+            re.search(rf"\b{re.escape(kw)}\b", cond) for kw in keywords for cond in conditions_lower
         ):
             condition_items.append(
                 RecommendationItem(

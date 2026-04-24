@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { MOCK_USER, MOCK_TOKEN, MOCK_PROFILE } from './helpers/auth';
+import { MOCK_USER, MOCK_TOKEN } from './helpers/auth';
 
 // ─── Shared mock payloads ────────────────────────────────────────────────────
 
@@ -14,11 +14,6 @@ const LOGIN_RESPONSE = {
 	access_token: MOCK_TOKEN,
 	token_type: 'bearer'
 };
-
-// Always mock refresh + me so any SPA navigation to a protected route doesn't redirect to login
-async function setupBaseAuthMocks(page: Parameters<typeof import('@playwright/test').test>[1] extends (...args: infer A) => unknown ? never : never) {
-	// Helper inline to avoid importing Page type separately
-}
 
 // ─── Registration ────────────────────────────────────────────────────────────
 

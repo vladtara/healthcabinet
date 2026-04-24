@@ -79,13 +79,15 @@ describe('AiInterpretationCard', () => {
 		});
 
 		// Disclaimer must be visible
-		expect(
-			getByText(/educational purposes only/i)
-		).toBeTruthy();
+		expect(getByText(/educational purposes only/i)).toBeTruthy();
 	});
 
 	test('renders nothing (no section) on 404 response', async () => {
-		mockGetInterpretation.mockRejectedValue({ status: 404, title: 'Not Found', type: 'about:blank' });
+		mockGetInterpretation.mockRejectedValue({
+			status: 404,
+			title: 'Not Found',
+			type: 'about:blank'
+		});
 		const { container } = renderCard();
 
 		await waitFor(() => {
@@ -374,7 +376,10 @@ describe('AiInterpretationCard', () => {
 			expect(getByRole('button', { name: /show reasoning/i })).toBeTruthy();
 		});
 		await fireEvent.click(getByRole('button', { name: /show reasoning/i }));
-		expect(getByRole('button', { name: /hide reasoning/i })).toHaveAttribute('aria-expanded', 'true');
+		expect(getByRole('button', { name: /hide reasoning/i })).toHaveAttribute(
+			'aria-expanded',
+			'true'
+		);
 
 		// Navigate to a different document
 		await rerender({ queryClient, documentId: 'doc-2' });

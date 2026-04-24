@@ -15,9 +15,7 @@ const mockFlagHealthValue = vi.mocked(flagHealthValue);
 
 const TEST_DOCUMENT_ID = 'doc-1';
 
-function makeHealthValue(
-	overrides: Partial<HealthValueItem> = {}
-): HealthValueItem {
+function makeHealthValue(overrides: Partial<HealthValueItem> = {}): HealthValueItem {
 	return {
 		id: 'hv-1',
 		biomarker_name: 'Glucose',
@@ -99,9 +97,7 @@ describe('HealthValueRow', () => {
 
 		expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['documents', 'doc-1'] });
 		expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['health_values'] });
-		expect(
-			screen.getByLabelText(/glucose flagged for review/i)
-		).toHaveTextContent('Flagged');
+		expect(screen.getByLabelText(/glucose flagged for review/i)).toHaveTextContent('Flagged');
 	});
 
 	test('passes axe accessibility audit', async () => {

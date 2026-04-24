@@ -8,7 +8,7 @@ import type {
 	DocumentQueueDetail,
 	ErrorQueueResponse,
 	FlaggedReportListResponse,
-	FlagReviewedResponse,
+	FlagReviewedResponse
 } from '$lib/types/api';
 
 /**
@@ -48,7 +48,7 @@ export async function submitCorrection(
 		{
 			method: 'POST',
 			body: JSON.stringify(data),
-			headers: { 'Content-Type': 'application/json' },
+			headers: { 'Content-Type': 'application/json' }
 		}
 	);
 }
@@ -83,7 +83,7 @@ export async function updateAdminUserStatus(
 	return apiFetch<AdminUserDetail>(`/api/v1/admin/users/${userId}/status`, {
 		method: 'PATCH',
 		body: JSON.stringify({ account_status: accountStatus }),
-		headers: { 'Content-Type': 'application/json' },
+		headers: { 'Content-Type': 'application/json' }
 	});
 }
 
@@ -101,6 +101,6 @@ export async function getFlaggedReports(): Promise<FlaggedReportListResponse> {
  */
 export async function markFlagReviewed(healthValueId: string): Promise<FlagReviewedResponse> {
 	return apiFetch<FlagReviewedResponse>(`/api/v1/admin/flags/${healthValueId}/review`, {
-		method: 'POST',
+		method: 'POST'
 	});
 }

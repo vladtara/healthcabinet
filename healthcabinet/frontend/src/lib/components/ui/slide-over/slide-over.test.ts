@@ -190,7 +190,9 @@ describe('SlideOver', () => {
 		});
 		await tick();
 
-		expect(container.querySelector('.hc-slide-over')?.classList.contains('hc-slide-over-enter')).toBe(true);
+		expect(
+			container.querySelector('.hc-slide-over')?.classList.contains('hc-slide-over-enter')
+		).toBe(true);
 
 		vi.unstubAllGlobals();
 	});

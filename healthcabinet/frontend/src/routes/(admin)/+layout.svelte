@@ -24,7 +24,11 @@
 			goto('/login');
 			return;
 		}
-		if (authStore.bootstrapState === 'authenticated' && authStore.user && authStore.user.role !== 'admin') {
+		if (
+			authStore.bootstrapState === 'authenticated' &&
+			authStore.user &&
+			authStore.user.role !== 'admin'
+		) {
 			goto('/login');
 		}
 	});

@@ -23,8 +23,8 @@ describe('apiStream', () => {
 		const abortError = new DOMException('The operation was aborted.', 'AbortError');
 		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abortError));
 
-		await expect(apiStream('/api/v1/ai/chat', { signal: new AbortController().signal })).rejects.toBe(
-			abortError
-		);
+		await expect(
+			apiStream('/api/v1/ai/chat', { signal: new AbortController().signal })
+		).rejects.toBe(abortError);
 	});
 });

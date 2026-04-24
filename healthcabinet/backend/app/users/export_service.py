@@ -64,13 +64,10 @@ def _build_summary(
     if skipped_documents:
         lines.append(f"Documents unavailable due to retrieval errors: {skipped_documents}")
     if skipped_health_values:
-        lines.append(
-            f"Health values unavailable due to decryption errors: {skipped_health_values}"
-        )
+        lines.append(f"Health values unavailable due to decryption errors: {skipped_health_values}")
     if skipped_ai_interpretations:
         lines.append(
-            "AI interpretations unavailable due to decryption errors: "
-            f"{skipped_ai_interpretations}"
+            f"AI interpretations unavailable due to decryption errors: {skipped_ai_interpretations}"
         )
     return "\n".join(lines) + "\n"
 

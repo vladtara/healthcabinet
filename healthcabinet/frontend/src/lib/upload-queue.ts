@@ -121,7 +121,7 @@ function updateEntry(
  * Safe to call when an active entry already exists — it is a no-op.
  */
 export function processNextInQueue(options: ProcessQueueOptions): void {
-	const { queryClient, getQueue, setQueue } = options;
+	const { getQueue, setQueue } = options;
 
 	const current = getQueue();
 	if (getActiveEntry(current)) return;
@@ -139,8 +139,7 @@ export function processNextInQueue(options: ProcessQueueOptions): void {
 			// Upload succeeded — promote to `processing` so the UI pipeline picks up.
 			updateEntry(setQueue, entryId, { documentId: doc.id, status: 'processing' });
 		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : options.uploadFailedMessage;
+			const message = error instanceof Error ? error.message : options.uploadFailedMessage;
 			updateEntry(setQueue, entryId, { status: 'failed', error: message });
 			// Start the next file once the current one failed at upload-time.
 			// Forward the full options object so the recursive call carries the
@@ -173,16 +172,16 @@ export function applyTerminalStatus(
 		error: status === 'failed' ? errorMessage : undefined
 	});
 
-		if (status === 'completed' || status === 'partial') {
-			for (const key of DASHBOARD_INVALIDATION_KEYS) {
-				queryClient.invalidateQueries({ queryKey: [key] });
-			}
-			queryClient.invalidateQueries({
-				queryKey: ['ai_dashboard_interpretation'],
-				refetchType: 'none'
-			});
+	if (status === 'completed' || status === 'partial') {
+		for (const key of DASHBOARD_INVALIDATION_KEYS) {
+			queryClient.invalidateQueries({ queryKey: [key] });
 		}
+		queryClient.invalidateQueries({
+			queryKey: ['ai_dashboard_interpretation'],
+			refetchType: 'none'
+		});
 	}
+}
 
 /**
  * ProcessingPipeline reports `onEvent` before the terminal event. Call this
@@ -191,7 +190,9 @@ export function applyTerminalStatus(
  */
 export function markEntryProcessing(setQueue: QueueMutator, entryId: string): void {
 	setQueue((current) =>
-		current.map((e) => (e.id === entryId && e.status === 'uploading' ? { ...e, status: 'processing' } : e))
+		current.map((e) =>
+			e.id === entryId && e.status === 'uploading' ? { ...e, status: 'processing' } : e
+		)
 	);
 }
 

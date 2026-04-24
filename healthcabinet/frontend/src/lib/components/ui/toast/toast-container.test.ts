@@ -2,7 +2,7 @@ import axe from 'axe-core';
 import { describe, expect, test, afterEach } from 'vitest';
 import { renderComponent } from '$lib/test-utils/render';
 import ToastContainer from './ToastContainer.svelte';
-import { feedbackStore, showSuccess, showError, clearAll } from '$lib/stores/feedback.svelte';
+import { showSuccess, showError, clearAll } from '$lib/stores/feedback.svelte';
 
 describe('ToastContainer', () => {
 	afterEach(() => {

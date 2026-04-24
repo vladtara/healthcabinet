@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { DEFAULT_NEAR_BOTTOM_THRESHOLD_PX, isNearBottom } from './ai-chat-scroll';
 
-function fakeEl(
-	scrollHeight: number,
-	scrollTop: number,
-	clientHeight: number
-): HTMLElement {
+function fakeEl(scrollHeight: number, scrollTop: number, clientHeight: number): HTMLElement {
 	return { scrollHeight, scrollTop, clientHeight } as unknown as HTMLElement;
 }
 

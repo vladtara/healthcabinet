@@ -22,6 +22,7 @@ from app.documents.dependencies import get_arq_redis, rate_limit_upload
 from app.documents.exceptions import UploadLimitExceededError
 from app.main import app
 
+
 def make_upload_file(
     filename: str = "lab_results.pdf",
     content: bytes = b"fake-pdf-content",
@@ -323,9 +324,7 @@ async def test_delete_document_success(
         patch("app.documents.service.get_s3_client", return_value=MagicMock()),
         patch("app.documents.service.delete_object"),
     ):
-        response = await client.delete(
-            f"/api/v1/documents/{doc.id}", headers=auth_headers(user)
-        )
+        response = await client.delete(f"/api/v1/documents/{doc.id}", headers=auth_headers(user))
 
     assert response.status_code == 200
     data = response.json()
@@ -350,9 +349,7 @@ async def test_delete_document_wrong_user_returns_404(
         patch("app.documents.service.get_s3_client", return_value=MagicMock()),
         patch("app.documents.service.delete_object"),
     ):
-        response = await client.delete(
-            f"/api/v1/documents/{doc.id}", headers=auth_headers(user_b)
-        )
+        response = await client.delete(f"/api/v1/documents/{doc.id}", headers=auth_headers(user_b))
 
     assert response.status_code == 404
 
@@ -410,9 +407,7 @@ async def test_delete_document_minio_failure_returns_success_and_document_is_rem
         patch("app.documents.service.get_s3_client", return_value=MagicMock()),
         patch("app.documents.service.logger.warning") as mock_warning,
     ):
-        response = await client.delete(
-            f"/api/v1/documents/{doc.id}", headers=auth_headers(user)
-        )
+        response = await client.delete(f"/api/v1/documents/{doc.id}", headers=auth_headers(user))
 
     assert response.status_code == 200
     assert response.json() == {"deleted": True}
@@ -1003,10 +998,14 @@ async def test_confirm_date_year_happy_path(
     assert updated_doc.partial_measured_at_text is None
 
     rows = (
-        await async_db_session.execute(
-            select(HealthValue).where(HealthValue.document_id == doc_id_uuid)
+        (
+            await async_db_session.execute(
+                select(HealthValue).where(HealthValue.document_id == doc_id_uuid)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(rows) == 3
     db_expected = datetime(2026, 3, 12, 0, 0, 0, tzinfo=UTC)
     for row in rows:
@@ -1190,10 +1189,10 @@ async def test_confirm_date_year_invalidates_and_regenerates_ai_interpretation(
         from app.ai.models import AiMemory as _AiMemory
 
         row = (
-            await db.execute(
-                _select(_AiMemory).where(_AiMemory.document_id == document_id)
-            )
-        ).scalars().first()
+            (await db.execute(_select(_AiMemory).where(_AiMemory.document_id == document_id)))
+            .scalars()
+            .first()
+        )
         post_invalidate_validated.append(row.safety_validated if row is not None else None)
 
         await ai_repo.upsert_ai_interpretation(
@@ -1303,9 +1302,7 @@ async def test_confirm_date_year_ai_regeneration_failure_persists_confirmation(
     async def _raise_llm_outage(db, *, document_id, user_id, values):
         raise RuntimeError("llm outage")
 
-    with patch(
-        "app.ai.service.generate_interpretation", side_effect=_raise_llm_outage
-    ):
+    with patch("app.ai.service.generate_interpretation", side_effect=_raise_llm_outage):
         response = await client.post(
             f"/api/v1/documents/{doc.id}/confirm-date-year",
             json={"year": 2026},
@@ -1320,9 +1317,7 @@ async def test_confirm_date_year_ai_regeneration_failure_persists_confirmation(
     from datetime import datetime as _dt
 
     expected_dt = _dt(2026, 3, 12, 0, 0, 0, tzinfo=UTC)
-    parsed = _dt.fromisoformat(
-        data["health_values"][0]["measured_at"].replace("Z", "+00:00")
-    )
+    parsed = _dt.fromisoformat(data["health_values"][0]["measured_at"].replace("Z", "+00:00"))
     assert parsed == expected_dt
 
     # DB-level: document + health rows reflect the sweep. Cache primary-key
@@ -1335,10 +1330,14 @@ async def test_confirm_date_year_ai_regeneration_failure_persists_confirmation(
     assert updated_doc.partial_measured_at_text is None
 
     rows = (
-        await async_db_session.execute(
-            select(HealthValue).where(HealthValue.document_id == doc_id_uuid)
+        (
+            await async_db_session.execute(
+                select(HealthValue).where(HealthValue.document_id == doc_id_uuid)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert all(r.measured_at is not None for r in rows)
 
     # The pre-existing AI memory row should remain but be invalidated. The
@@ -1582,9 +1581,7 @@ async def test_confirm_date_year_invalidates_even_when_values_for_ai_is_empty(
     await async_db_session.commit()
 
     async def _empty_list_with_skipped(db, *, document_id, user_id):
-        return HealthValueListResult(
-            records=[], skipped_corrupt_records=1, scope="list"
-        )
+        return HealthValueListResult(records=[], skipped_corrupt_records=1, scope="list")
 
     generate_mock = AsyncMock(return_value="should-not-run")
 
@@ -1611,10 +1608,10 @@ async def test_confirm_date_year_invalidates_even_when_values_for_ai_is_empty(
     from sqlalchemy import select
 
     rows = (
-        await async_db_session.execute(
-            select(AiMemory).where(AiMemory.document_id == doc.id)
-        )
-    ).scalars().all()
+        (await async_db_session.execute(select(AiMemory).where(AiMemory.document_id == doc.id)))
+        .scalars()
+        .all()
+    )
     assert len(rows) == 1
     assert rows[0].safety_validated is False
 

@@ -12,7 +12,6 @@ from app.auth.repository import (
     create_consent_log,
     create_user,
     get_user_by_email,
-    get_user_by_id,
     get_user_by_id_for_update,
 )
 from app.core.security import (

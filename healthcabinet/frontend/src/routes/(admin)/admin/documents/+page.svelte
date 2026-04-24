@@ -10,7 +10,7 @@
 		queryKey: ['admin', 'queue'],
 		queryFn: getErrorQueue,
 		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
+		refetchOnReconnect: false
 	}));
 
 	function handleRefresh() {
@@ -25,7 +25,7 @@
 		return new Date(dateStr).toLocaleDateString('en-GB', {
 			year: 'numeric',
 			month: 'short',
-			day: 'numeric',
+			day: 'numeric'
 		});
 	}
 
@@ -42,7 +42,7 @@
 		{ key: 'value_count', label: 'Values', sortable: true, align: 'center' },
 		{ key: 'low_confidence_count', label: 'Low Conf.', sortable: true, align: 'center' },
 		{ key: 'flagged_count', label: 'Flagged', sortable: true, align: 'center' },
-		{ key: 'flag_reason', label: 'Flag Reason' },
+		{ key: 'flag_reason', label: 'Flag Reason' }
 	];
 
 	let rows = $derived(
@@ -55,7 +55,7 @@
 			value_count: item.value_count,
 			low_confidence_count: item.low_confidence_count,
 			flagged_count: item.flagged_count,
-			flag_reason: getFlagReason(item.flagged_count),
+			flag_reason: getFlagReason(item.flagged_count)
 		}))
 	);
 
@@ -71,26 +71,15 @@
 	<header class="hc-admin-queue-header">
 		<div>
 			<h1 class="hc-admin-queue-title">Extraction Error Queue</h1>
-			<p class="hc-admin-queue-subtitle">
-				Documents with extraction problems requiring review
-			</p>
+			<p class="hc-admin-queue-subtitle">Documents with extraction problems requiring review</p>
 		</div>
-		<button
-			type="button"
-			class="btn-standard"
-			onclick={handleRefresh}
-			aria-label="Refresh queue"
-		>
+		<button type="button" class="btn-standard" onclick={handleRefresh} aria-label="Refresh queue">
 			Refresh
 		</button>
 	</header>
 
 	{#if queueQuery.isPending}
-		<div
-			class="hc-admin-queue-skeleton"
-			role="status"
-			aria-label="Loading queue"
-		>
+		<div class="hc-admin-queue-skeleton" role="status" aria-label="Loading queue">
 			{#each Array(3) as _}
 				<div class="hc-admin-queue-skeleton-row"></div>
 			{/each}
@@ -116,9 +105,7 @@
 			<div class="hc-admin-queue-empty-panel">
 				<div class="hc-state hc-state-empty">
 					<p class="hc-state-title">No documents requiring review</p>
-					<p>
-						All documents have been processed successfully or no values need correction.
-					</p>
+					<p>All documents have been processed successfully or no values need correction.</p>
 				</div>
 			</div>
 		{:else}

@@ -33,7 +33,6 @@ vi.mock('$lib/api/client.svelte', () => ({
 }));
 
 import { saveOnboardingStep } from '$lib/api/users';
-import { goto } from '$app/navigation';
 import { localeStore } from '$lib/stores/locale.svelte';
 
 describe('Onboarding page', () => {
@@ -90,7 +89,9 @@ describe('Onboarding page', () => {
 			expect(grid).toBeInTheDocument();
 		});
 
-		const checkboxes = container.querySelectorAll('.hc-profile-checkbox-grid input[type="checkbox"]');
+		const checkboxes = container.querySelectorAll(
+			'.hc-profile-checkbox-grid input[type="checkbox"]'
+		);
 		expect(checkboxes.length).toBe(12);
 
 		// Toggle first checkbox
@@ -184,9 +185,7 @@ describe('Onboarding page', () => {
 		expect(container.querySelector('#age-error')?.textContent).toContain(
 			'Вік має бути від 1 до 120'
 		);
-		expect(container.querySelector('#age-error')?.textContent).not.toContain(
-			'Age must be between'
-		);
+		expect(container.querySelector('#age-error')?.textContent).not.toContain('Age must be between');
 
 		// Unrelated assertion — Continue button should remain disabled-agnostic and localized
 		expect(getByRole('button', { name: /продовжити/i })).toBeInTheDocument();

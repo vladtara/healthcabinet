@@ -29,7 +29,9 @@ async def test_extract_from_document_validates_structured_output():
     fake_client = SimpleNamespace(
         messages=SimpleNamespace(
             create=AsyncMock(
-                return_value=SimpleNamespace(content=[SimpleNamespace(text=json.dumps(response_payload))])
+                return_value=SimpleNamespace(
+                    content=[SimpleNamespace(text=json.dumps(response_payload))]
+                )
             )
         )
     )
@@ -102,7 +104,11 @@ async def test_extract_from_document_rejects_trailing_non_json_content():
         messages=SimpleNamespace(
             create=AsyncMock(
                 return_value=SimpleNamespace(
-                    content=[SimpleNamespace(text='{"measured_at": null, "source_language": null, "raw_lab_name": null, "values": []}\nextra')]
+                    content=[
+                        SimpleNamespace(
+                            text='{"measured_at": null, "source_language": null, "raw_lab_name": null, "values": []}\nextra'
+                        )
+                    ]
                 )
             )
         )

@@ -27,13 +27,7 @@
 
 {#if href}
 	{#if variant === 'tab'}
-		<a
-			{href}
-			class={classes}
-			role="tab"
-			aria-selected={active}
-			{...rest as HTMLAnchorAttributes}
-		>
+		<a {href} class={classes} role="tab" aria-selected={active} {...rest as HTMLAnchorAttributes}>
 			{@render children?.()}
 		</a>
 	{:else}
@@ -41,19 +35,12 @@
 			{@render children?.()}
 		</a>
 	{/if}
+{:else if variant === 'tab'}
+	<button class={classes} role="tab" aria-selected={active} {...rest as HTMLButtonAttributes}>
+		{@render children?.()}
+	</button>
 {:else}
-	{#if variant === 'tab'}
-		<button
-			class={classes}
-			role="tab"
-			aria-selected={active}
-			{...rest as HTMLButtonAttributes}
-		>
-			{@render children?.()}
-		</button>
-	{:else}
-		<button class={classes} {...rest as HTMLButtonAttributes}>
-			{@render children?.()}
-		</button>
-	{/if}
+	<button class={classes} {...rest as HTMLButtonAttributes}>
+		{@render children?.()}
+	</button>
 {/if}

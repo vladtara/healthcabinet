@@ -99,9 +99,7 @@ async def finalize_document(
     fallback.error_stage = "finalize_document"
     fallback.error_message = None
 
-    document_kind = _resolve_document_kind(
-        state, fallback, prior_error_stage=prior_error_stage
-    )
+    document_kind = _resolve_document_kind(state, fallback, prior_error_stage=prior_error_stage)
     needs_date_confirmation = _resolve_needs_date_confirmation(state)
     partial_text = state["partial_measured_at_text"] if needs_date_confirmation else None
     terminal_status, terminal_event = _resolve_terminal_outcome(

@@ -54,6 +54,7 @@ class DashboardInterpretationResponse(BaseModel):
     document. source_document_ids lists the contributing per-document rows so
     callers can show provenance without the frontend needing a second fetch.
     """
+
     document_id: uuid.UUID | None = None
     document_kind: DashboardKind
     source_document_ids: list[uuid.UUID]

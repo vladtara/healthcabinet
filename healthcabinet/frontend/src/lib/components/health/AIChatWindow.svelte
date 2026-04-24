@@ -35,7 +35,7 @@
 	// Derive the identity + gating signals up front so the template stays
 	// simple and reactive updates stay predictable.
 	const identity = $derived(
-		props.mode === 'document' ? props.documentId ?? '' : `dashboard:${props.documentKind}`
+		props.mode === 'document' ? (props.documentId ?? '') : `dashboard:${props.documentKind}`
 	);
 
 	const canSubmit = $derived.by(() => {
@@ -47,9 +47,7 @@
 		return props.hasContext === true;
 	});
 
-	const showNoContextHint = $derived(
-		props.mode === 'dashboard' && props.hasContext === false
-	);
+	const showNoContextHint = $derived(props.mode === 'dashboard' && props.hasContext === false);
 
 	let minimized = $state(false);
 	let maximized = $state(false);
@@ -276,9 +274,7 @@
 			</div>
 			{#each messages as msg}
 				<div
-					class="hc-ai-chat-msg {msg.role === 'user'
-						? 'hc-ai-chat-msg-user'
-						: 'hc-ai-chat-msg-ai'}"
+					class="hc-ai-chat-msg {msg.role === 'user' ? 'hc-ai-chat-msg-user' : 'hc-ai-chat-msg-ai'}"
 				>
 					<div class="hc-ai-chat-msg-header">
 						<span class="hc-ai-chat-msg-avatar">{msg.role === 'user' ? '👤' : '🩺'}</span>
@@ -287,6 +283,7 @@
 					</div>
 					<div class="hc-ai-chat-msg-text">
 						{#if msg.role === 'ai'}
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							{@html marked(msg.text)}
 						{:else}
 							{msg.text}
@@ -301,14 +298,17 @@
 
 		<div class="hc-ai-chat-inputbar">
 			<div class="hc-ai-chat-toolbar">
-				<button type="button" title={copy.toolbarBold} onclick={() => execFormat('bold')}><b>B</b></button>
-				<button type="button" title={copy.toolbarItalic} onclick={() => execFormat('italic')}><i>I</i></button>
+				<button type="button" title={copy.toolbarBold} onclick={() => execFormat('bold')}
+					><b>B</b></button
+				>
+				<button type="button" title={copy.toolbarItalic} onclick={() => execFormat('italic')}
+					><i>I</i></button
+				>
 				<button type="button" title={copy.toolbarUnderline} onclick={() => execFormat('underline')}
 					><u>U</u></button
 				>
 			</div>
 			<div class="hc-ai-chat-input">
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					class="hc-ai-chat-editor"
 					contenteditable="true"
@@ -349,10 +349,7 @@
 		</div>
 
 		{#if errorMessage}
-			<p
-				role="alert"
-				style="font-size: 11px; color: var(--color-status-action); padding: 3px 8px;"
-			>
+			<p role="alert" style="font-size: 11px; color: var(--color-status-action); padding: 3px 8px;">
 				{errorMessage}
 			</p>
 		{/if}

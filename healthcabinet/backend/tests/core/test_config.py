@@ -18,9 +18,7 @@ def _base_settings() -> dict[str, object]:
 
 
 def test_settings_reject_partial_bootstrap_admin_config() -> None:
-    with pytest.raises(
-        ValidationError, match="BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD"
-    ):
+    with pytest.raises(ValidationError, match="BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD"):
         Settings(**(_base_settings() | {"BOOTSTRAP_ADMIN_EMAIL": "admin@example.com"}))
 
 

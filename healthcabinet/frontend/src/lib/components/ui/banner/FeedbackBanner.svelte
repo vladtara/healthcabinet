@@ -31,11 +31,9 @@
 		<span class="hc-banner-icon" aria-hidden="true">{icons[type]}</span>
 		<span class="hc-banner-message">{message}</span>
 		{#if dismissible}
-			<button
-				class="hc-banner-dismiss"
-				onclick={handleDismiss}
-				aria-label="Dismiss banner"
-			>×</button>
+			<button class="hc-banner-dismiss" onclick={handleDismiss} aria-label="Dismiss banner"
+				>×</button
+			>
 		{/if}
 	</div>
 {/if}

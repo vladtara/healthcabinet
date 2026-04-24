@@ -19,7 +19,7 @@ const testNamesUk: Record<string, string> = {
 	'Complete Blood Count (CBC)': 'Загальний аналіз крові (CBC)',
 	'Comprehensive Metabolic Panel': 'Комплексна метаболічна панель',
 	'Lipid Panel': 'Ліпідна панель',
-	'HbA1c': 'HbA1c',
+	HbA1c: 'HbA1c',
 	'Vitamin D (25-OH)': 'Вітамін D (25-OH)',
 	'Iron & Ferritin': 'Залізо і феритин',
 	'PSA (Prostate-Specific Antigen)': 'ПСА (простат-специфічний антиген)',
@@ -33,7 +33,7 @@ const testNamesUk: Record<string, string> = {
 
 const frequenciesUk: Record<string, string> = {
 	// _GENERAL_PANELS
-	'Annually': 'Щорічно',
+	Annually: 'Щорічно',
 	'Every 1–2 years': 'Кожні 1–2 роки',
 	'Every 3 years': 'Кожні 3 роки',
 	'Discuss with GP': 'Обговорити з лікарем',

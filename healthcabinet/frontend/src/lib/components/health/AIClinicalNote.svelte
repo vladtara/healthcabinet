@@ -50,7 +50,8 @@
 		const hasContext = props.hasContext;
 		return {
 			queryKey: ['ai_dashboard_interpretation', documentKind, localeStore.locale],
-			queryFn: (): Promise<InterpretationData> => getDashboardInterpretation(documentKind, localeStore.locale),
+			queryFn: (): Promise<InterpretationData> =>
+				getDashboardInterpretation(documentKind, localeStore.locale),
 			// When the parent has already determined the filter is empty, skip
 			// the network round-trip entirely — it would only 409 and produce
 			// log noise on every filter-empty mount.
@@ -86,7 +87,7 @@
 
 	const documentReasoning = $derived(
 		props.mode === 'document'
-			? (interpretationQuery.data as AiInterpretationResponse | undefined)?.reasoning ?? null
+			? ((interpretationQuery.data as AiInterpretationResponse | undefined)?.reasoning ?? null)
 			: null
 	);
 
@@ -124,8 +125,8 @@
 		aria-label={copy.regenerateAria}
 		title={copy.regenerateAria}
 		disabled={interpretationQuery.isFetching}
-		onclick={() => interpretationQuery.refetch()}
-	><span aria-hidden="true">↺</span></button>
+		onclick={() => interpretationQuery.refetch()}><span aria-hidden="true">↺</span></button
+	>
 {/snippet}
 
 {#if props.mode === 'document' && props.documentId == null}
@@ -139,10 +140,10 @@
 {:else if interpretationQuery.isPending || (interpretationQuery.isFetching && !interpretationQuery.data)}
 	<div class="hc-ai-note" aria-busy="true" aria-label={copy.loadingAria}>
 		<div class="animate-pulse">
-			<div class="mb-2 h-4 w-2/5 rounded bg-muted"></div>
-			<div class="mb-1 h-3 w-full rounded bg-muted"></div>
-			<div class="mb-1 h-3 w-4/5 rounded bg-muted"></div>
-			<div class="h-3 w-3/5 rounded bg-muted"></div>
+			<div class="bg-muted mb-2 h-4 w-2/5 rounded"></div>
+			<div class="bg-muted mb-1 h-3 w-full rounded"></div>
+			<div class="bg-muted mb-1 h-3 w-4/5 rounded"></div>
+			<div class="bg-muted h-3 w-3/5 rounded"></div>
 		</div>
 	</div>
 {:else if interpretationQuery.isError && isSoftEmpty(interpretationQuery.error)}
@@ -159,7 +160,7 @@
 			<p class="hc-ai-note-header">{copy.header}</p>
 			{@render regenButton()}
 		</div>
-		<p class="text-xs text-muted-foreground">{copy.errorUnable}</p>
+		<p class="text-muted-foreground text-xs">{copy.errorUnable}</p>
 	</div>
 {:else if interpretationQuery.data}
 	{@const data = interpretationQuery.data as
@@ -170,6 +171,7 @@
 			<p class="hc-ai-note-header">{copy.header}</p>
 			{@render regenButton()}
 		</div>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		<div class="hc-ai-note-body">{@html marked(data.interpretation)}</div>
 
 		{#if documentReasoning}

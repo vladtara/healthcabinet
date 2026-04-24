@@ -51,12 +51,7 @@
 		onFilesSelected?: (files: File[]) => void;
 	}
 
-	let {
-		onSuccess,
-		retryDocumentId = null,
-		multiple = false,
-		onFilesSelected
-	}: Props = $props();
+	let { onSuccess, retryDocumentId = null, multiple = false, onFilesSelected }: Props = $props();
 
 	function isAcceptedType(f: File): boolean {
 		return ACCEPTED_TYPES.some((t) => f.type.startsWith(t));
@@ -216,7 +211,9 @@
 <!-- Interactive elements outside role="button" to avoid nested-interactive axe violation. -->
 {#if !isUploading && !isSuccess && !isError}
 	<div class="hc-upload-zone-below">
-		<button type="button" class="hc-upload-zone-browse" onclick={handleBrowseClick}>{copy.zoneBrowse}</button>
+		<button type="button" class="hc-upload-zone-browse" onclick={handleBrowseClick}
+			>{copy.zoneBrowse}</button
+		>
 		<div class="hc-upload-zone-formats">
 			<span class="hc-upload-zone-badge">📄 PDF</span>
 			<span class="hc-upload-zone-badge">🖼️ JPG</span>
@@ -239,11 +236,7 @@
 />
 
 {#if isError && file}
-	<button
-		type="button"
-		class="hc-upload-zone-retry"
-		onclick={retry}
-	>
+	<button type="button" class="hc-upload-zone-retry" onclick={retry}>
 		{copy.zoneRetry}
 	</button>
 {/if}

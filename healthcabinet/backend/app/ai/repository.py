@@ -142,7 +142,9 @@ async def list_user_ai_context(
 
     # Sort: active document first, then by updated_at DESC
     def _sort_key(row: AiMemory) -> tuple[int, object]:
-        is_active = 0 if (active_document_id is not None and row.document_id == active_document_id) else 1
+        is_active = (
+            0 if (active_document_id is not None and row.document_id == active_document_id) else 1
+        )
         return (is_active, -(row.updated_at.timestamp() if row.updated_at else 0))
 
     rows = sorted(rows, key=_sort_key)
@@ -161,11 +163,11 @@ async def list_user_ai_context(
         reasoning: dict[str, object] | None = None
         if row.context_json_encrypted is not None:
             try:
-                reasoning = json.loads(
-                    decrypt_bytes(row.context_json_encrypted).decode("utf-8")
-                )
+                reasoning = json.loads(decrypt_bytes(row.context_json_encrypted).decode("utf-8"))
             except Exception:
-                logger.warning("ai.context_reasoning_decrypt_failed", document_id=str(row.document_id))
+                logger.warning(
+                    "ai.context_reasoning_decrypt_failed", document_id=str(row.document_id)
+                )
 
         entry: dict[str, object] = {
             "document_id": str(row.document_id),
@@ -237,9 +239,7 @@ async def get_interpretation_and_metadata(
     reasoning: dict[str, object] | None = None
     if memory.context_json_encrypted is not None:
         try:
-            reasoning = json.loads(
-                decrypt_bytes(memory.context_json_encrypted).decode("utf-8")
-            )
+            reasoning = json.loads(decrypt_bytes(memory.context_json_encrypted).decode("utf-8"))
         except Exception:
             logger.warning("ai.reasoning_decrypt_failed", document_id=str(document_id))
             reasoning = None

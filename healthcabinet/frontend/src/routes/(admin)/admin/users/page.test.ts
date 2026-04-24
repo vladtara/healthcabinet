@@ -148,9 +148,7 @@ describe('Admin users management page', () => {
 
 		await fireEvent.click(getByText('alice@example.com'));
 
-		expect(mockGoto).toHaveBeenCalledWith(
-			'/admin/users/00000000-0000-0000-0000-000000000001'
-		);
+		expect(mockGoto).toHaveBeenCalledWith('/admin/users/00000000-0000-0000-0000-000000000001');
 	});
 
 	test('refresh button invalidates both users and flags queries', async () => {
@@ -216,7 +214,10 @@ describe('Admin users management page', () => {
 	test('mark reviewed calls API and invalidates flags and queue queries', async () => {
 		mockGetAdminUsers.mockResolvedValue(mockUsersData);
 		mockGetFlaggedReports.mockResolvedValue(mockFlagsData);
-		mockMarkFlagReviewed.mockResolvedValue({ health_value_id: 'hv-1', reviewed_at: new Date().toISOString() });
+		mockMarkFlagReviewed.mockResolvedValue({
+			health_value_id: 'hv-1',
+			reviewed_at: new Date().toISOString()
+		});
 
 		const { queryClient, getByText, queryByRole } = renderPage();
 		const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -228,9 +229,7 @@ describe('Admin users management page', () => {
 		await fireEvent.click(getByText('Mark Reviewed'));
 
 		await waitFor(() => {
-			expect(mockMarkFlagReviewed).toHaveBeenCalledWith(
-				'00000000-0000-0000-0000-000000000100'
-			);
+			expect(mockMarkFlagReviewed).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000100');
 		});
 		expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'flags'] });
 		expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'queue'] });

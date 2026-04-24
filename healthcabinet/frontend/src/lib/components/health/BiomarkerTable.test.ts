@@ -1,5 +1,5 @@
 import axe from 'axe-core';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { renderComponent } from '$lib/test-utils/render';
 import BiomarkerTable from './BiomarkerTable.svelte';
 import type { HealthValue } from '$lib/api/health-values';
@@ -7,21 +7,51 @@ import { tick } from 'svelte';
 
 function makeValue(overrides: Partial<HealthValue> = {}): HealthValue {
 	return {
-		id: 'uuid-1', user_id: 'user-uuid', document_id: 'doc-uuid',
-		biomarker_name: 'Glucose', canonical_biomarker_name: 'glucose',
-		value: 91.0, unit: 'mg/dL',
-		reference_range_low: 70.0, reference_range_high: 99.0,
-		measured_at: null, confidence: 0.95,
-		needs_review: false, is_flagged: false, flagged_at: null,
-		created_at: '2026-01-01T00:00:00Z', status: 'optimal',
+		id: 'uuid-1',
+		user_id: 'user-uuid',
+		document_id: 'doc-uuid',
+		biomarker_name: 'Glucose',
+		canonical_biomarker_name: 'glucose',
+		value: 91.0,
+		unit: 'mg/dL',
+		reference_range_low: 70.0,
+		reference_range_high: 99.0,
+		measured_at: null,
+		confidence: 0.95,
+		needs_review: false,
+		is_flagged: false,
+		flagged_at: null,
+		created_at: '2026-01-01T00:00:00Z',
+		status: 'optimal',
 		...overrides
 	};
 }
 
 const mockValues: HealthValue[] = [
-	makeValue({ id: 'uuid-1', biomarker_name: 'Glucose', canonical_biomarker_name: 'glucose', value: 91.0, status: 'optimal' }),
-	makeValue({ id: 'uuid-2', biomarker_name: 'Cholesterol', canonical_biomarker_name: 'cholesterol', value: 65.0, status: 'borderline' }),
-	makeValue({ id: 'uuid-3', biomarker_name: 'TSH', canonical_biomarker_name: 'tsh', value: 5.8, unit: 'mIU/L', reference_range_low: 0.4, reference_range_high: 4.0, status: 'concerning' })
+	makeValue({
+		id: 'uuid-1',
+		biomarker_name: 'Glucose',
+		canonical_biomarker_name: 'glucose',
+		value: 91.0,
+		status: 'optimal'
+	}),
+	makeValue({
+		id: 'uuid-2',
+		biomarker_name: 'Cholesterol',
+		canonical_biomarker_name: 'cholesterol',
+		value: 65.0,
+		status: 'borderline'
+	}),
+	makeValue({
+		id: 'uuid-3',
+		biomarker_name: 'TSH',
+		canonical_biomarker_name: 'tsh',
+		value: 5.8,
+		unit: 'mIU/L',
+		reference_range_low: 0.4,
+		reference_range_high: 4.0,
+		status: 'concerning'
+	})
 ];
 
 const mockTimeline: Record<string, HealthValue[]> = {
@@ -31,9 +61,27 @@ const mockTimeline: Record<string, HealthValue[]> = {
 	],
 	cholesterol: [makeValue({ id: 'uuid-2', canonical_biomarker_name: 'cholesterol', value: 65.0 })],
 	tsh: [
-		makeValue({ id: 'uuid-3', canonical_biomarker_name: 'tsh', value: 3.9, measured_at: '2026-01-01T00:00:00Z', status: 'optimal' }),
-		makeValue({ id: 'uuid-4', canonical_biomarker_name: 'tsh', value: 4.6, measured_at: '2026-03-01T00:00:00Z', status: 'borderline' }),
-		makeValue({ id: 'uuid-5', canonical_biomarker_name: 'tsh', value: 5.8, measured_at: '2026-06-01T00:00:00Z', status: 'concerning' })
+		makeValue({
+			id: 'uuid-3',
+			canonical_biomarker_name: 'tsh',
+			value: 3.9,
+			measured_at: '2026-01-01T00:00:00Z',
+			status: 'optimal'
+		}),
+		makeValue({
+			id: 'uuid-4',
+			canonical_biomarker_name: 'tsh',
+			value: 4.6,
+			measured_at: '2026-03-01T00:00:00Z',
+			status: 'borderline'
+		}),
+		makeValue({
+			id: 'uuid-5',
+			canonical_biomarker_name: 'tsh',
+			value: 5.8,
+			measured_at: '2026-06-01T00:00:00Z',
+			status: 'concerning'
+		})
 	]
 };
 
@@ -76,7 +124,7 @@ describe('BiomarkerTable', () => {
 	test('shows trend arrows based on timeline', () => {
 		const { container } = renderTable();
 		const trendCells = container.querySelectorAll('.hc-v2-trend-cell');
-		const trendTexts = Array.from(trendCells).map(c => c.textContent?.trim());
+		const trendTexts = Array.from(trendCells).map((c) => c.textContent?.trim());
 		// TSH: 3.9 → 5.8 = ~49% increase = ↑↑
 		expect(trendTexts).toContain('↑↑');
 		// Glucose: 88 → 91 = ~3.4% = →

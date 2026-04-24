@@ -26,14 +26,14 @@
 		queryKey: ['admin', 'users', debouncedQuery],
 		queryFn: () => getAdminUsers(debouncedQuery || undefined),
 		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
+		refetchOnReconnect: false
 	}));
 
 	const flagsQuery = createQuery(() => ({
 		queryKey: ['admin', 'flags'],
 		queryFn: getFlaggedReports,
 		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
+		refetchOnReconnect: false
 	}));
 
 	function handleRefresh() {
@@ -68,7 +68,7 @@
 		return new Date(dateStr).toLocaleDateString('en-GB', {
 			year: 'numeric',
 			month: 'short',
-			day: 'numeric',
+			day: 'numeric'
 		});
 	}
 
@@ -77,7 +77,7 @@
 		{ key: 'user_id', label: 'User ID', sortable: true },
 		{ key: 'registration_date', label: 'Registered', sortable: true },
 		{ key: 'upload_count', label: 'Uploads', sortable: true, align: 'center' },
-		{ key: 'account_status', label: 'Status', sortable: true },
+		{ key: 'account_status', label: 'Status', sortable: true }
 	];
 
 	let rows = $derived(
@@ -86,7 +86,7 @@
 			user_id: user.user_id,
 			registration_date: user.registration_date,
 			upload_count: user.upload_count,
-			account_status: user.account_status,
+			account_status: user.account_status
 		}))
 	);
 
@@ -140,18 +140,20 @@
 				<p class="hc-state-title">Unable to load user list</p>
 				<p>Try refreshing the page or contact support if the issue persists.</p>
 			</div>
-			<button type="button" class="btn-standard" onclick={handleRefresh}>
-				Try again
-			</button>
+			<button type="button" class="btn-standard" onclick={handleRefresh}> Try again </button>
 		</div>
 	{:else if usersQuery.data}
 		{@const data = usersQuery.data}
 		{#if data.items.length === 0}
 			<div class="hc-admin-users-empty-panel">
 				<div class="hc-state hc-state-empty">
-					<p class="hc-state-title">{debouncedQuery ? 'No users match your search' : 'No users found'}</p>
+					<p class="hc-state-title">
+						{debouncedQuery ? 'No users match your search' : 'No users found'}
+					</p>
 					<p>
-						{debouncedQuery ? 'Try a different search term.' : 'Users will appear here after registration.'}
+						{debouncedQuery
+							? 'Try a different search term.'
+							: 'Users will appear here after registration.'}
 					</p>
 				</div>
 			</div>

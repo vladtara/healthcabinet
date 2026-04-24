@@ -15,5 +15,7 @@
 <div class={classes} role="alert" {...rest}>
 	<p class="hc-state-title"><strong><span class="hc-state-icon">{icon}</span> {title}</strong></p>
 	{#if description}<p class="hc-state-description">{description}</p>{/if}
-	{#if action}<button type="button" class="hc-button" onclick={action.onclick}>{action.label}</button>{/if}
+	{#if action}<button type="button" class="hc-button" onclick={action.onclick}
+			>{action.label}</button
+		>{/if}
 </div>

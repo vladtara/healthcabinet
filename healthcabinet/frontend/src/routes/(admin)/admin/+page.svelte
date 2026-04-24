@@ -27,12 +27,7 @@
 <div class="hc-admin-overview-page">
 	<header class="hc-admin-overview-header">
 		<h1 class="hc-admin-overview-title">Platform Metrics</h1>
-		<button
-			type="button"
-			onclick={handleRefresh}
-			class="btn-standard"
-			aria-label="Refresh metrics"
-		>
+		<button type="button" onclick={handleRefresh} class="btn-standard" aria-label="Refresh metrics">
 			Refresh
 		</button>
 	</header>
@@ -47,15 +42,11 @@
 		<div class="hc-state hc-state-error">
 			<div role="alert">
 				<p class="hc-state-title">Unable to load platform metrics.</p>
-				<p class="hc-state-description">Try refreshing the page or contact support if the issue persists.</p>
+				<p class="hc-state-description">
+					Try refreshing the page or contact support if the issue persists.
+				</p>
 			</div>
-			<button
-				type="button"
-				onclick={handleRefresh}
-				class="btn-standard"
-			>
-				Try again
-			</button>
+			<button type="button" onclick={handleRefresh} class="btn-standard"> Try again </button>
 		</div>
 	{:else if metricsQuery.data}
 		{@const metrics = metricsQuery.data}

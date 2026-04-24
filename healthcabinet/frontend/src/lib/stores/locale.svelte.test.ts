@@ -147,11 +147,9 @@ describe('localeStore', () => {
 
 	test('storage access failures do not break rendering', () => {
 		// Simulate a SecurityError from blocked-storage scenarios.
-		const getItemSpy = vi
-			.spyOn(Storage.prototype, 'getItem')
-			.mockImplementation(() => {
-				throw new Error('SecurityError');
-			});
+		const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+			throw new Error('SecurityError');
+		});
 		try {
 			expect(localeStore.locale).toBe('en');
 		} finally {

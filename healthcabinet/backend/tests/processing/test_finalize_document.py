@@ -103,7 +103,9 @@ async def test_finalize_classifies_analysis_with_full_date():
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state, fallback)
@@ -144,7 +146,9 @@ async def test_finalize_classifies_analysis_with_yearless_date_as_partial():
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state, fallback)
@@ -159,7 +163,9 @@ async def test_finalize_classifies_analysis_with_yearless_date_as_partial():
 @pytest.mark.asyncio
 async def test_finalize_classifies_document_when_no_values_but_processing_succeeded():
     """AC 2 — successful processing with no usable lab values => `document` + `completed`."""
-    state, fallback = _make_state(normalized_values=[], measured_at=None, partial_measured_at_text=None)
+    state, fallback = _make_state(
+        normalized_values=[], measured_at=None, partial_measured_at_text=None
+    )
     fallback.error_stage = None
 
     intelligence_calls: list[dict] = []
@@ -180,7 +186,9 @@ async def test_finalize_classifies_document_when_no_values_but_processing_succee
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state, fallback)
@@ -221,7 +229,9 @@ async def test_finalize_classifies_unknown_when_processing_failed_and_no_prior_v
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state, fallback)
@@ -261,7 +271,9 @@ async def test_finalize_retries_with_prior_values_preserves_analysis_classificat
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state, fallback)
@@ -307,7 +319,9 @@ async def test_finalize_document_recomputes_classification_on_reprocess():
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         await finalize_document(state_a, fallback_a)
@@ -336,7 +350,9 @@ async def test_finalize_document_recomputes_classification_on_reprocess():
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state_b, fallback_b)
@@ -371,7 +387,9 @@ async def test_finalize_low_confidence_values_still_partial_even_with_full_date(
             "app.processing.nodes.finalize_document.document_repository.update_document_status_internal",
             side_effect=_record_status,
         ),
-        patch("app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()),
+        patch(
+            "app.processing.nodes.finalize_document.AsyncSession", return_value=_make_session_mock()
+        ),
         patch("app.processing.nodes.finalize_document.publish_event", new=AsyncMock()),
     ):
         result = await finalize_document(state, fallback)

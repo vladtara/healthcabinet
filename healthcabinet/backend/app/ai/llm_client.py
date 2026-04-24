@@ -138,9 +138,7 @@ def _raise_translated_provider_error(exc: anthropic.AnthropicError) -> None:
         raise ModelTemporaryUnavailableError(
             "The AI provider is temporarily unavailable. Please retry shortly."
         ) from exc
-    raise ModelPermanentError(
-        "The AI provider returned a non-retriable error."
-    ) from exc
+    raise ModelPermanentError("The AI provider returned a non-retriable error.") from exc
 
 
 async def call_model_text(prompt: str) -> str:

@@ -154,9 +154,7 @@ async def document_status_stream(
             while loop.time() < deadline:
                 remaining = deadline - loop.time()
                 timeout = min(_HEARTBEAT_INTERVAL_SECONDS, remaining)
-                message = await pubsub.get_message(
-                    ignore_subscribe_messages=True, timeout=timeout
-                )
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=timeout)
                 if message is None:
                     if loop.time() < deadline:
                         yield _heartbeat_frame()

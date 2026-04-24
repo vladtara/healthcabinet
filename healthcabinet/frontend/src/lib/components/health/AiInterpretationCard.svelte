@@ -23,6 +23,7 @@
 
 	// Reset disclosure state whenever the user navigates to a different document
 	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		documentId; // reactive dependency — re-runs on every documentId change
 		showReasoning = false;
 		reasoningAnnouncementVisible = false;
@@ -92,16 +93,16 @@
 	{#if interpretationQuery.data}
 		<section
 			aria-label={copy.cardAria}
-			class="border-l-4 border-l-[#3366FF] bg-card/50 rounded-md p-4"
+			class="bg-card/50 rounded-md border-l-4 border-l-[#3366FF] p-4"
 		>
-			<h3 class="text-base font-semibold mb-3 text-foreground">{copy.cardHeader}</h3>
-			<div class="text-[15px] leading-relaxed text-foreground mb-4">
+			<h3 class="text-foreground mb-3 text-base font-semibold">{copy.cardHeader}</h3>
+			<div class="text-foreground mb-4 text-[15px] leading-relaxed">
 				{interpretationQuery.data.interpretation}
 			</div>
 			{#if interpretationQuery.data.reasoning}
 				<button
 					type="button"
-					class="mt-3 text-[13px] text-[#3366FF] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3366FF]"
+					class="mt-3 text-[13px] text-[#3366FF] hover:underline focus-visible:ring-2 focus-visible:ring-[#3366FF] focus-visible:outline-none"
 					aria-expanded={showReasoning}
 					aria-controls="reasoning-panel"
 					onclick={toggleReasoning}
@@ -117,21 +118,21 @@
 							<table class="mb-3 w-full border-collapse text-[13px]">
 								<caption class="sr-only">{copy.reasoningTableCaption}</caption>
 								<thead>
-									<tr class="border-b border-border text-left text-muted-foreground">
-										<th class="pb-1 pr-3 font-medium">{copy.biomarkerHeader}</th>
-										<th class="pb-1 pr-3 font-medium">{copy.valueHeader}</th>
-										<th class="pb-1 pr-3 font-medium">{copy.referenceRangeHeader}</th>
+									<tr class="border-border text-muted-foreground border-b text-left">
+										<th class="pr-3 pb-1 font-medium">{copy.biomarkerHeader}</th>
+										<th class="pr-3 pb-1 font-medium">{copy.valueHeader}</th>
+										<th class="pr-3 pb-1 font-medium">{copy.referenceRangeHeader}</th>
 										<th class="pb-1 font-medium">{copy.statusHeader}</th>
 									</tr>
 								</thead>
 								<tbody>
 									{#each reasoning.values_referenced as value, index (valueKey(value, index))}
-										<tr class="border-b border-border/40">
-											<td class="py-1 pr-3 text-foreground">{value.name}</td>
-											<td class="py-1 pr-3 text-foreground">
+										<tr class="border-border/40 border-b">
+											<td class="text-foreground py-1 pr-3">{value.name}</td>
+											<td class="text-foreground py-1 pr-3">
 												{value.value}{value.unit ? ` ${value.unit}` : ''}
 											</td>
-											<td class="py-1 pr-3 text-muted-foreground">
+											<td class="text-muted-foreground py-1 pr-3">
 												{value.ref_low != null && value.ref_high != null
 													? `${value.ref_low}–${value.ref_high}`
 													: '—'}
@@ -146,7 +147,7 @@
 						{/if}
 
 						{#if reasoning.uncertainty_flags.length > 0}
-							<ul class="mb-3 space-y-0.5 text-[12px] text-muted-foreground">
+							<ul class="text-muted-foreground mb-3 space-y-0.5 text-[12px]">
 								{#each reasoning.uncertainty_flags as flag, index (flagKey(flag, index))}
 									<li class="flex items-start gap-1">
 										<span aria-hidden="true">⚠</span>
@@ -157,7 +158,7 @@
 						{/if}
 
 						{#if reasoning.prior_documents_referenced.length > 0}
-							<p class="text-[12px] text-muted-foreground">
+							<p class="text-muted-foreground text-[12px]">
 								{copy.priorDocumentsReferenced}
 								{reasoning.prior_documents_referenced.join(', ')}
 							</p>
@@ -165,7 +166,7 @@
 					{/if}
 				</div>
 			{/if}
-			<p class="text-[11px] text-muted-foreground">
+			<p class="text-muted-foreground text-[11px]">
 				{copy.disclaimer}
 			</p>
 		</section>
@@ -175,8 +176,8 @@
 	<div
 		aria-busy="true"
 		aria-label={copy.loadingAria}
-		class="animate-pulse rounded-lg h-32 bg-card border border-border"
+		class="bg-card border-border h-32 animate-pulse rounded-lg border"
 	></div>
 {:else if interpretationQuery.isError && !is404(interpretationQuery.error)}
-	<p class="text-[13px] text-muted-foreground">{copy.cardInterpretationUnavailable}</p>
+	<p class="text-muted-foreground text-[13px]">{copy.cardInterpretationUnavailable}</p>
 {/if}

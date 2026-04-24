@@ -22,7 +22,9 @@
 </script>
 
 <div
-	class="hc-recovery-card {status === 'partial' ? 'hc-recovery-card-partial' : 'hc-recovery-card-failed'}"
+	class="hc-recovery-card {status === 'partial'
+		? 'hc-recovery-card-partial'
+		: 'hc-recovery-card-failed'}"
 	role="region"
 	aria-label={status === 'partial' ? copy.recoveryAriaPartial : copy.recoveryAriaFailed}
 >
@@ -56,11 +58,7 @@
 	</div>
 
 	<div class="hc-recovery-actions">
-		<button
-			type="button"
-			class="hc-recovery-btn-primary"
-			onclick={() => onReupload(documentId)}
-		>
+		<button type="button" class="hc-recovery-btn-primary" onclick={() => onReupload(documentId)}>
 			{copy.recoveryReupload}
 		</button>
 

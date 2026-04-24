@@ -14,15 +14,12 @@ from app.ai.schemas import (
     DashboardChatRequest,
     DashboardInterpretationResponse,
 )
-from app.ai.service import AiServiceUnavailableError
 
 
 @pytest.mark.asyncio
 async def test_dashboard_interpretation_locale_uk_threads_output_language():
     """Router passes output_language='uk' to service when locale=uk query param is given."""
     import datetime
-
-    from fastapi import HTTPException
 
     fake_response = DashboardInterpretationResponse(
         document_id=None,
@@ -36,24 +33,22 @@ async def test_dashboard_interpretation_locale_uk_threads_output_language():
 
     mock_service = AsyncMock(return_value=fake_response)
 
-    with patch("app.ai.router.ai_service.generate_dashboard_interpretation", mock_service):
-        with patch(
-            "app.ai.router.check_ai_dashboard_rate_limit", AsyncMock(return_value=None)
-        ):
-            result = await get_dashboard_interpretation(
-                document_kind="all",
-                locale="uk",
-                current_user=SimpleNamespace(id=uuid.uuid4()),
-                db=AsyncMock(),
-            )
+    with (
+        patch("app.ai.router.ai_service.generate_dashboard_interpretation", mock_service),
+        patch("app.ai.router.check_ai_dashboard_rate_limit", AsyncMock(return_value=None)),
+    ):
+        result = await get_dashboard_interpretation(
+            document_kind="all",
+            locale="uk",
+            current_user=SimpleNamespace(id=uuid.uuid4()),
+            db=AsyncMock(),
+        )
 
     assert result.interpretation == "Агрегований огляд."
     # Verify the service was called with output_language='uk'
     mock_service.assert_awaited_once()
     _, kwargs = mock_service.call_args
-    assert kwargs.get("output_language") == "uk", (
-        f"Expected output_language='uk', got {kwargs}"
-    )
+    assert kwargs.get("output_language") == "uk", f"Expected output_language='uk', got {kwargs}"
 
 
 @pytest.mark.asyncio

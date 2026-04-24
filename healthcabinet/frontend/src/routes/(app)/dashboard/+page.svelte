@@ -14,10 +14,7 @@
 	import type { Document } from '$lib/types/api';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { statusBarStore } from '$lib/stores/status-bar.svelte';
-	import {
-		dashboardFilterStore,
-		type DashboardFilter
-	} from '$lib/stores/dashboard-filter.svelte';
+	import { dashboardFilterStore, type DashboardFilter } from '$lib/stores/dashboard-filter.svelte';
 	import { localeStore } from '$lib/stores/locale.svelte';
 	import { t } from '$lib/i18n/messages';
 	import { formatDate } from '$lib/i18n/format';
@@ -62,7 +59,9 @@
 	const values = $derived<HealthValue[]>(valuesQuery.data ?? []);
 	const documents = $derived<Document[]>(documentsQuery.data ?? []);
 	const recommendations = $derived(baselineQuery.data?.recommendations ?? []);
-	const loading = $derived(valuesQuery.isPending || documentsQuery.isPending || baselineQuery.isPending);
+	const loading = $derived(
+		valuesQuery.isPending || documentsQuery.isPending || baselineQuery.isPending
+	);
 	const error = $derived(
 		valuesQuery.isError || documentsQuery.isError || baselineQuery.isError
 			? copy.loadErrorBody
@@ -71,7 +70,8 @@
 
 	function matchesDashboardFilter(document: Document, activeFilter: DashboardFilter): boolean {
 		if (document.document_kind === 'unknown') return false;
-		if (activeFilter === 'all') return document.document_kind === 'analysis' || document.document_kind === 'document';
+		if (activeFilter === 'all')
+			return document.document_kind === 'analysis' || document.document_kind === 'document';
 		return document.document_kind === activeFilter;
 	}
 
@@ -220,9 +220,9 @@
 				<div class="hc-dash-section-body">
 					{#each [0, 1, 2] as i}
 						<div class="hc-dash-rec-item animate-pulse" aria-hidden="true" data-skeleton={i}>
-							<div class="mb-2 h-4 w-2/5 rounded bg-muted"></div>
-							<div class="mb-1 h-3 w-4/5 rounded bg-muted"></div>
-							<div class="h-3 w-1/3 rounded bg-muted"></div>
+							<div class="bg-muted mb-2 h-4 w-2/5 rounded"></div>
+							<div class="bg-muted mb-1 h-3 w-4/5 rounded"></div>
+							<div class="bg-muted h-3 w-1/3 rounded"></div>
 						</div>
 					{/each}
 				</div>
@@ -233,24 +233,20 @@
 		<div class="hc-dash-section">
 			<div class="hc-dash-section-body" style="text-align: center;">
 				<div role="alert">
-					<p class="mb-4 text-sm text-destructive">{error}</p>
+					<p class="text-destructive mb-4 text-sm">{error}</p>
 				</div>
 				<Button variant="standard" onclick={retry}>{copy.errorRetry}</Button>
 			</div>
 		</div>
-		{:else if hasAnyDocuments}
-			<div class="hc-action-bar">
-				<fieldset
-					class="hc-dash-filter"
-					aria-label={copy.filterAria}
-					data-testid="dashboard-filter"
-				>
-					<legend class="sr-only">{copy.filterLegend}</legend>
-					{#each FILTER_OPTIONS as opt}
-						<label>
-							<input
-								type="radio"
-								name="dashboard-filter"
+	{:else if hasAnyDocuments}
+		<div class="hc-action-bar">
+			<fieldset class="hc-dash-filter" aria-label={copy.filterAria} data-testid="dashboard-filter">
+				<legend class="sr-only">{copy.filterLegend}</legend>
+				{#each FILTER_OPTIONS as opt}
+					<label>
+						<input
+							type="radio"
+							name="dashboard-filter"
 							value={opt}
 							checked={filter === opt}
 							onchange={() => onFilterChange(opt)}
@@ -258,62 +254,54 @@
 						<span>
 							{#if opt === 'all'}{copy.filterAll}{:else if opt === 'analysis'}{copy.filterAnalyses}{:else}{copy.filterDocuments}{/if}
 						</span>
-						</label>
-					{/each}
-				</fieldset>
-				<button onclick={() => goto('/documents/upload')}>{copy.importDocument}</button>
-			</div>
+					</label>
+				{/each}
+			</fieldset>
+			<button onclick={() => goto('/documents/upload')}>{copy.importDocument}</button>
+		</div>
 
-			{#if hasFilteredDocuments}
-				<section aria-label={copy.biomarkersAria}>
-					<div class="hc-dash-section">
-						{#if filterHasValues}
-							<BiomarkerTable {values} {timelineByBiomarker} />
-						{:else}
-							<div class="hc-dash-section-body" data-testid="dashboard-biomarker-empty">
-								<p class="hc-ai-note-empty">{biomarkerEmptyCopy(filter)}</p>
-							</div>
-						{/if}
-					</div>
-				</section>
-
-				<!-- AI Clinical Note -->
-				<section aria-label={copy.interpretationAria} style="margin-top: 8px;">
-					<AIClinicalNote
-						mode="dashboard"
-						documentKind={filter}
-						hasContext={dashboardHasContext}
-					/>
-				</section>
-
-				<!-- AI Chat Window -->
-				<section aria-label={copy.chatAria} style="margin-top: 8px;">
-					<AIChatWindow
-						mode="dashboard"
-						documentKind={filter}
-						hasContext={dashboardHasContext}
-					/>
-				</section>
-			{:else}
-				<section aria-label={copy.filteredResultsAria}>
-					<div class="hc-dash-section">
-						<div class="hc-dash-section-body" data-testid="dashboard-filter-empty">
-							<p class="hc-ai-note-empty">{filterEmptyCopy(filter)}</p>
+		{#if hasFilteredDocuments}
+			<section aria-label={copy.biomarkersAria}>
+				<div class="hc-dash-section">
+					{#if filterHasValues}
+						<BiomarkerTable {values} {timelineByBiomarker} />
+					{:else}
+						<div class="hc-dash-section-body" data-testid="dashboard-biomarker-empty">
+							<p class="hc-ai-note-empty">{biomarkerEmptyCopy(filter)}</p>
 						</div>
-					</div>
-				</section>
+					{/if}
+				</div>
+			</section>
 
-				<section aria-label={copy.interpretationAria} style="margin-top: 8px;">
-					<AIClinicalNote mode="dashboard" documentKind={filter} hasContext={false} />
-				</section>
+			<!-- AI Clinical Note -->
+			<section aria-label={copy.interpretationAria} style="margin-top: 8px;">
+				<AIClinicalNote mode="dashboard" documentKind={filter} hasContext={dashboardHasContext} />
+			</section>
 
-				<section aria-label={copy.chatAria} style="margin-top: 8px;">
-					<AIChatWindow mode="dashboard" documentKind={filter} hasContext={false} />
-				</section>
-			{/if}
+			<!-- AI Chat Window -->
+			<section aria-label={copy.chatAria} style="margin-top: 8px;">
+				<AIChatWindow mode="dashboard" documentKind={filter} hasContext={dashboardHasContext} />
+			</section>
 		{:else}
-			<!-- First-time empty state: no documents at all -->
-			<section aria-label={copy.firstTimeAria}>
+			<section aria-label={copy.filteredResultsAria}>
+				<div class="hc-dash-section">
+					<div class="hc-dash-section-body" data-testid="dashboard-filter-empty">
+						<p class="hc-ai-note-empty">{filterEmptyCopy(filter)}</p>
+					</div>
+				</div>
+			</section>
+
+			<section aria-label={copy.interpretationAria} style="margin-top: 8px;">
+				<AIClinicalNote mode="dashboard" documentKind={filter} hasContext={false} />
+			</section>
+
+			<section aria-label={copy.chatAria} style="margin-top: 8px;">
+				<AIChatWindow mode="dashboard" documentKind={filter} hasContext={false} />
+			</section>
+		{/if}
+	{:else}
+		<!-- First-time empty state: no documents at all -->
+		<section aria-label={copy.firstTimeAria}>
 			<div class="hc-empty-center">
 				<div class="hc-empty-icon" aria-hidden="true">📋</div>
 				<div class="hc-empty-title">{copy.firstTimeTitle}</div>

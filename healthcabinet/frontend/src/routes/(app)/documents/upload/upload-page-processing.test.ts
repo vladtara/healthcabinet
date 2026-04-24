@@ -12,11 +12,7 @@ vi.mock('$lib/api/documents', () => ({
 	uploadDocument: vi.fn()
 }));
 
-import {
-	applyTerminalStatus,
-	createUploadQueue,
-	type UploadQueueEntry
-} from '$lib/upload-queue';
+import { applyTerminalStatus, createUploadQueue, type UploadQueueEntry } from '$lib/upload-queue';
 
 function makeDocument(id = 'mock-doc-id'): Document {
 	return {

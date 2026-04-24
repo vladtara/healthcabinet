@@ -86,11 +86,12 @@
 			if (profile.known_conditions?.length) selectedConditions = [...profile.known_conditions];
 			if (profile.medications?.length) medications = profile.medications.join(', ');
 			if (profile.family_history) {
-				const parts = profile.family_history.split(',').map((s: string) => s.trim()).filter(Boolean);
+				const parts = profile.family_history
+					.split(',')
+					.map((s: string) => s.trim())
+					.filter(Boolean);
 				for (const part of parts) {
-					const preset = PRESET_FAMILY_HISTORY.find(
-						(p) => p.toLowerCase() === part.toLowerCase()
-					);
+					const preset = PRESET_FAMILY_HISTORY.find((p) => p.toLowerCase() === part.toLowerCase());
 					if (preset && !selectedFamilyHistory.includes(preset)) {
 						selectedFamilyHistory = [...selectedFamilyHistory, preset];
 					}
@@ -98,7 +99,9 @@
 			}
 			if (profile.onboarding_step > 1) currentStep = Math.min(profile.onboarding_step, TOTAL_STEPS);
 		});
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	function toggleCondition(condition: string) {
@@ -237,7 +240,11 @@
 			{#each Array(TOTAL_STEPS) as _, i}
 				{@const stepNum = i + 1}
 				<div
-					class="hc-wizard-step-circle {stepNum < currentStep ? 'done' : stepNum === currentStep ? 'current' : ''}"
+					class="hc-wizard-step-circle {stepNum < currentStep
+						? 'done'
+						: stepNum === currentStep
+							? 'current'
+							: ''}"
 				>
 					{#if stepNum < currentStep}✓{:else}{stepNum}{/if}
 				</div>
@@ -254,7 +261,10 @@
 			aria-valuemax={TOTAL_STEPS}
 			aria-label={copy.progressAria}
 		>
-			{copy.stepIndicatorPrefix} {currentStep} {copy.stepIndicatorMid} {TOTAL_STEPS} — {stepLabel}
+			{copy.stepIndicatorPrefix}
+			{currentStep}
+			{copy.stepIndicatorMid}
+			{TOTAL_STEPS} — {stepLabel}
 		</div>
 
 		<div class="hc-wizard-body">
@@ -275,7 +285,9 @@
 							aria-describedby={errors.age ? 'age-error' : undefined}
 						/>
 						{#if errors.age}
-							<p id="age-error" class="hc-profile-field-error" role="alert">{errorMessage(errors.age)}</p>
+							<p id="age-error" class="hc-profile-field-error" role="alert">
+								{errorMessage(errors.age)}
+							</p>
 						{/if}
 					</div>
 
@@ -305,7 +317,9 @@
 							aria-describedby={errors.height_cm ? 'height-error' : undefined}
 						/>
 						{#if errors.height_cm}
-							<p id="height-error" class="hc-profile-field-error" role="alert">{errorMessage(errors.height_cm)}</p>
+							<p id="height-error" class="hc-profile-field-error" role="alert">
+								{errorMessage(errors.height_cm)}
+							</p>
 						{/if}
 					</div>
 
@@ -324,7 +338,9 @@
 							aria-describedby={errors.weight_kg ? 'weight-error' : undefined}
 						/>
 						{#if errors.weight_kg}
-							<p id="weight-error" class="hc-profile-field-error" role="alert">{errorMessage(errors.weight_kg)}</p>
+							<p id="weight-error" class="hc-profile-field-error" role="alert">
+								{errorMessage(errors.weight_kg)}
+							</p>
 						{/if}
 					</div>
 				</div>
@@ -356,7 +372,9 @@
 						onkeydown={handleOtherConditionKeydown}
 						aria-label={copy.conditionOtherAria}
 					/>
-					<button type="button" class="btn-standard" onclick={addOtherCondition}>{copy.conditionAdd}</button>
+					<button type="button" class="btn-standard" onclick={addOtherCondition}
+						>{copy.conditionAdd}</button
+					>
 				</div>
 
 				{#if selectedConditions.some((c) => !PRESET_CONDITIONS.includes(c))}
@@ -375,7 +393,9 @@
 					</div>
 				{/if}
 
-				<div class="hc-wizard-section-label" style="margin-top:18px">{copy.medicationsSectionLabel}</div>
+				<div class="hc-wizard-section-label" style="margin-top:18px">
+					{copy.medicationsSectionLabel}
+				</div>
 				<input
 					type="text"
 					class="hc-input"
@@ -404,7 +424,9 @@
 			{/if}
 
 			{#if submitError}
-				<p role="alert" class="hc-profile-field-error" style="margin-top:12px">{copy.submitError}</p>
+				<p role="alert" class="hc-profile-field-error" style="margin-top:12px">
+					{copy.submitError}
+				</p>
 			{/if}
 		</div>
 

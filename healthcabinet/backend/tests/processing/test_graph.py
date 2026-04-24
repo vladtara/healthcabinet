@@ -135,12 +135,20 @@ async def test_run_processing_graph_completed_path_with_confident_values():
             "app.processing.nodes.extract_values.extract_from_document",
             new=AsyncMock(return_value=extraction),
         ),
-        patch("app.processing.nodes.extract_values.normalize_extraction_result", return_value=normalized),
+        patch(
+            "app.processing.nodes.extract_values.normalize_extraction_result",
+            return_value=normalized,
+        ),
         patch("app.ai.repository.invalidate_interpretation", new=AsyncMock()) as invalidate_mock,
-        patch("app.ai.service.generate_interpretation", new=AsyncMock(return_value="ok")) as generate_mock,
+        patch(
+            "app.ai.service.generate_interpretation", new=AsyncMock(return_value="ok")
+        ) as generate_mock,
         patch("app.processing.nodes.load_document.AsyncSession", return_value=load_session),
         patch("app.processing.nodes.persist_values.AsyncSession", return_value=persist_session),
-        patch("app.processing.nodes.generate_interpretation.AsyncSession", return_value=generate_session),
+        patch(
+            "app.processing.nodes.generate_interpretation.AsyncSession",
+            return_value=generate_session,
+        ),
         patch("app.processing.nodes.finalize_document.AsyncSession", return_value=finalize_session),
     ):
         final_state = await run_processing_graph(_make_ctx(redis=redis), doc_id)
@@ -216,20 +224,24 @@ async def test_run_processing_graph_partial_path_with_low_confidence_values():
             "app.processing.nodes.persist_values.health_data_repository.replace_document_health_values",
             new=AsyncMock(),
         ),
-        patch(
-            "app.processing.nodes.load_document.get_s3_client", return_value=MagicMock()
-        ),
+        patch("app.processing.nodes.load_document.get_s3_client", return_value=MagicMock()),
         patch("app.processing.nodes.load_document.get_object_bytes", return_value=b"%PDF-1.4"),
         patch(
             "app.processing.nodes.extract_values.extract_from_document",
             new=AsyncMock(return_value=ExtractionResult(values=[])),
         ),
-        patch("app.processing.nodes.extract_values.normalize_extraction_result", return_value=normalized),
+        patch(
+            "app.processing.nodes.extract_values.normalize_extraction_result",
+            return_value=normalized,
+        ),
         patch("app.ai.repository.invalidate_interpretation", new=AsyncMock()),
         patch("app.ai.service.generate_interpretation", new=AsyncMock(return_value="ok")),
         patch("app.processing.nodes.load_document.AsyncSession", return_value=load_session),
         patch("app.processing.nodes.persist_values.AsyncSession", return_value=persist_session),
-        patch("app.processing.nodes.generate_interpretation.AsyncSession", return_value=generate_session),
+        patch(
+            "app.processing.nodes.generate_interpretation.AsyncSession",
+            return_value=generate_session,
+        ),
         patch("app.processing.nodes.finalize_document.AsyncSession", return_value=finalize_session),
     ):
         final_state = await run_processing_graph(_make_ctx(redis=redis), doc_id)
@@ -502,7 +514,10 @@ async def test_run_processing_graph_missing_user_id_does_not_publish_generating_
             "app.processing.nodes.extract_values.extract_from_document",
             new=AsyncMock(return_value=ExtractionResult(values=[])),
         ),
-        patch("app.processing.nodes.extract_values.normalize_extraction_result", return_value=normalized),
+        patch(
+            "app.processing.nodes.extract_values.normalize_extraction_result",
+            return_value=normalized,
+        ),
         patch("app.processing.nodes.load_document.AsyncSession", return_value=load_session),
         patch("app.processing.nodes.persist_values.AsyncSession", return_value=persist_session),
         pytest.raises(ProcessingGraphExecutionError) as exc_info,
@@ -577,12 +592,18 @@ async def test_run_processing_graph_interpretation_failure_after_value_commit_ke
             "app.processing.nodes.extract_values.extract_from_document",
             new=AsyncMock(return_value=ExtractionResult(values=[])),
         ),
-        patch("app.processing.nodes.extract_values.normalize_extraction_result", return_value=normalized),
+        patch(
+            "app.processing.nodes.extract_values.normalize_extraction_result",
+            return_value=normalized,
+        ),
         patch("app.ai.repository.invalidate_interpretation", side_effect=_mock_invalidate),
         patch("app.ai.service.generate_interpretation", side_effect=_mock_generate),
         patch("app.processing.nodes.load_document.AsyncSession", return_value=load_session),
         patch("app.processing.nodes.persist_values.AsyncSession", return_value=persist_session),
-        patch("app.processing.nodes.generate_interpretation.AsyncSession", return_value=generate_session),
+        patch(
+            "app.processing.nodes.generate_interpretation.AsyncSession",
+            return_value=generate_session,
+        ),
         patch("app.processing.nodes.finalize_document.AsyncSession", return_value=finalize_session),
     ):
         final_state = await run_processing_graph(_make_ctx(redis=redis), doc_id)
@@ -646,12 +667,18 @@ async def test_run_processing_graph_raises_with_fallback_context_after_late_fail
             "app.processing.nodes.extract_values.extract_from_document",
             new=AsyncMock(return_value=ExtractionResult(values=[])),
         ),
-        patch("app.processing.nodes.extract_values.normalize_extraction_result", return_value=normalized),
+        patch(
+            "app.processing.nodes.extract_values.normalize_extraction_result",
+            return_value=normalized,
+        ),
         patch("app.ai.repository.invalidate_interpretation", new=AsyncMock()),
         patch("app.ai.service.generate_interpretation", new=AsyncMock(return_value="ok")),
         patch("app.processing.nodes.load_document.AsyncSession", return_value=load_session),
         patch("app.processing.nodes.persist_values.AsyncSession", return_value=persist_session),
-        patch("app.processing.nodes.generate_interpretation.AsyncSession", return_value=generate_session),
+        patch(
+            "app.processing.nodes.generate_interpretation.AsyncSession",
+            return_value=generate_session,
+        ),
         patch("app.processing.nodes.finalize_document.AsyncSession", return_value=finalize_session),
         pytest.raises(ProcessingGraphExecutionError) as exc_info,
     ):
@@ -723,7 +750,10 @@ async def test_run_processing_graph_swallows_terminal_publish_failures_after_sta
             "app.processing.nodes.extract_values.extract_from_document",
             new=AsyncMock(return_value=ExtractionResult(values=[])),
         ),
-        patch("app.processing.nodes.extract_values.normalize_extraction_result", return_value=normalized),
+        patch(
+            "app.processing.nodes.extract_values.normalize_extraction_result",
+            return_value=normalized,
+        ),
         patch("app.ai.repository.invalidate_interpretation", new=AsyncMock()),
         patch("app.ai.service.generate_interpretation", new=AsyncMock(return_value="ok")),
         patch(
@@ -732,7 +762,10 @@ async def test_run_processing_graph_swallows_terminal_publish_failures_after_sta
         ),
         patch("app.processing.nodes.load_document.AsyncSession", return_value=load_session),
         patch("app.processing.nodes.persist_values.AsyncSession", return_value=persist_session),
-        patch("app.processing.nodes.generate_interpretation.AsyncSession", return_value=generate_session),
+        patch(
+            "app.processing.nodes.generate_interpretation.AsyncSession",
+            return_value=generate_session,
+        ),
         patch("app.processing.nodes.finalize_document.AsyncSession", return_value=finalize_session),
     ):
         final_state = await run_processing_graph(_make_ctx(redis=redis), doc_id)

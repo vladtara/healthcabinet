@@ -31,8 +31,7 @@ export default defineConfig({
 			onwarn(warning, defaultHandler) {
 				const warningMessage = typeof warning.message === 'string' ? warning.message : '';
 				const isTanstackUnusedExternalImport =
-					warning.code === 'UNUSED_EXTERNAL_IMPORT' ||
-					isTanstackSvelteQueryWarning(warningMessage);
+					warning.code === 'UNUSED_EXTERNAL_IMPORT' || isTanstackSvelteQueryWarning(warningMessage);
 
 				if (isTanstackUnusedExternalImport) {
 					return;

@@ -211,9 +211,9 @@ test.describe('Dashboard', () => {
 
 		await page.goto('/dashboard');
 		// TanStack Query retries 3× before setting isError — allow up to 15s
-		await expect(
-			page.getByText('Unable to load your health data. Please try again.')
-		).toBeVisible({ timeout: 15_000 });
+		await expect(page.getByText('Unable to load your health data. Please try again.')).toBeVisible({
+			timeout: 15_000
+		});
 		await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
 	});
 
@@ -294,9 +294,7 @@ test.describe('Dashboard', () => {
 			return route.fulfill({
 				status: 200,
 				contentType: 'application/json',
-				body: JSON.stringify(
-					analysisDeleted || kind === 'document' ? [] : MOCK_HEALTH_VALUES
-				)
+				body: JSON.stringify(analysisDeleted || kind === 'document' ? [] : MOCK_HEALTH_VALUES)
 			});
 		});
 		await page.route('**/api/v1/ai/dashboard/interpretation*', (route) => {
@@ -340,19 +338,14 @@ test.describe('Dashboard', () => {
 		await expect(page.getByRole('cell', { name: 'Hemoglobin' })).toHaveCount(0);
 		await expect(page.getByText(activeInterpretation)).toHaveCount(0);
 
-		await page
-			.getByTestId('dashboard-filter')
-			.getByText('Analyses', { exact: true })
-			.click();
+		await page.getByTestId('dashboard-filter').getByText('Analyses', { exact: true }).click();
 
 		const filterEmpty = page.getByTestId('dashboard-filter-empty');
 		await expect(filterEmpty).toBeVisible();
 		await expect(filterEmpty).toContainText('No analyses yet');
 
 		// First-time empty CTA must not render (user does have uploads).
-		await expect(
-			page.getByRole('heading', { name: 'Upload your first document' })
-		).toHaveCount(0);
+		await expect(page.getByRole('heading', { name: 'Upload your first document' })).toHaveCount(0);
 	});
 
 	test('"Try again" button re-fetches data', async ({ page }) => {

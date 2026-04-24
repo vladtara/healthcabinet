@@ -112,11 +112,15 @@ class AuthStore {
 			} else {
 				// Queue cookie clear for when connectivity restores, but only if the user
 				// hasn't started a new session by then (isAuthenticated would be true again).
-				window.addEventListener('online', () => {
-					if (!this.isAuthenticated) {
-						apiLogout().catch(console.error);
-					}
-				}, { once: true });
+				window.addEventListener(
+					'online',
+					() => {
+						if (!this.isAuthenticated) {
+							apiLogout().catch(console.error);
+						}
+					},
+					{ once: true }
+				);
 			}
 		}
 	}
@@ -285,11 +289,15 @@ class AuthStore {
 				} else {
 					// Guard against calling apiLogout() against a new session: only clear
 					// the cookie if the user hasn't logged back in while offline.
-					window.addEventListener('online', () => {
-						if (!this.isAuthenticated) {
-							clearCookie();
-						}
-					}, { once: true });
+					window.addEventListener(
+						'online',
+						() => {
+							if (!this.isAuthenticated) {
+								clearCookie();
+							}
+						},
+						{ once: true }
+					);
 				}
 				goto('/login')?.catch(console.error);
 			}

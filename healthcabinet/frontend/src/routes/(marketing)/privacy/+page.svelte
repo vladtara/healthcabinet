@@ -8,12 +8,10 @@
 	// interpolation below; this regex is belt-and-suspenders for shape only,
 	// NOT a security barrier — do NOT rely on it if future code binds the
 	// version into {@html} or an href/src attribute.
-	const VERSION_PATTERN = /^[A-Za-z0-9._+\-]{1,64}$/;
+	const VERSION_PATTERN = /^[A-Za-z0-9._+-]{1,64}$/;
 
 	const versionRaw = $derived($page.url.searchParams.get('version'));
-	const version = $derived(
-		versionRaw && VERSION_PATTERN.test(versionRaw) ? versionRaw : 'current'
-	);
+	const version = $derived(versionRaw && VERSION_PATTERN.test(versionRaw) ? versionRaw : 'current');
 </script>
 
 <svelte:head>
@@ -32,8 +30,8 @@
 
 	<section class="hc-privacy-body" aria-label="Policy placeholder">
 		<p>
-			HealthCabinet records every privacy policy version you accept so you can always verify
-			what you agreed to. The full text for this version is being finalised.
+			HealthCabinet records every privacy policy version you accept so you can always verify what
+			you agreed to. The full text for this version is being finalised.
 		</p>
 		<p>
 			If you need a copy of the policy that applied on a specific date, contact

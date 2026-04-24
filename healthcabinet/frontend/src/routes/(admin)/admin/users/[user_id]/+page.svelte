@@ -19,7 +19,7 @@
 		queryFn: () => getAdminUserDetail(userId),
 		enabled: userId.length > 0,
 		refetchOnWindowFocus: false,
-		refetchOnReconnect: false,
+		refetchOnReconnect: false
 	}));
 
 	function handleRefresh() {
@@ -52,7 +52,7 @@
 			month: 'short',
 			day: 'numeric',
 			hour: '2-digit',
-			minute: '2-digit',
+			minute: '2-digit'
 		});
 	}
 </script>
@@ -77,9 +77,7 @@
 				<p class="hc-state-title">Unable to load user details</p>
 				<p>The user may not exist or you may not have permission.</p>
 			</div>
-			<button type="button" class="btn-standard" onclick={handleRefresh}>
-				Try again
-			</button>
+			<button type="button" class="btn-standard" onclick={handleRefresh}> Try again </button>
 		</div>
 	{:else if userQuery.data}
 		{@const user = userQuery.data}
@@ -142,11 +140,7 @@
 					Suspend Account
 				</button>
 			{:else}
-				<button
-					type="button"
-					class="btn-primary"
-					onclick={() => promptStatusChange('active')}
-				>
+				<button type="button" class="btn-primary" onclick={() => promptStatusChange('active')}>
 					Reactivate Account
 				</button>
 			{/if}
@@ -164,7 +158,10 @@
 	onConfirm={confirmStatusChange}
 >
 	{#if pendingStatus === 'suspended'}
-		<p>This will immediately prevent the user from logging in or accessing the platform. Existing sessions will be terminated on their next API call.</p>
+		<p>
+			This will immediately prevent the user from logging in or accessing the platform. Existing
+			sessions will be terminated on their next API call.
+		</p>
 	{:else}
 		<p>This will restore the user's access to the platform. They can log in normally.</p>
 	{/if}

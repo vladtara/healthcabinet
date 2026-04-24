@@ -73,9 +73,7 @@ def delete_objects_by_prefix(
         result = s3_client.delete_objects(Bucket=bucket, Delete=delete_payload)
         errors = result.get("Errors", [])
         if errors:
-            raise RuntimeError(
-                f"S3 delete_objects returned {len(errors)} error(s): {errors!r}"
-            )
+            raise RuntimeError(f"S3 delete_objects returned {len(errors)} error(s): {errors!r}")
         deleted += len(objects)
     return deleted
 

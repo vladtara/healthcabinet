@@ -51,9 +51,7 @@ class FlaggedReportRow(TypedDict):
     flagged_at: str
 
 
-async def list_audit_logs_by_user_documents(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[AuditLog]:
+async def list_audit_logs_by_user_documents(db: AsyncSession, user_id: uuid.UUID) -> list[AuditLog]:
     """Return audit log entries linked to a user's data export scope.
 
     New rows are keyed directly by audit_logs.user_id so correction history
@@ -162,9 +160,9 @@ async def get_error_queue_documents(db: AsyncSession) -> list[ErrorQueueDocument
             Document.created_at,
             Document.status,
             func.count(HealthValue.id).label("value_count"),
-            func.sum(
-                func.cast(HealthValue.confidence < 0.7, sa.Integer)
-            ).label("low_confidence_count"),
+            func.sum(func.cast(HealthValue.confidence < 0.7, sa.Integer)).label(
+                "low_confidence_count"
+            ),
             func.sum(
                 func.cast(
                     HealthValue.is_flagged.is_(True) & HealthValue.flag_reviewed_at.is_(None),
@@ -265,9 +263,7 @@ async def update_health_value_encrypted(
 ) -> None:
     """Update a health_value's encrypted value. Uses FOR UPDATE to prevent concurrent modification."""
     result = await db.execute(
-        select(HealthValue)
-        .where(HealthValue.id == health_value_id)
-        .with_for_update()
+        select(HealthValue).where(HealthValue.id == health_value_id).with_for_update()
     )
     row = result.scalar_one_or_none()
     if row is None:
@@ -282,9 +278,7 @@ async def update_health_value_encrypted(
 # ---------------------------------------------------------------------------
 
 
-async def list_admin_users(
-    db: AsyncSession, query: str | None = None
-) -> list[AdminUserRow]:
+async def list_admin_users(db: AsyncSession, query: str | None = None) -> list[AdminUserRow]:
     """List end-user accounts with upload count. Scoped to role='user' only.
 
     Search matches email or id::text when query is provided.
@@ -293,8 +287,7 @@ async def list_admin_users(
         select(
             Document.user_id,
             func.count(Document.id).label("upload_count"),
-        )
-        .group_by(Document.user_id)
+        ).group_by(Document.user_id)
     ).subquery()
 
     stmt = (
@@ -311,12 +304,7 @@ async def list_admin_users(
     )
 
     if query:
-        escaped_query = (
-            query.lower()
-            .replace("\\", "\\\\")
-            .replace("%", "\\%")
-            .replace("_", "\\_")
-        )
+        escaped_query = query.lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         q = f"%{escaped_query}%"
         stmt = stmt.where(
             func.lower(User.email).like(q, escape="\\")
@@ -336,26 +324,20 @@ async def list_admin_users(
     ]
 
 
-async def get_admin_user_detail(
-    db: AsyncSession, user_id: uuid.UUID
-) -> AdminUserDetailRow | None:
+async def get_admin_user_detail(db: AsyncSession, user_id: uuid.UUID) -> AdminUserDetailRow | None:
     """Return account metadata for a single end-user. No health data."""
     upload_count_subq = (
-        select(func.count(Document.id))
-        .where(Document.user_id == user_id)
+        select(func.count(Document.id)).where(Document.user_id == user_id)
     ).scalar_subquery()
 
-    stmt = (
-        select(
-            User.id,
-            User.email,
-            User.created_at,
-            User.last_login_at,
-            upload_count_subq.label("upload_count"),
-            User.account_status,
-        )
-        .where(User.id == user_id, User.role == "user")
-    )
+    stmt = select(
+        User.id,
+        User.email,
+        User.created_at,
+        User.last_login_at,
+        upload_count_subq.label("upload_count"),
+        User.account_status,
+    ).where(User.id == user_id, User.role == "user")
     result = await db.execute(stmt)
     row = result.one_or_none()
     if row is None:
@@ -378,9 +360,7 @@ async def set_user_account_status(
     Scoped to role='user' to prevent admin self-suspension.
     """
     result = await db.execute(
-        select(User)
-        .where(User.id == user_id, User.role == "user")
-        .with_for_update()
+        select(User).where(User.id == user_id, User.role == "user").with_for_update()
     )
     user = result.scalar_one_or_none()
     if user is None:
@@ -390,9 +370,7 @@ async def set_user_account_status(
     return True
 
 
-async def revoke_user_sessions(
-    db: AsyncSession, user_id: uuid.UUID, revoked_at: datetime
-) -> bool:
+async def revoke_user_sessions(db: AsyncSession, user_id: uuid.UUID, revoked_at: datetime) -> bool:
     """Stamp users.tokens_invalid_before, invalidating every JWT with iat < revoked_at.
 
     Scoped to role='user' for the same reason as account-status updates: admin self-
@@ -439,8 +417,7 @@ async def get_flagged_reports(db: AsyncSession) -> list[tuple[HealthValue, str |
     )
     result = await db.execute(stmt)
     return [
-        (hv, hv.flagged_at.isoformat() if hv.flagged_at else None)
-        for hv in result.scalars().all()
+        (hv, hv.flagged_at.isoformat() if hv.flagged_at else None) for hv in result.scalars().all()
     ]
 
 

@@ -21,6 +21,8 @@
 		{#if icon}<span class="hc-state-icon">{icon}</span>{/if}
 		{#if title}<p class="hc-state-title"><strong>{title}</strong></p>{/if}
 		{#if description}<p class="hc-state-description">{description}</p>{/if}
-		{#if action}<button type="button" class="hc-button" onclick={action.onclick}>{action.label}</button>{/if}
+		{#if action}<button type="button" class="hc-button" onclick={action.onclick}
+				>{action.label}</button
+			>{/if}
 	{/if}
 </div>

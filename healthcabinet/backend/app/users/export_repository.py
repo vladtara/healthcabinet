@@ -27,9 +27,7 @@ async def list_health_values_for_export(
     return await list_values_by_user(db, user_id=user_id)
 
 
-async def list_documents_for_export(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[Document]:
+async def list_documents_for_export(db: AsyncSession, user_id: uuid.UUID) -> list[Document]:
     """Return all documents for a user."""
     return await get_documents_by_user(db, user_id)
 
@@ -76,15 +74,11 @@ async def list_ai_interpretations_for_export(
     return await list_ai_memories_by_user(db, user_id)
 
 
-async def list_consent_logs_for_export(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[ConsentLog]:
+async def list_consent_logs_for_export(db: AsyncSession, user_id: uuid.UUID) -> list[ConsentLog]:
     """Return all consent log entries for a user."""
     return await list_consent_logs_by_user(db, user_id)
 
 
-async def list_admin_corrections_for_export(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[AuditLog]:
+async def list_admin_corrections_for_export(db: AsyncSession, user_id: uuid.UUID) -> list[AuditLog]:
     """Return all audit log entries linked to a user's documents/health values."""
     return await list_audit_logs_by_user_documents(db, user_id)

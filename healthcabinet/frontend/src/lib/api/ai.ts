@@ -40,9 +40,7 @@ export interface AiPatternsResponse {
 export async function getDocumentInterpretation(
 	documentId: string
 ): Promise<AiInterpretationResponse> {
-	return apiFetch<AiInterpretationResponse>(
-		`/api/v1/ai/documents/${documentId}/interpretation`
-	);
+	return apiFetch<AiInterpretationResponse>(`/api/v1/ai/documents/${documentId}/interpretation`);
 }
 
 export interface AiChatRequest {
@@ -51,7 +49,10 @@ export interface AiChatRequest {
 	locale?: Locale;
 }
 
-export async function streamAiChat(payload: AiChatRequest, signal?: AbortSignal): Promise<Response> {
+export async function streamAiChat(
+	payload: AiChatRequest,
+	signal?: AbortSignal
+): Promise<Response> {
 	return apiStream('/api/v1/ai/chat', {
 		method: 'POST',
 		body: JSON.stringify(payload),

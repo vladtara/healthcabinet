@@ -76,33 +76,41 @@ async def test_queue_returns_only_problematic_documents(
     doc_failed = await make_document(user=regular_user, status="failed", filename="failed_lab.pdf")
 
     # 2. Partial document
-    doc_partial = await make_document(user=regular_user, status="partial", filename="partial_lab.pdf")
+    doc_partial = await make_document(
+        user=regular_user, status="partial", filename="partial_lab.pdf"
+    )
 
     # 3. Completed doc with a low-confidence value
-    doc_low_conf = await make_document(user=regular_user, status="completed", filename="low_conf_lab.pdf")
+    doc_low_conf = await make_document(
+        user=regular_user, status="completed", filename="low_conf_lab.pdf"
+    )
     await make_health_value(
         user=regular_user, document=doc_low_conf, value=4.5, confidence=0.5, needs_review=True
     )
     # OK value on same doc
     await make_health_value(
-        user=regular_user, document=doc_low_conf, value=120.0, confidence=0.95, biomarker_name="Heart Rate", canonical_biomarker_name="heart_rate", unit="bpm"
+        user=regular_user,
+        document=doc_low_conf,
+        value=120.0,
+        confidence=0.95,
+        biomarker_name="Heart Rate",
+        canonical_biomarker_name="heart_rate",
+        unit="bpm",
     )
 
     # 4. Completed doc with a flagged value
-    doc_flagged = await make_document(user=regular_user, status="completed", filename="flagged_lab.pdf")
+    doc_flagged = await make_document(
+        user=regular_user, status="completed", filename="flagged_lab.pdf"
+    )
     await make_health_value(
         user=regular_user, document=doc_flagged, value=5.5, confidence=0.9, is_flagged=True
     )
 
     # 5. Completed doc with all OK values — should NOT appear in queue
     doc_ok = await make_document(user=regular_user, status="completed", filename="ok_lab.pdf")
-    await make_health_value(
-        user=regular_user, document=doc_ok, value=5.0, confidence=0.95
-    )
+    await make_health_value(user=regular_user, document=doc_ok, value=5.0, confidence=0.95)
 
-    response = await admin_client.get(
-        "/api/v1/admin/queue", headers=admin_headers(admin_user)
-    )
+    response = await admin_client.get("/api/v1/admin/queue", headers=admin_headers(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -138,16 +146,10 @@ async def test_queue_items_have_correct_aggregate_counts(
     await make_health_value(
         user=regular_user, document=doc, value=5.5, confidence=0.5, is_flagged=True
     )
-    await make_health_value(
-        user=regular_user, document=doc, value=4.2, confidence=0.6
-    )
-    await make_health_value(
-        user=regular_user, document=doc, value=120.0, confidence=0.95
-    )
+    await make_health_value(user=regular_user, document=doc, value=4.2, confidence=0.6)
+    await make_health_value(user=regular_user, document=doc, value=120.0, confidence=0.95)
 
-    response = await admin_client.get(
-        "/api/v1/admin/queue", headers=admin_headers(admin_user)
-    )
+    response = await admin_client.get("/api/v1/admin/queue", headers=admin_headers(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -173,12 +175,14 @@ async def test_queue_ordering(
 
     regular_user, _ = await make_user(email="order_user@example.com")
 
-    doc_partial = await make_document(user=regular_user, status="partial", filename="partial_first.pdf")
-    doc_failed = await make_document(user=regular_user, status="failed", filename="failed_second.pdf")
-
-    response = await admin_client.get(
-        "/api/v1/admin/queue", headers=admin_headers(admin_user)
+    doc_partial = await make_document(
+        user=regular_user, status="partial", filename="partial_first.pdf"
     )
+    doc_failed = await make_document(
+        user=regular_user, status="failed", filename="failed_second.pdf"
+    )
+
+    response = await admin_client.get("/api/v1/admin/queue", headers=admin_headers(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -200,9 +204,7 @@ async def test_empty_queue_returns_zero_items(
     async_db_session.add(admin_user)
     await async_db_session.flush()
 
-    response = await admin_client.get(
-        "/api/v1/admin/queue", headers=admin_headers(admin_user)
-    )
+    response = await admin_client.get("/api/v1/admin/queue", headers=admin_headers(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -347,9 +349,7 @@ async def test_correction_creates_audit_log_and_updates_value(
     assert audit_row.reason == reason
 
     # Verify health_value was updated with new encrypted value
-    hv_result = await async_db_session.execute(
-        select(HealthValue).where(HealthValue.id == hv.id)
-    )
+    hv_result = await async_db_session.execute(select(HealthValue).where(HealthValue.id == hv.id))
     updated_hv = hv_result.scalar_one()
     # Decrypt and check value
     from app.health_data.repository import _decrypt_numeric_value
@@ -456,9 +456,7 @@ async def test_non_admin_gets_403_on_queue_list(
     """Test 7: Non-admin user gets 403 on queue list endpoint."""
     regular_user, _ = await make_user(email="regular_queue@example.com")
 
-    response = await admin_client.get(
-        "/api/v1/admin/queue", headers=user_headers(regular_user)
-    )
+    response = await admin_client.get("/api/v1/admin/queue", headers=user_headers(regular_user))
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Admin access required"

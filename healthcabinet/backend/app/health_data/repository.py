@@ -4,10 +4,11 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal, cast
 
 from cryptography.exceptions import InvalidTag
 from sqlalchemy import delete, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.encryption import decrypt_bytes, encrypt_bytes
@@ -274,7 +275,7 @@ async def update_document_measured_at(
         .values(measured_at=measured_at)
     )
     await db.flush()
-    return int(result.rowcount or 0)
+    return int(cast(CursorResult[Any], result).rowcount or 0)
 
 
 async def flag_health_value(
@@ -301,9 +302,7 @@ async def flag_health_value(
     )
     row = result.scalar_one_or_none()
     if row is None:
-        raise HealthValueNotFoundError(
-            f"Health value {health_value_id} not found"
-        )
+        raise HealthValueNotFoundError(f"Health value {health_value_id} not found")
 
     if not row.is_flagged:
         row.is_flagged = True

@@ -17,7 +17,6 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -62,9 +61,7 @@ async def test_admin_gets_metrics(
     async_db_session.add(admin_user)
     await async_db_session.flush()
 
-    response = await admin_client.get(
-        "/api/v1/admin/metrics", headers=admin_headers(admin_user)
-    )
+    response = await admin_client.get("/api/v1/admin/metrics", headers=admin_headers(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -82,9 +79,7 @@ async def test_regular_user_gets_403(
     """Test 2: User with role=user JWT gets 403."""
     regular_user, _ = await make_user(email="regular@example.com")
 
-    response = await admin_client.get(
-        "/api/v1/admin/metrics", headers=user_headers(regular_user)
-    )
+    response = await admin_client.get("/api/v1/admin/metrics", headers=user_headers(regular_user))
 
     assert response.status_code == 403
     data = response.json()
@@ -128,9 +123,7 @@ async def test_metrics_correct_with_fixture_data(
     async_db_session.add(ai_mem)
     await async_db_session.flush()
 
-    response = await admin_client.get(
-        "/api/v1/admin/metrics", headers=admin_headers(admin_user)
-    )
+    response = await admin_client.get("/api/v1/admin/metrics", headers=admin_headers(admin_user))
 
     assert response.status_code == 200
     data = response.json()
@@ -158,9 +151,7 @@ async def test_null_rates_when_no_documents(
     async_db_session.add(admin_user)
     await async_db_session.flush()
 
-    response = await admin_client.get(
-        "/api/v1/admin/metrics", headers=admin_headers(admin_user)
-    )
+    response = await admin_client.get("/api/v1/admin/metrics", headers=admin_headers(admin_user))
     assert response.status_code == 200
     data = response.json()
 
