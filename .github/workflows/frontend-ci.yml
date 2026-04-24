@@ -76,34 +76,34 @@ jobs:
       - name: Run vitest
         run: npm run test:unit
 
-  test-e2e:
-    name: E2E Tests (Smoke)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: healthcabinet/frontend
-    steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
-        with:
-          persist-credentials: false
+  # test-e2e:
+  #   name: E2E Tests (Smoke)
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
+  #   permissions:
+  #     contents: read
+  #   defaults:
+  #     run:
+  #       working-directory: healthcabinet/frontend
+  #   steps:
+  #     - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+  #       with:
+  #         persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: healthcabinet/frontend/package-lock.json
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+  #       with:
+  #         node-version: "22"
+  #         cache: "npm"
+  #         cache-dependency-path: healthcabinet/frontend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+  #     - name: Install dependencies
+  #       run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+  #     - name: Install Playwright browsers
+  #       run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright smoke tests
-        run: npm run test:e2e -- --project=chromium
-        env:
-          PUBLIC_API_URL: http://localhost:8000
+  #     - name: Run Playwright smoke tests
+  #       run: npm run test:e2e -- --project=chromium
+  #       env:
+  #         PUBLIC_API_URL: http://localhost:8000

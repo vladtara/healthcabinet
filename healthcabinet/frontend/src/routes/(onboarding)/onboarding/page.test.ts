@@ -52,7 +52,7 @@ describe('Onboarding page', () => {
 		const { getByRole } = renderComponent(OnboardingPage);
 		const progressbar = getByRole('progressbar');
 		expect(progressbar).toBeInTheDocument();
-		expect(progressbar.textContent).toContain('Step 1 of 3');
+		expect(progressbar).toHaveTextContent(/Step\s+1\s+of\s+3/);
 	});
 
 	test('sex field renders as select dropdown', () => {
