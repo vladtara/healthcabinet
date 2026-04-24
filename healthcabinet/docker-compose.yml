@@ -129,7 +129,7 @@ services:
       dockerfile: Dockerfile
       target: dev
     env_file:
-      - ./backend/.env.test
+      - ./backend/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://healthcabinet:healthcabinet@postgres:5432/healthcabinet_test
     volumes:
