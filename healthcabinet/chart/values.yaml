@@ -1,0 +1,192 @@
+# ── Global ────────────────────────────────────────────────────────────────────
+nameOverride: ""
+fullnameOverride: ""
+
+namespace:
+  create: false
+
+# ── Images ────────────────────────────────────────────────────────────────────
+image:
+  registry: ghcr.io
+  backend:
+    repository: vladtara/healthcabinet-backend
+    tag: ""                 # empty → fall back to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: vladtara/healthcabinet-frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+
+imagePullSecret:
+  create: false
+  name: ghcr-pull
+  # dockerconfigjson must be the full JSON blob expected by the kubelet —
+  # base64 of `{"auths":{"ghcr.io":{"auth":"<b64 user:token>"}}}`.
+  dockerconfigjson: ""
+
+# ── Backend (FastAPI) ─────────────────────────────────────────────────────────
+backend:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  env:
+    ENVIRONMENT: production
+    AWS_REGION: eu-central-1
+    AI_CHAT_MODEL: claude-sonnet-4-6
+    RUN_DB_MIGRATIONS_ON_STARTUP: "true"
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+  podAnnotations: {}
+  podLabels: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ── Worker (ARQ) ──────────────────────────────────────────────────────────────
+worker:
+  replicaCount: 1
+  command: ["arq", "app.processing.worker.WorkerSettings"]
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  podAnnotations: {}
+  podLabels: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ── Frontend (SvelteKit) ──────────────────────────────────────────────────────
+frontend:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  # PUBLIC_API_URL is consumed by the browser — must be the externally-reachable
+  # URL. API_URL (SSR, container-to-container) is auto-templated to the backend Service.
+  env:
+    PUBLIC_API_URL: "https://api.healthcabinet.local"
+  podAnnotations: {}
+  podLabels: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ── Application secrets ───────────────────────────────────────────────────────
+# Either let the chart create an Opaque Secret from .data, OR point existingSecret
+# at a secret you manage out-of-band (SOPS / ExternalSecret / etc).
+appSecrets:
+  create: true
+  existingSecret: ""
+  data:
+    SECRET_KEY: ""
+    ENCRYPTION_KEY: ""
+    ANTHROPIC_API_KEY: ""
+    STRIPE_SECRET_KEY: ""
+    STRIPE_WEBHOOK_SECRET: ""
+    SENTRY_DSN: ""
+    AWS_ACCESS_KEY_ID: ""
+    AWS_SECRET_ACCESS_KEY: ""
+    AWS_S3_BUCKET: ""
+    BOOTSTRAP_ADMIN_EMAIL: ""
+    BOOTSTRAP_ADMIN_PASSWORD: ""
+    ALLOWED_ORIGINS: '["https://healthcabinet.local"]'
+
+# ── Gateway API (kgateway) ────────────────────────────────────────────────────
+gateway:
+  enabled: true
+  className: kgateway
+  name: healthcabinet
+  listeners:
+    httpPort: 80
+    httpsPort: 443
+  hostnames:
+    frontend: healthcabinet.local
+    backend: api.healthcabinet.local
+  tls:
+    enabled: false
+    certManager:
+      issuerName: letsencrypt-prod
+      issuerKind: ClusterIssuer
+      secretName: healthcabinet-tls
+
+# ── Sub-charts ────────────────────────────────────────────────────────────────
+# Keys below MUST match dependency names in Chart.yaml.
+# Reference: https://github.com/CloudPirates-io/helm-charts
+
+postgres:
+  enabled: true
+  auth:
+    username: healthcabinet
+    password: healthcabinet    # dev-only; override via auth.existingSecret in prod
+    database: healthcabinet
+  persistence:
+    enabled: true
+    size: 8Gi
+  service:
+    port: 5432
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false             # docker-compose parity — Redis has no password
+  persistence:
+    enabled: false             # ARQ queue is ephemeral
+  service:
+    port: 6379
+
+minio:
+  enabled: true
+  auth:
+    rootUser: minioadmin
+    rootPassword: minioadmin   # dev-only; override via auth.existingSecret in prod
+  defaultBuckets: "healthcabinet"
+  persistence:
+    enabled: true
+    size: 10Gi
+  service:
+    port: 9000
+    consolePort: 9090

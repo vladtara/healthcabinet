@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "healthcabinet.worker.fullname" . }}
+  labels:
+    {{- include "healthcabinet.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "healthcabinet.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      {{- with .Values.worker.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "healthcabinet.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+        {{- with .Values.worker.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "healthcabinet.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: worker
+          image: {{ include "healthcabinet.backend.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
+          command: {{ toJson .Values.worker.command }}
+          env:
+            {{- include "healthcabinet.backendEnv" . | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: {{ include "healthcabinet.appSecretName" . }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+      {{- with .Values.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "healthcabinet.backend.fullname" . }}
+  labels:
+    {{- include "healthcabinet.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  {{- if not .Values.backend.autoscaling.enabled }}
+  replicas: {{ .Values.backend.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "healthcabinet.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      {{- with .Values.backend.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "healthcabinet.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backend
+        {{- with .Values.backend.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "healthcabinet.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: backend
+          image: {{ include "healthcabinet.backend.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.service.targetPort }}
+              protocol: TCP
+          env:
+            {{- include "healthcabinet.backendEnv" . | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: {{ include "healthcabinet.appSecretName" . }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.backend.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probes.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.backend.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probes.readiness.periodSeconds }}
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

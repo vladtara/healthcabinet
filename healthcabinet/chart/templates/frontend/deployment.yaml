@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "healthcabinet.frontend.fullname" . }}
+  labels:
+    {{- include "healthcabinet.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  {{- if not .Values.frontend.autoscaling.enabled }}
+  replicas: {{ .Values.frontend.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "healthcabinet.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      {{- with .Values.frontend.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "healthcabinet.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        {{- with .Values.frontend.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "healthcabinet.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: frontend
+          image: {{ include "healthcabinet.frontend.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.frontend.service.targetPort | quote }}
+            - name: HOST
+              value: "0.0.0.0"
+            # SSR path — container-to-container, plain HTTP, no Gateway roundtrip
+            - name: API_URL
+              value: "http://{{ include "healthcabinet.backend.fullname" . }}:{{ .Values.backend.service.port }}"
+            {{- range $k, $v := .Values.frontend.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      {{- with .Values.frontend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

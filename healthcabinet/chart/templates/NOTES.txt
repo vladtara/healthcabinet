@@ -1,0 +1,46 @@
+HealthCabinet is deploying.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+Components:
+  - backend   ({{ include "healthcabinet.backend.fullname" . }})
+  - worker    ({{ include "healthcabinet.worker.fullname" . }})
+  - frontend  ({{ include "healthcabinet.frontend.fullname" . }})
+{{- if .Values.postgres.enabled }}
+  - postgres  ({{ include "healthcabinet.postgres.host" . }})
+{{- end }}
+{{- if .Values.redis.enabled }}
+  - redis     ({{ include "healthcabinet.redis.host" . }})
+{{- end }}
+{{- if .Values.minio.enabled }}
+  - minio     ({{ include "healthcabinet.minio.host" . }})
+{{- end }}
+
+Watch rollout:
+  kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }} -w
+
+{{- if .Values.gateway.enabled }}
+
+Gateway ({{ .Values.gateway.className }}):
+  Frontend → http{{ if .Values.gateway.tls.enabled }}s{{ end }}://{{ .Values.gateway.hostnames.frontend }}
+  Backend  → http{{ if .Values.gateway.tls.enabled }}s{{ end }}://{{ .Values.gateway.hostnames.backend }}
+
+Add these to /etc/hosts pointing at your k3s node IP (e.g. 127.0.0.1 for a single-node cluster with port-forward):
+  <NODE_IP>  {{ .Values.gateway.hostnames.frontend }} {{ .Values.gateway.hostnames.backend }}
+
+Inspect routing:
+  kubectl -n {{ .Release.Namespace }} get gateway,httproute
+{{- end }}
+
+{{- if and .Values.appSecrets.create (not .Values.appSecrets.existingSecret) }}
+
+Application secrets (Opaque) live in: {{ include "healthcabinet.appSecretName" . }}
+Make sure SECRET_KEY and ENCRYPTION_KEY are set — the backend will fail to start otherwise.
+  kubectl -n {{ .Release.Namespace }} get secret {{ include "healthcabinet.appSecretName" . }} -o jsonpath='{.data}'
+{{- end }}
+
+Uninstall:
+  helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+  # PVCs are retained by default. Delete them explicitly:
+  kubectl -n {{ .Release.Namespace }} delete pvc -l app.kubernetes.io/instance={{ .Release.Name }}

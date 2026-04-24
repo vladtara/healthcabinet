@@ -1,0 +1,57 @@
+# Overrides for a local k3s cluster — smaller footprint, no TLS, dev-friendly
+# defaults. Used with: helm install ... -f values.yaml -f values-dev.yaml
+
+namespace:
+  create: true
+
+backend:
+  replicaCount: 1
+  env:
+    ENVIRONMENT: development
+    AWS_REGION: eu-central-1
+    AI_CHAT_MODEL: claude-sonnet-4-6
+    RUN_DB_MIGRATIONS_ON_STARTUP: "true"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  replicaCount: 1
+  env:
+    PUBLIC_API_URL: "http://api.healthcabinet.local"
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+gateway:
+  tls:
+    enabled: false
+  hostnames:
+    frontend: healthcabinet.local
+    backend: api.healthcabinet.local
+
+postgres:
+  persistence:
+    size: 1Gi
+
+minio:
+  persistence:
+    size: 1Gi

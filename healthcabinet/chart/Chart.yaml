@@ -1,0 +1,25 @@
+apiVersion: v2
+name: healthcabinet
+description: HealthCabinet — personal health data platform (backend, worker, frontend) with Postgres, Redis and MinIO datastores.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.29.0-0"
+home: https://github.com/vladtara/healthcabinet
+sources:
+  - https://github.com/vladtara/healthcabinet
+maintainers:
+  - name: vladtara
+dependencies:
+  - name: postgres
+    version: "*"
+    repository: "oci://registry-1.docker.io/cloudpirates"
+    condition: postgres.enabled
+  - name: redis
+    version: "*"
+    repository: "oci://registry-1.docker.io/cloudpirates"
+    condition: redis.enabled
+  - name: minio
+    version: "*"
+    repository: "oci://registry-1.docker.io/cloudpirates"
+    condition: minio.enabled
