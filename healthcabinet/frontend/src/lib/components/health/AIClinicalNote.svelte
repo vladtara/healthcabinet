@@ -125,7 +125,7 @@
 	<div class="hc-ai-note">
 		<p class="hc-ai-note-empty">{copy.emptyDashboard}</p>
 	</div>
-{:else if interpretationQuery.isPending}
+{:else if interpretationQuery.isPending || (interpretationQuery.isFetching && !interpretationQuery.data)}
 	<div class="hc-ai-note" aria-busy="true" aria-label={copy.loadingAria}>
 		<div class="animate-pulse">
 			<div class="mb-2 h-4 w-2/5 rounded bg-muted"></div>
@@ -144,7 +144,16 @@
 	</div>
 {:else if interpretationQuery.isError && isHardError(interpretationQuery.error)}
 	<div class="hc-ai-note">
-		<p class="hc-ai-note-header">{copy.header}</p>
+		<div class="hc-ai-note-header-row">
+			<p class="hc-ai-note-header">{copy.header}</p>
+			<button
+				class="hc-ai-note-regen"
+				class:spinning={interpretationQuery.isFetching}
+				aria-label={copy.regenerateAria}
+				disabled={interpretationQuery.isFetching}
+				onclick={() => interpretationQuery.refetch()}
+			>↺</button>
+		</div>
 		<p class="text-xs text-muted-foreground">{copy.errorUnable}</p>
 	</div>
 {:else if interpretationQuery.data}
@@ -152,7 +161,16 @@
 		| AiInterpretationResponse
 		| DashboardInterpretationResponse}
 	<section class="hc-ai-note" aria-label={copy.aria}>
-		<p class="hc-ai-note-header">{copy.header}</p>
+		<div class="hc-ai-note-header-row">
+			<p class="hc-ai-note-header">{copy.header}</p>
+			<button
+				class="hc-ai-note-regen"
+				class:spinning={interpretationQuery.isFetching}
+				aria-label={copy.regenerateAria}
+				disabled={interpretationQuery.isFetching}
+				onclick={() => interpretationQuery.refetch()}
+			>↺</button>
+		</div>
 		<div class="hc-ai-note-body">{@html marked(data.interpretation)}</div>
 
 		{#if documentReasoning}

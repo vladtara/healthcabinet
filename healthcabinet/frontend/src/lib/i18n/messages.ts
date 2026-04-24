@@ -195,7 +195,8 @@ const en = {
 		reasoningShownAnnouncement: 'Reasoning details shown below.',
 		referenceRangeHeader: 'Reference range',
 		priorDocumentsReferenced: 'Prior documents referenced:',
-		cardInterpretationUnavailable: 'Interpretation unavailable'
+		cardInterpretationUnavailable: 'Interpretation unavailable',
+		regenerateAria: 'Regenerate'
 	},
 	aiChat: {
 		title: 'Dr. Health — AI Assistant',
@@ -752,7 +753,8 @@ const uk: Messages = {
 		reasoningShownAnnouncement: 'Деталі міркувань показано нижче.',
 		referenceRangeHeader: 'Референсний діапазон',
 		priorDocumentsReferenced: 'Посилання на попередні документи:',
-		cardInterpretationUnavailable: 'Інтерпретація недоступна'
+		cardInterpretationUnavailable: 'Інтерпретація недоступна',
+		regenerateAria: 'Оновити'
 	},
 	aiChat: {
 		title: 'Dr. Health — AI-асистент',
