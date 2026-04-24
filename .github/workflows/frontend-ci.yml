@@ -2,12 +2,12 @@ name: Frontend CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
     paths:
       - "healthcabinet/frontend/**"
       - ".github/workflows/frontend-ci.yml"
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "healthcabinet/frontend/**"
 
