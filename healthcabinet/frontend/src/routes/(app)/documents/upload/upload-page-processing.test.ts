@@ -14,6 +14,8 @@ vi.mock('$lib/api/documents', () => ({
 
 import { applyTerminalStatus, createUploadQueue, type UploadQueueEntry } from '$lib/upload-queue';
 
+type InvalidateQueries = Parameters<typeof applyTerminalStatus>[0]['invalidateQueries'];
+
 function makeDocument(id = 'mock-doc-id'): Document {
 	return {
 		id,
@@ -34,7 +36,7 @@ function makeDocument(id = 'mock-doc-id'): Document {
 
 describe('upload page processing state helpers', () => {
 	test('invalidates documents, health_values, and dashboard AI queries on successful processing', () => {
-		const invalidateQueries = vi.fn();
+		const invalidateQueries = vi.fn<InvalidateQueries>();
 		const next = handleProcessingComplete(
 			{ invalidateQueries },
 			{ uploadState: 'success', documentId: 'mock-doc-id' }
@@ -52,7 +54,7 @@ describe('upload page processing state helpers', () => {
 	});
 
 	test('partial processing invalidates documents, health_values, and dashboard AI', () => {
-		const invalidateQueries = vi.fn();
+		const invalidateQueries = vi.fn<InvalidateQueries>();
 		const next = handleProcessingFailure(
 			{ invalidateQueries },
 			{ uploadState: 'success', documentId: 'mock-doc-id' },
@@ -70,7 +72,7 @@ describe('upload page processing state helpers', () => {
 	});
 
 	test('failed processing transitions to failed state without cache invalidation', () => {
-		const invalidateQueries = vi.fn();
+		const invalidateQueries = vi.fn<InvalidateQueries>();
 		const next = handleProcessingFailure(
 			{ invalidateQueries },
 			{ uploadState: 'success', documentId: 'mock-doc-id' },
@@ -96,7 +98,7 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 	function simulatePipelineTerminal(
 		queue: UploadQueueEntry[],
 		setQueue: (mut: (c: UploadQueueEntry[]) => UploadQueueEntry[]) => void,
-		invalidateQueries: ReturnType<typeof vi.fn>,
+		invalidateQueries: InvalidateQueries,
 		entryId: string,
 		status: 'completed' | 'partial' | 'failed',
 		error?: string
@@ -112,7 +114,7 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 			status: 'processing' as const,
 			documentId: `doc-${e.file.name}`
 		}));
-		const invalidateQueries = vi.fn();
+		const invalidateQueries = vi.fn<InvalidateQueries>();
 		const setQueue = (mut: (c: UploadQueueEntry[]) => UploadQueueEntry[]) => {
 			queue = mut(queue);
 		};
@@ -147,7 +149,7 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 			status: 'processing' as const,
 			documentId: `doc-${e.file.name}`
 		}));
-		const invalidateQueries = vi.fn();
+		const invalidateQueries = vi.fn<InvalidateQueries>();
 		const setQueue = (mut: (c: UploadQueueEntry[]) => UploadQueueEntry[]) => {
 			queue = mut(queue);
 		};
@@ -169,7 +171,7 @@ describe('multi-file queue dashboard invalidation (Story 15.4)', () => {
 			}
 		];
 		let queue = queue0;
-		const invalidateQueries = vi.fn();
+		const invalidateQueries = vi.fn<InvalidateQueries>();
 		const setQueue = (mut: (c: UploadQueueEntry[]) => UploadQueueEntry[]) => {
 			queue = mut(queue);
 		};
