@@ -4,24 +4,30 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>HealthCabinet Pitch Deck</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+			rel="stylesheet"
+		/>
 		<style>
 			:root {
-				--bg: #0f1117;
-				--panel: #171b24;
-				--panel-soft: #1d2330;
-				--panel-ink: #0c0f15;
-				--line: #2a3344;
-				--line-strong: #4d5d78;
-				--text: #eef4ff;
-				--muted: #9aabc7;
+				--surface-base: #e4eaf0;
+				--surface-raised: #eef2f8;
+				--surface-sunken: #ffffff;
+				--surface-window: #ffffff;
+				--text-primary: #1a2030;
+				--text-secondary: #5a6a80;
+				--text-disabled: #8898a8;
 				--accent: #3366ff;
-				--accent-soft: #89a8ff;
-				--accent-fade: rgba(51, 102, 255, 0.16);
-				--optimal: #2e8b57;
-				--borderline: #daa520;
-				--concerning: #e07020;
-				--action: #cc3333;
-				--shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+				--accent-light: #6690ff;
+				--accent-text: #ffffff;
+				--status-optimal: #2e8b57;
+				--status-borderline: #daa520;
+				--status-concerning: #e07020;
+				--status-action: #cc3333;
+				--row-alternate: #eef2f8;
+				--shadow-soft: 0 10px 28px rgba(90, 106, 128, 0.14);
 			}
 
 			* {
@@ -34,382 +40,730 @@
 
 			body {
 				margin: 0;
+				font-family: 'DM Sans', 'Segoe UI', sans-serif;
 				background:
-					radial-gradient(circle at top left, rgba(51, 102, 255, 0.14), transparent 28%),
-					linear-gradient(180deg, #0b0e14 0%, var(--bg) 100%);
-				color: var(--text);
-				font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+					linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)) 0 0 / 100%
+						180px no-repeat,
+					var(--surface-base);
+				color: var(--text-primary);
 			}
 
 			a {
 				color: inherit;
+				text-decoration: none;
 			}
 
-			.deck-nav {
+			button,
+			input,
+			table,
+			th,
+			td {
+				font-family: inherit;
+				font-feature-settings: 'tnum' 1;
+			}
+
+			.deck-topbar {
 				position: sticky;
 				top: 0;
 				z-index: 20;
 				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 8px 12px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #a0b0c0;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.deck-topbar-brand {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 16px;
+				font-weight: 700;
+			}
+
+			.deck-topbar-brand-icon {
+				color: var(--accent);
+				font-size: 18px;
+			}
+
+			.deck-topbar-actions,
+			.deck-topbar-links {
+				display: flex;
 				flex-wrap: wrap;
-				gap: 0.5rem;
-				padding: 0.9rem 1rem;
-				border-bottom: 1px solid var(--line);
-				background: rgba(10, 12, 18, 0.9);
-				backdrop-filter: blur(10px);
+				gap: 4px;
+				align-items: center;
 			}
 
-			.deck-nav a {
-				padding: 0.45rem 0.7rem;
-				border: 1px solid var(--line-strong);
-				border-radius: 999px;
-				background: rgba(255, 255, 255, 0.02);
-				color: var(--muted);
-				font-size: 0.85rem;
-				text-decoration: none;
+			.btn-standard,
+			.btn-primary,
+			.btn-toolbar {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+				min-height: 23px;
+				min-width: 75px;
+				padding: 0 12px;
+				background: silver;
+				border: none;
+				box-shadow:
+					inset -1px -1px #0a0a0a,
+					inset 1px 1px #fff,
+					inset -2px -2px grey,
+					inset 2px 2px #dfdfdf;
+				color: var(--text-primary);
+				cursor: pointer;
+				font-size: 14px;
+				line-height: 1.2;
 			}
 
-			.deck-nav a:hover {
-				color: var(--text);
-				border-color: var(--accent-soft);
-				background: var(--accent-fade);
+			.btn-standard:active,
+			.btn-primary:active,
+			.btn-toolbar:active {
+				box-shadow:
+					inset -1px -1px #fff,
+					inset 1px 1px #0a0a0a,
+					inset -2px -2px #dfdfdf,
+					inset 2px 2px grey;
+			}
+
+			.btn-standard:focus-visible,
+			.btn-primary:focus-visible,
+			.btn-toolbar:focus-visible,
+			.hc-app-nav-item:focus-visible,
+			.deck-link:focus-visible {
+				outline: 1px dotted #000;
+				outline-offset: -3px;
+			}
+
+			.btn-primary {
+				background: var(--accent);
+				color: var(--accent-text);
+				border: 2px outset var(--accent-light);
+				font-weight: 700;
+			}
+
+			.btn-toolbar {
+				min-width: 0;
+				padding: 4px 10px;
+				font-size: 13px;
 			}
 
 			.deck {
-				padding: 1.2rem;
+				display: grid;
+				gap: 14px;
+				padding: 12px;
 			}
 
-			.slide {
-				position: relative;
-				display: grid;
-				align-items: stretch;
-				min-height: calc(100vh - 4.6rem);
-				margin: 0 auto 1.2rem;
-				padding: 1.5rem;
-				max-width: 1440px;
-				border: 1px solid var(--line);
-				border-radius: 28px;
-				background:
-					linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-					var(--panel);
-				box-shadow: var(--shadow);
+			.deck-slide {
+				scroll-margin-top: 72px;
+			}
+
+			.deck-shell {
+				display: flex;
+				flex-direction: column;
+				min-height: 880px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				box-shadow: var(--shadow-soft);
+			}
+
+			.hc-app-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				height: 40px;
+				min-height: 40px;
+				padding: 0 12px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #a0b0c0;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.hc-app-header-brand {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				font-size: 16px;
+				font-weight: 700;
+			}
+
+			.hc-app-header-icon {
+				color: var(--accent);
+				font-size: 18px;
+			}
+
+			.hc-app-header-user {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				font-size: 14px;
+				color: var(--text-secondary);
+			}
+
+			.deck-body {
+				flex: 1;
+				display: flex;
+				gap: 4px;
+				padding: 4px;
+			}
+
+			.hc-app-left-nav {
+				width: 196px;
+				min-width: 196px;
+				background: var(--surface-sunken);
+				border: 2px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.hc-app-nav-header {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				padding: 6px 14px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #a0b0c0;
+				box-shadow: inset 0 1px 0 #fff;
+				font-size: 13px;
+				font-weight: 700;
+				color: var(--accent);
+				letter-spacing: 0.3px;
+			}
+
+			.hc-app-nav-section-label {
+				padding: 8px 14px 2px;
+				font-size: 11px;
+				font-weight: 700;
+				color: var(--text-disabled);
+				text-transform: uppercase;
+				letter-spacing: 0.8px;
+			}
+
+			.hc-app-nav-item {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 10px 14px;
+				border-left: 3px solid transparent;
+				color: var(--text-primary);
+				font-size: 14px;
+				white-space: nowrap;
+			}
+
+			.hc-app-nav-item:hover {
+				background: var(--surface-raised);
+			}
+
+			.hc-app-nav-item.active {
+				background: rgba(51, 102, 255, 0.1);
+				border-left-color: var(--accent);
+				font-weight: 700;
+			}
+
+			.hc-app-nav-separator {
+				margin: 6px 14px;
+				height: 1px;
+				background: #d0d8e4;
+			}
+
+			.deck-content {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				min-width: 0;
+			}
+
+			.deck-content-body {
+				flex: 1;
+				padding: 0 0 4px;
+			}
+
+			.hc-status-bar {
+				display: flex;
+				align-items: center;
+				gap: 2px;
+				height: 24px;
+				padding: 2px 4px;
+				border-top: 2px solid #a0b0c0;
+				background: var(--surface-raised);
+				font-size: 14px;
+			}
+
+			.hc-status-bar-field {
+				display: inline-flex;
+				align-items: center;
+				height: 18px;
+				padding: 0 8px;
+				background: var(--surface-sunken);
+				border: 1px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+				white-space: nowrap;
+			}
+
+			.hc-summary-bar {
+				display: flex;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 4px;
+				padding: 6px 12px;
+				margin-bottom: 8px;
+				font-size: 14px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.hc-summary-label {
+				font-weight: 700;
+				color: var(--text-secondary);
+			}
+
+			.hc-summary-value {
+				color: var(--text-primary);
+			}
+
+			.hc-summary-sep {
+				color: var(--text-disabled);
+			}
+
+			.hc-dash-section {
+				margin-bottom: 10px;
+				background: var(--surface-sunken);
+				border: 2px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+			}
+
+			.hc-dash-section-header {
+				padding: 6px 12px;
+				font-size: 13px;
+				font-weight: 700;
+				color: var(--accent);
+				background: var(--surface-raised);
+				border-bottom: 1px solid #a0b0c0;
+			}
+
+			.hc-dash-section-body {
+				padding: 10px 12px;
+			}
+
+			.hc-data-table {
+				background: var(--surface-sunken);
+				box-shadow:
+					inset -1px -1px #fff,
+					inset 1px 1px #0a0a0a,
+					inset -2px -2px #dfdfdf,
+					inset 2px 2px grey;
 				overflow: hidden;
 			}
 
-			.slide::before {
-				content: '';
-				position: absolute;
-				inset: 0;
-				background:
-					linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-					linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-				background-size: 32px 32px;
-				pointer-events: none;
-				mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent 90%);
+			.hc-data-table table {
+				width: 100%;
+				border-collapse: collapse;
 			}
 
-			.slide-inner {
-				position: relative;
-				z-index: 1;
-				display: grid;
-				gap: 1.2rem;
-				grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+			.hc-data-table th {
+				padding: 8px 12px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #808080;
+				color: var(--text-primary);
+				font-size: 14px;
+				font-weight: 700;
+				text-align: left;
+				white-space: nowrap;
 			}
 
-			.slide.full .slide-inner {
-				grid-template-columns: 1fr;
+			.hc-data-table td {
+				padding: 6px 12px;
+				border-bottom: 1px solid #dfdfdf;
+				color: var(--text-primary);
+				font-size: 15px;
+				vertical-align: top;
 			}
 
-			.kicker {
+			.hc-data-table tbody tr:nth-child(even) {
+				background: var(--row-alternate);
+			}
+
+			.hc-data-table tbody tr:last-child td {
+				border-bottom: 0;
+			}
+
+			.hc-ai-note {
+				background: var(--surface-sunken);
+				border-left: 3px solid var(--accent);
+				border-top: 2px solid #a0b0c0;
+				border-right: 2px solid #d0d8e4;
+				border-bottom: 2px solid #d0d8e4;
+				padding: 12px 16px;
+			}
+
+			.hc-ai-note-header {
+				margin: 0 0 8px;
+				font-size: 16px;
+				font-weight: 700;
+				color: var(--accent);
+			}
+
+			.hc-ai-note-body {
+				font-size: 15px;
+				line-height: 1.6;
+				color: var(--text-primary);
+			}
+
+			.hc-ai-note-body p {
+				margin: 0 0 8px;
+			}
+
+			.hc-ai-note-disclaimer {
+				margin-top: 10px;
+				padding-top: 8px;
+				border-top: 1px solid var(--surface-raised);
+				color: var(--text-disabled);
+				font-size: 13px;
+				font-style: italic;
+			}
+
+			.hc-fieldset {
+				margin: 0;
+				padding: 8px;
+				border: 2px groove #d0d8e4;
+			}
+
+			.hc-fieldset legend {
+				padding: 0 4px;
+				color: var(--accent);
+				font-size: 15px;
+				font-weight: 700;
+			}
+
+			.hc-badge {
 				display: inline-flex;
 				align-items: center;
-				gap: 0.55rem;
-				width: fit-content;
-				padding: 0.35rem 0.75rem;
-				border: 1px solid var(--line-strong);
-				border-radius: 999px;
-				background: rgba(255, 255, 255, 0.03);
-				color: var(--accent-soft);
-				font-size: 0.88rem;
+				gap: 4px;
+				padding: 1px 6px;
+				box-shadow:
+					inset -1px -1px #0a0a0a,
+					inset 1px 1px #fff,
+					inset -2px -2px grey,
+					inset 2px 2px #dfdfdf;
+				font-size: 13px;
+				font-weight: 600;
+				line-height: 1.4;
+				white-space: nowrap;
+			}
+
+			.hc-badge-default {
+				background: silver;
+				color: var(--text-primary);
+			}
+
+			.hc-badge-info {
+				background: var(--accent);
+				color: #fff;
+			}
+
+			.hc-badge-success {
+				background: var(--status-optimal);
+				color: #fff;
+			}
+
+			.hc-badge-warning {
+				background: var(--status-borderline);
+				color: var(--text-primary);
+			}
+
+			.hc-badge-danger {
+				background: var(--status-action);
+				color: #fff;
+			}
+
+			.hc-state {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				padding: 12px;
+				background: var(--surface-sunken);
+				box-shadow:
+					inset -1px -1px #fff,
+					inset 1px 1px #0a0a0a,
+					inset -2px -2px #dfdfdf,
+					inset 2px 2px grey;
+				font-size: 15px;
+			}
+
+			.hc-state-title {
+				margin: 0;
+				font-size: 15px;
+				line-height: 1.4;
+				font-weight: 700;
+			}
+
+			.hc-state-description {
+				margin: 0;
+				font-size: 14px;
+				line-height: 1.45;
+				color: var(--text-secondary);
+			}
+
+			.hc-state-success {
+				border-left: 3px solid var(--status-optimal);
+			}
+
+			.hc-state-warning {
+				border-left: 3px solid var(--status-borderline);
+			}
+
+			.hc-state-error {
+				border-left: 3px solid var(--status-action);
+			}
+
+			.hc-state-info {
+				border-left: 3px solid var(--accent);
+			}
+
+			.hc-status-optimal {
+				color: var(--status-optimal);
+				font-weight: 700;
+			}
+
+			.hc-status-borderline {
+				color: var(--status-borderline);
+				font-weight: 700;
+			}
+
+			.hc-status-concerning {
+				color: var(--status-concerning);
+				font-weight: 700;
+			}
+
+			.hc-status-action {
+				color: var(--status-action);
+				font-weight: 700;
+			}
+
+			.deck-kicker {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				margin-bottom: 10px;
+				padding: 3px 8px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				color: var(--accent);
+				font-size: 12px;
 				font-weight: 700;
 				letter-spacing: 0.04em;
 				text-transform: uppercase;
 			}
 
-			h1,
-			h2,
-			h3,
-			p {
+			.deck-title {
 				margin: 0;
-			}
-
-			h1 {
-				font-size: clamp(2.8rem, 6vw, 5.2rem);
-				line-height: 0.95;
-				letter-spacing: -0.05em;
-			}
-
-			h2 {
-				font-size: clamp(2rem, 3vw, 3.2rem);
-				line-height: 1;
+				font-size: 42px;
+				line-height: 1.02;
 				letter-spacing: -0.04em;
 			}
 
-			.lead {
-				max-width: 60ch;
-				color: var(--muted);
-				font-size: clamp(1.02rem, 1.8vw, 1.35rem);
-				line-height: 1.55;
+			.deck-subtitle {
+				margin: 10px 0 0;
+				font-size: 28px;
+				line-height: 1.1;
+				letter-spacing: -0.03em;
 			}
 
-			.hero-stack,
-			.content-stack {
+			.deck-lead {
+				margin: 10px 0 0;
+				max-width: 62ch;
+				font-size: 16px;
+				line-height: 1.6;
+				color: var(--text-secondary);
+			}
+
+			.deck-grid {
 				display: grid;
-				align-content: space-between;
-				gap: 1.2rem;
+				gap: 10px;
 			}
 
-			.metric-row,
-			.card-grid,
-			.story-grid,
-			.status-grid,
-			.model-grid,
-			.roadmap-grid {
-				display: grid;
-				gap: 1rem;
+			.deck-grid-2 {
+				grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
 			}
 
-			.metric-row {
+			.deck-grid-3 {
 				grid-template-columns: repeat(3, minmax(0, 1fr));
 			}
 
-			.card-grid {
-				grid-template-columns: repeat(2, minmax(0, 1fr));
+			.deck-grid-4 {
+				grid-template-columns: repeat(4, minmax(0, 1fr));
 			}
 
-			.story-grid,
-			.status-grid,
-			.model-grid,
-			.roadmap-grid {
-				grid-template-columns: repeat(3, minmax(0, 1fr));
+			.deck-stack {
+				display: grid;
+				gap: 10px;
 			}
 
-			.panel,
-			.metric,
-			.story-card,
-			.status-card,
-			.model-card,
-			.roadmap-card,
-			.window,
-			.table-panel {
-				border: 1px solid var(--line);
-				border-radius: 20px;
-				background: var(--panel-soft);
-				box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-			}
-
-			.panel,
-			.story-card,
-			.status-card,
-			.model-card,
-			.roadmap-card {
-				padding: 1.1rem;
-			}
-
-			.metric {
-				padding: 1rem;
-				background:
-					linear-gradient(180deg, rgba(51, 102, 255, 0.1), transparent),
-					var(--panel-soft);
-			}
-
-			.metric-label {
-				color: var(--muted);
-				font-size: 0.78rem;
-				text-transform: uppercase;
-				letter-spacing: 0.08em;
-			}
-
-			.metric-value {
-				margin-top: 0.5rem;
-				font-size: 1.45rem;
-				font-weight: 800;
-			}
-
-			ul,
-			ol {
+			.deck-list {
 				margin: 0;
-				padding-left: 1.2rem;
-				color: var(--muted);
+				padding-left: 18px;
+				font-size: 15px;
 				line-height: 1.55;
-				font-size: 1.04rem;
+				color: var(--text-secondary);
 			}
 
-			li + li {
-				margin-top: 0.55rem;
+			.deck-list li + li {
+				margin-top: 6px;
 			}
 
-			.quote {
-				padding: 1.2rem 1.25rem;
-				border-left: 4px solid var(--accent);
-				background: rgba(255, 255, 255, 0.03);
-				color: var(--text);
-				font-size: 1.1rem;
-				line-height: 1.55;
-			}
-
-			.window {
-				padding: 0;
-				overflow: hidden;
-			}
-
-			.window-bar {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				padding: 0.75rem 1rem;
-				border-bottom: 1px solid var(--line);
-				background: linear-gradient(180deg, rgba(132, 168, 255, 0.14), rgba(0, 0, 0, 0));
-				font-size: 0.92rem;
-				font-weight: 700;
-			}
-
-			.window-body {
+			.deck-metric {
 				display: grid;
-				gap: 0.9rem;
-				padding: 1rem;
+				gap: 4px;
+				padding: 10px 8px;
+				text-align: center;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				border-top: 3px solid var(--accent);
+				box-shadow: inset 0 1px 0 #fff;
 			}
 
-			.window-toolbar {
-				display: flex;
-				gap: 0.55rem;
-				flex-wrap: wrap;
-			}
-
-			.pill {
-				padding: 0.38rem 0.65rem;
-				border: 1px solid var(--line-strong);
-				border-radius: 999px;
-				background: rgba(255, 255, 255, 0.03);
-				color: var(--muted);
-				font-size: 0.82rem;
+			.deck-metric-label {
+				font-size: 12px;
 				font-weight: 700;
-			}
-
-			.table-panel {
-				overflow: hidden;
-			}
-
-			table {
-				width: 100%;
-				border-collapse: collapse;
-				font-size: 0.92rem;
-			}
-
-			th,
-			td {
-				padding: 0.78rem 0.9rem;
-				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-				text-align: left;
-			}
-
-			th {
-				color: var(--muted);
-				font-size: 0.78rem;
+				color: var(--text-secondary);
 				text-transform: uppercase;
-				letter-spacing: 0.08em;
-				background: rgba(255, 255, 255, 0.03);
+				letter-spacing: 0.05em;
 			}
 
-			tr:last-child td {
-				border-bottom: 0;
-			}
-
-			.status {
-				display: inline-flex;
-				align-items: center;
-				gap: 0.45rem;
+			.deck-metric-value {
+				font-size: 24px;
 				font-weight: 700;
+				line-height: 1.1;
 			}
 
-			.status.optimal {
-				color: var(--optimal);
+			.deck-metric-copy {
+				font-size: 13px;
+				line-height: 1.4;
+				color: var(--text-secondary);
 			}
 
-			.status.borderline {
-				color: var(--borderline);
-			}
-
-			.status.concerning {
-				color: var(--concerning);
-			}
-
-			.note {
-				padding: 1rem;
+			.deck-quote {
+				margin: 0;
+				padding: 12px;
+				background: var(--surface-sunken);
 				border-left: 4px solid var(--accent);
-				border-radius: 16px;
-				background: rgba(51, 102, 255, 0.08);
-			}
-
-			.note-title {
-				font-size: 0.86rem;
-				font-weight: 800;
-				letter-spacing: 0.08em;
-				text-transform: uppercase;
-				color: var(--accent-soft);
-			}
-
-			.note p {
-				margin-top: 0.55rem;
-				color: var(--text);
+				font-size: 16px;
 				line-height: 1.55;
 			}
 
-			.big-number {
-				font-size: clamp(3.8rem, 7vw, 6rem);
-				font-weight: 900;
-				letter-spacing: -0.06em;
-				color: var(--text);
+			.deck-mini {
+				font-size: 13px;
+				color: var(--text-secondary);
+				line-height: 1.45;
 			}
 
-			.big-number-caption {
-				margin-top: 0.35rem;
-				color: var(--muted);
-				font-size: 1rem;
+			.deck-process {
+				display: grid;
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+				gap: 8px;
 			}
 
-			.accent {
-				color: var(--accent-soft);
+			.deck-process-step {
+				display: grid;
+				gap: 6px;
+				padding: 10px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				box-shadow: inset 0 1px 0 #fff;
 			}
 
-			.footer-tag {
+			.deck-process-step-index {
+				width: 24px;
+				height: 24px;
 				display: inline-flex;
 				align-items: center;
-				gap: 0.5rem;
-				padding: 0.45rem 0.75rem;
-				border: 1px solid var(--line-strong);
-				border-radius: 14px;
-				background: rgba(255, 255, 255, 0.03);
-				color: var(--muted);
-				font-size: 0.9rem;
+				justify-content: center;
+				background: var(--accent);
+				color: #fff;
+				font-size: 13px;
+				font-weight: 700;
+				box-shadow:
+					inset -1px -1px rgba(0, 0, 0, 0.2),
+					inset 1px 1px rgba(255, 255, 255, 0.35);
+			}
+
+			.deck-process-step-title {
+				font-size: 15px;
+				font-weight: 700;
+			}
+
+			.deck-process-step-copy {
+				font-size: 13px;
+				line-height: 1.45;
+				color: var(--text-secondary);
+			}
+
+			.deck-arch {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 8px;
+				align-items: stretch;
+			}
+
+			.deck-arch-box {
+				display: grid;
+				gap: 4px;
+				padding: 10px;
+				background: var(--surface-sunken);
+				border: 2px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+			}
+
+			.deck-arch-box strong {
+				font-size: 14px;
+			}
+
+			.deck-arch-box span {
+				font-size: 13px;
+				line-height: 1.45;
+				color: var(--text-secondary);
+			}
+
+			.deck-link {
+				color: var(--accent);
+				text-decoration: underline;
+			}
+
+			@media (max-width: 1200px) {
+				.deck-grid-2,
+				.deck-grid-3,
+				.deck-grid-4,
+				.deck-process,
+				.deck-arch {
+					grid-template-columns: 1fr;
+				}
 			}
 
 			@media (max-width: 980px) {
-				.slide {
-					min-height: auto;
+				.deck-body {
+					flex-direction: column;
 				}
 
-				.slide-inner,
-				.slide.full .slide-inner {
-					grid-template-columns: 1fr;
+				.hc-app-left-nav {
+					width: auto;
+					min-width: 0;
 				}
 
-				.metric-row,
-				.card-grid,
-				.story-grid,
-				.status-grid,
-				.model-grid,
-				.roadmap-grid {
-					grid-template-columns: 1fr;
+				.deck-topbar {
+					align-items: flex-start;
+					flex-direction: column;
 				}
 			}
 
@@ -418,473 +772,1206 @@
 					background: #fff;
 				}
 
-				.deck-nav {
+				.deck-topbar {
 					display: none;
 				}
 
 				.deck {
 					padding: 0;
+					gap: 0;
 				}
 
-				.slide {
-					margin: 0;
+				.deck-slide {
+					break-after: page;
+				}
+
+				.deck-shell {
 					min-height: 100vh;
-					border-radius: 0;
 					box-shadow: none;
-					page-break-after: always;
+					border: none;
 				}
 			}
 		</style>
 	</head>
 	<body>
-		<nav class="deck-nav" aria-label="Slide navigation">
-			<a href="#slide-1">01 Cover</a>
-			<a href="#slide-2">02 Problem</a>
-			<a href="#slide-3">03 User</a>
-			<a href="#slide-4">04 Product</a>
-			<a href="#slide-5">05 Loop</a>
-			<a href="#slide-6">06 Differentiation</a>
-			<a href="#slide-7">07 Trust</a>
-			<a href="#slide-8">08 Build</a>
-			<a href="#slide-9">09 Model</a>
-			<a href="#slide-10">10 Ask</a>
-		</nav>
+		<header class="deck-topbar">
+			<div class="deck-topbar-brand">
+				<span class="deck-topbar-brand-icon" aria-hidden="true">&#9877;</span>
+				<span>HealthCabinet Pitch Deck</span>
+			</div>
+			<nav class="deck-topbar-links" aria-label="Slide links">
+				<a class="btn-toolbar" href="#slide-01">01</a>
+				<a class="btn-toolbar" href="#slide-02">02</a>
+				<a class="btn-toolbar" href="#slide-03">03</a>
+				<a class="btn-toolbar" href="#slide-04">04</a>
+				<a class="btn-toolbar" href="#slide-05">05</a>
+				<a class="btn-toolbar" href="#slide-06">06</a>
+				<a class="btn-toolbar" href="#slide-07">07</a>
+				<a class="btn-toolbar" href="#slide-08">08</a>
+				<a class="btn-toolbar" href="#slide-09">09</a>
+				<a class="btn-toolbar" href="#slide-10">10</a>
+			</nav>
+			<div class="deck-topbar-actions">
+				<a class="btn-standard" href="healthcabinet-pitch-deck.md">Open Outline</a>
+				<button class="btn-primary" type="button" onclick="window.print()">Print / PDF</button>
+			</div>
+		</header>
 
 		<main class="deck">
-			<section class="slide" id="slide-1">
-				<div class="slide-inner">
-					<div class="hero-stack">
-						<div class="content-stack">
-							<div class="kicker">HealthCabinet / Pitch Deck</div>
-							<h1>Your health data,<br /><span class="accent">finally understood.</span></h1>
-							<p class="lead">
-								A personal health intelligence platform that turns scattered lab PDFs and
-								photos into structured biomarker history, trend visibility, and plain-language
-								AI interpretation.
-							</p>
+			<section class="deck-slide" id="slide-01">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
 						</div>
+						<div class="hc-app-header-user">
+							<span>Pitch Mode</span>
+							<span>Slide 1 / 10</span>
+						</div>
+					</header>
 
-						<div class="metric-row">
-							<div class="metric">
-								<div class="metric-label">Input</div>
-								<div class="metric-value">PDFs + photos</div>
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header">
+								<span aria-hidden="true">&#128240;</span>
+								Presentation
 							</div>
-							<div class="metric">
-								<div class="metric-label">Experience</div>
-								<div class="metric-value">Clinical table-first UI</div>
-							</div>
-							<div class="metric">
-								<div class="metric-label">Trust posture</div>
-								<div class="metric-value">EU + GDPR minded</div>
-							</div>
-						</div>
-					</div>
+							<div class="hc-app-nav-section-label">Story Flow</div>
+							<a class="hc-app-nav-item active" href="#slide-01"><span aria-hidden="true">&#9679;</span>Cover</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Problem</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>User</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Product</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Loop</a>
+							<div class="hc-app-nav-separator"></div>
+							<div class="hc-app-nav-section-label">Proof</div>
+							<a class="hc-app-nav-item" href="#slide-06"><span aria-hidden="true">&#9679;</span>Trust</a>
+							<a class="hc-app-nav-item" href="#slide-07"><span aria-hidden="true">&#9679;</span>Build</a>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Model</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Roadmap</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Ask</a>
+						</aside>
 
-					<div class="window">
-						<div class="window-bar">
-							<span>HealthCabinet Preview</span>
-							<span>Dashboard</span>
-						</div>
-						<div class="window-body">
-							<div class="window-toolbar">
-								<span class="pill">Import Document</span>
-								<span class="pill">View Trends</span>
-								<span class="pill">Export Data</span>
-							</div>
-							<div class="table-panel">
-								<table aria-label="Example biomarker table">
-									<thead>
-										<tr>
-											<th>Biomarker</th>
-											<th>Value</th>
-											<th>Range</th>
-											<th>Status</th>
-											<th>Trend</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr>
-											<td>TSH</td>
-											<td>3.8 mIU/L</td>
-											<td>0.4 - 4.0</td>
-											<td><span class="status optimal">● Optimal</span></td>
-											<td>→ Stable</td>
-										</tr>
-										<tr>
-											<td>Vitamin D</td>
-											<td>22 ng/mL</td>
-											<td>30 - 100</td>
-											<td><span class="status concerning">◆ Concerning</span></td>
-											<td>↓ Declining</td>
-										</tr>
-										<tr>
-											<td>Hemoglobin</td>
-											<td>11.8 g/dL</td>
-											<td>12.0 - 15.5</td>
-											<td><span class="status borderline">⚠ Borderline</span></td>
-											<td>↓ Monitor</td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-							<div class="note">
-								<div class="note-title">AI Clinical Note</div>
-								<p>
-									Your ferritin and hemoglobin pattern suggests a slow downward trend worth
-									tracking. This is informational and should be discussed with your doctor,
-									but the trend is more important than the latest isolated number.
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</section>
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<div class="hc-summary-bar">
+									<span class="hc-summary-label">Mode:</span>
+									<span class="hc-summary-value">Product pitch</span>
+									<span class="hc-summary-sep">|</span>
+									<span class="hc-summary-label">Visual system:</span>
+									<span class="hc-summary-value">Current HealthCabinet UI</span>
+									<span class="hc-summary-sep">|</span>
+									<span class="hc-summary-label">Audience:</span>
+									<span class="hc-summary-value">Investors, partners, design reviewers</span>
+								</div>
 
-			<section class="slide" id="slide-2">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Problem</div>
-						<h2>Labs produce data.<br />Nobody produces meaning.</h2>
-						<p class="lead">
-							People already have their health information. They just have it in the wrong
-							shape: fragmented files, isolated numbers, and no longitudinal memory.
-						</p>
-						<ol>
-							<li>Results arrive as PDFs, scans, screenshots, and paper printouts.</li>
-							<li>Each document is interpreted in isolation instead of as a pattern over time.</li>
-							<li>Patients google abnormal values and still leave confused.</li>
-							<li>Repeated testers re-live the same workflow every few months.</li>
-						</ol>
-					</div>
+								<div class="deck-grid deck-grid-2">
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Positioning</div>
+											<div class="hc-dash-section-body">
+												<div class="deck-kicker">HealthCabinet / Personal health intelligence</div>
+												<h1 class="deck-title">Your health data, finally understood.</h1>
+												<p class="deck-lead">
+													HealthCabinet turns scattered lab PDFs and photos into structured
+													biomarker history, trend visibility, and plain-language AI interpretation.
+												</p>
+											</div>
+										</section>
 
-					<div class="card-grid">
-						<div class="panel">
-							<div class="big-number">1</div>
-							<div class="big-number-caption">Document snapshot with no durable context</div>
-						</div>
-						<div class="panel">
-							<div class="big-number">0</div>
-							<div class="big-number-caption">Patient-owned memory across labs and time</div>
-						</div>
-						<div class="panel" style="grid-column: 1 / -1;">
-							<div class="quote">
-								“I have the PDF, the flagged numbers, and the doctor’s one-line comment. I
-								still do not know what changed.”
+										<div class="deck-grid deck-grid-3">
+											<div class="deck-metric">
+												<div class="deck-metric-label">Input</div>
+												<div class="deck-metric-value">PDFs + photos</div>
+												<div class="deck-metric-copy">Messy real-world documents, not idealized feeds</div>
+											</div>
+											<div class="deck-metric">
+												<div class="deck-metric-label">Output</div>
+												<div class="deck-metric-value">Structured trend memory</div>
+												<div class="deck-metric-copy">One timeline instead of isolated files</div>
+											</div>
+											<div class="deck-metric">
+												<div class="deck-metric-label">Experience</div>
+												<div class="deck-metric-value">Clinical workstation UI</div>
+												<div class="deck-metric-copy">Serious tool, not generic wellness chrome</div>
+											</div>
+										</div>
+
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Why this matters</div>
+											<div class="hc-dash-section-body">
+												<blockquote class="deck-quote">
+													Labs give people numbers. HealthCabinet gives them memory,
+													interpretation, and continuity across time.
+												</blockquote>
+											</div>
+										</section>
+									</div>
+
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Current product language</div>
+											<div class="hc-dash-section-body">
+												<div class="hc-summary-bar">
+													<span class="hc-summary-label">Patient:</span>
+													<span class="hc-summary-value">Sofia K.</span>
+													<span class="hc-summary-sep">|</span>
+													<span class="hc-summary-label">Age:</span>
+													<span class="hc-summary-value">34</span>
+													<span class="hc-summary-sep">|</span>
+													<span class="hc-summary-label">Documents:</span>
+													<span class="hc-summary-value">4</span>
+													<span class="hc-summary-sep">|</span>
+													<span class="hc-summary-label">Biomarkers:</span>
+													<span class="hc-summary-value">23</span>
+												</div>
+
+												<div class="hc-data-table">
+													<table aria-label="Example biomarker table">
+														<thead>
+															<tr>
+																<th>Biomarker</th>
+																<th>Value</th>
+																<th>Range</th>
+																<th>Status</th>
+																<th>Trend</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr>
+																<td>TSH</td>
+																<td>5.82 mIU/L</td>
+																<td>0.40 - 4.00</td>
+																<td class="hc-status-borderline">&#9888; Borderline</td>
+																<td>&uarr; 3 results</td>
+															</tr>
+															<tr>
+																<td>Ferritin</td>
+																<td>17 ng/mL</td>
+																<td>13 - 150</td>
+																<td class="hc-status-concerning">&#9670; Concerning</td>
+																<td>&darr; 2 results</td>
+															</tr>
+															<tr>
+																<td>Vitamin D</td>
+																<td>22 ng/mL</td>
+																<td>30 - 100</td>
+																<td class="hc-status-concerning">&#9670; Concerning</td>
+																<td>&darr; Stable low</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</section>
+
+										<div class="hc-ai-note">
+											<h2 class="hc-ai-note-header">&#8505; AI Clinical Note</h2>
+											<div class="hc-ai-note-body">
+												<p>
+													Your ferritin has been drifting downward across multiple uploads.
+													The single number matters, but the trend matters more: the pattern
+													suggests declining iron stores rather than a one-off anomaly.
+												</p>
+												<p>
+													The same longitudinal view makes TSH easier to interpret. It is not
+													just elevated today; it has been climbing over several results.
+												</p>
+											</div>
+											<div class="hc-ai-note-disclaimer">
+												Informational only. HealthCabinet explains patterns and context; it
+												does not replace professional medical advice.
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
-						</div>
-					</div>
-				</div>
-			</section>
 
-			<section class="slide" id="slide-3">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Wedge</div>
-						<h2>Start with repeated testers,<br />where memory compounds.</h2>
-						<p class="lead">
-							HealthCabinet is strongest when a user uploads again and again. The product gets
-							better as the history gets denser.
-						</p>
-						<ul>
-							<li>Chronic condition managers who test every quarter</li>
-							<li>Private lab users who self-order panels</li>
-							<li>People who need clarity, not wellness gamification</li>
-						</ul>
-					</div>
-
-					<div class="story-grid">
-						<div class="story-card">
-							<h3>Sofia</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Hashimoto’s patient. Needs trend intelligence across several lab cycles, not
-								one more PDF archive.
-							</p>
-						</div>
-						<div class="story-card">
-							<h3>Maks</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Private self-tester. Wants plain-language interpretation without panic or
-								guesswork.
-							</p>
-						</div>
-						<div class="story-card">
-							<h3>Founder/Admin</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Needs operational visibility, correction workflows, and a clean queue when
-								parsing goes sideways.
-							</p>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			<section class="slide" id="slide-4">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Product</div>
-						<h2>Upload once.<br />Understand immediately.<br />Learn over time.</h2>
-						<ul>
-							<li>Upload a health document as a PDF or photo</li>
-							<li>Extract and normalize biomarker values</li>
-							<li>Display status, ranges, and trends in a dense clinical UI</li>
-							<li>Generate an AI clinical note grounded in the user’s data history</li>
-						</ul>
-						<div class="footer-tag">Table-first UX instead of generic card-based wellness design</div>
-					</div>
-
-					<div class="window">
-						<div class="window-bar">
-							<span>Upload Pipeline</span>
-							<span>Processing</span>
-						</div>
-						<div class="window-body">
-							<div class="panel">
-								<div class="metric-label">Stage</div>
-								<div class="metric-value">Uploading → Reading → Extracting → Generating</div>
-							</div>
-							<div class="panel">
-								<div class="metric-label">Failure handling</div>
-								<div class="metric-value">Partial extraction retained + guided re-upload</div>
-							</div>
-							<div class="panel">
-								<div class="metric-label">Output</div>
-								<div class="metric-value">Structured values + AI note + updated history</div>
-							</div>
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Cover</div>
+								<div class="hc-status-bar-field">Clinical workstation theme applied</div>
+							</footer>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<section class="slide full" id="slide-5">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Core Loop</div>
-						<h2>Import → understand → trust the platform more.</h2>
-						<div class="roadmap-grid">
-							<div class="roadmap-card">
-								<h3>1. Import</h3>
-								<p class="lead" style="font-size: 1rem;">
-									User drops in a new lab document without caring about source lab, format,
-									or layout.
-								</p>
+			<section class="deck-slide" id="slide-02">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Problem framing</span>
+							<span>Slide 2 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Presentation</div>
+							<div class="hc-app-nav-section-label">Story Flow</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Cover</a>
+							<a class="hc-app-nav-item active" href="#slide-02"><span aria-hidden="true">&#9679;</span>Problem</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>User</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Product</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Loop</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Problem</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Health data exists. Meaning does not.</div>
+										<h2 class="deck-subtitle">Patients own the files, but not the longitudinal understanding.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Current reality</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Results arrive as PDFs, scans, screenshots, and paper printouts.</li>
+												<li>Each lab is interpreted as a snapshot, not a timeline.</li>
+												<li>Users google abnormal values and still leave uncertain.</li>
+												<li>Chronic-condition users repeat the same confusion every few months.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">What the product must replace</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Current state versus needed state">
+													<thead>
+														<tr>
+															<th>Today</th>
+															<th>Needed instead</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Static PDF archive</td>
+															<td>Patient-owned health memory</td>
+														</tr>
+														<tr>
+															<td>Single-result interpretation</td>
+															<td>Cross-upload pattern recognition</td>
+														</tr>
+														<tr>
+															<td>Raw numbers and flags</td>
+															<td>Plain-language, contextual meaning</td>
+														</tr>
+														<tr>
+															<td>Portal-by-portal fragmentation</td>
+															<td>One coherent timeline</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<div class="hc-state hc-state-warning">
+										<p class="hc-state-title">User pain is repetitive, not one-time.</p>
+										<p class="hc-state-description">
+											The strongest use case is not a novelty upload. It is the person who
+											keeps testing and never gets a patient-owned longitudinal view.
+										</p>
+									</div>
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">The opportunity is continuity.</p>
+										<p class="hc-state-description">
+											HealthCabinet does not need to invent more health data. It needs to
+											transform existing documents into compounding intelligence.
+										</p>
+									</div>
+								</div>
 							</div>
-							<div class="roadmap-card">
-								<h3>2. Extract</h3>
-								<p class="lead" style="font-size: 1rem;">
-									The pipeline parses, normalizes, and preserves structured health values.
-								</p>
-							</div>
-							<div class="roadmap-card">
-								<h3>3. Interpret</h3>
-								<p class="lead" style="font-size: 1rem;">
-									AI explains the latest state in plain language, with uncertainty surfaced
-									where needed.
-								</p>
-							</div>
-							<div class="roadmap-card">
-								<h3>4. Remember</h3>
-								<p class="lead" style="font-size: 1rem;">
-									The history becomes more valuable after every additional upload.
-								</p>
-							</div>
-							<div class="roadmap-card">
-								<h3>5. Retain</h3>
-								<p class="lead" style="font-size: 1rem;">
-									Users return because the product accumulates context that no single visit
-									can recreate.
-								</p>
-							</div>
-							<div class="roadmap-card">
-								<h3>6. Expand</h3>
-								<p class="lead" style="font-size: 1rem;">
-									Doctor-share workflows, premium AI memory, and deeper intelligence stack on
-									top of the same loop.
-								</p>
-							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Problem</div>
+								<div class="hc-status-bar-field">Fragmented data -> missing meaning</div>
+							</footer>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<section class="slide" id="slide-6">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Differentiation</div>
-						<h2>Memory, context, and trust.<br />Not just “AI for labs.”</h2>
-						<p class="lead">
-							The moat is the combination: ingest arbitrary documents, create value before
-							the first upload, and make the product feel like serious medical software.
-						</p>
-					</div>
+			<section class="deck-slide" id="slide-03">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Target users</span>
+							<span>Slide 3 / 10</span>
+						</div>
+					</header>
 
-					<div class="status-grid">
-						<div class="status-card">
-							<h3>Universal document intake</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Handles the messy real-world input people already have instead of waiting for
-								pristine integrations.
-							</p>
-						</div>
-						<div class="status-card">
-							<h3>Context-first onboarding</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Creates a baseline and recommendations before the first document arrives.
-							</p>
-						</div>
-						<div class="status-card">
-							<h3>Cross-upload reasoning</h3>
-							<p class="lead" style="font-size: 1rem;">
-								The product sees trends across time, not only whatever arrived today.
-							</p>
-						</div>
-						<div class="status-card" style="grid-column: 1 / -1;">
-							<h3>Clinical workstation visual language</h3>
-							<p class="lead" style="font-size: 1rem;">
-								HealthCabinet looks like a trustworthy tool, not another pastel wellness app.
-								The interface itself becomes part of the positioning.
-							</p>
-						</div>
-					</div>
-				</div>
-			</section>
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Presentation</div>
+							<div class="hc-app-nav-section-label">Story Flow</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Cover</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Problem</a>
+							<a class="hc-app-nav-item active" href="#slide-03"><span aria-hidden="true">&#9679;</span>User</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Product</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Loop</a>
+						</aside>
 
-			<section class="slide" id="slide-7">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Trust</div>
-						<h2>Sensitive product.<br />Serious handling.</h2>
-						<ul>
-							<li>EU region posture: AWS <code>eu-central-1</code></li>
-							<li>Consent, export, and deletion are part of the product, not backlog garnish</li>
-							<li>AI is framed as informational, not diagnostic</li>
-							<li>Admin review paths exist for extraction edge cases</li>
-						</ul>
-					</div>
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Target user wedge</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Start where the history compounds</div>
+										<h2 class="deck-subtitle">Repeated testers are the highest-value starting segment.</h2>
+									</div>
+								</section>
 
-					<div class="status-grid">
-						<div class="status-card">
-							<h3>Data handling</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Encryption posture, protected tokens, and EU residency expectations are built
-								into the architecture.
-							</p>
-						</div>
-						<div class="status-card">
-							<h3>AI safety</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Outputs are plain-language and bounded. They explain. They do not prescribe.
-							</p>
-						</div>
-						<div class="status-card">
-							<h3>Operational correction</h3>
-							<p class="lead" style="font-size: 1rem;">
-								Parsing is observable, partial extraction is retained, and admin correction is
-								part of the workflow.
-							</p>
-						</div>
-					</div>
-				</div>
-			</section>
+								<div class="deck-grid deck-grid-3">
+									<fieldset class="hc-fieldset">
+										<legend>Sofia</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-info">Primary persona</span>
+											<p class="deck-mini">
+												Hashimoto's patient testing every quarter. She does not need another
+												file cabinet. She needs trend intelligence and context she can take
+												into appointments.
+											</p>
+											<p class="deck-mini">
+												Retention driver: each new upload makes the product more useful.
+											</p>
+										</div>
+									</fieldset>
 
-			<section class="slide" id="slide-8">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Build Status</div>
-						<h2>This is not deck theater.<br />There is already product surface.</h2>
-						<ul>
-							<li>Auth, registration, and consent-aware account creation</li>
-							<li>Medical onboarding and profile capture</li>
-							<li>Document upload, status streaming, and partial extraction handling</li>
-							<li>Dashboard trends, AI clinical notes, and admin operations</li>
-						</ul>
-					</div>
+									<fieldset class="hc-fieldset">
+										<legend>Maks</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-default">Secondary persona</span>
+											<p class="deck-mini">
+												Private self-tester who gets a panel twice a year and wants a clear,
+												non-alarmist explanation of what changed.
+											</p>
+											<p class="deck-mini">
+												Retention driver: plain-language interpretation and trust.
+											</p>
+										</div>
+									</fieldset>
 
-					<div class="model-grid">
-						<div class="model-card">
-							<h3>Frontend</h3>
-							<p class="lead" style="font-size: 1rem;">SvelteKit 2, Svelte 5, table-first clinical UI</p>
-						</div>
-						<div class="model-card">
-							<h3>Backend</h3>
-							<p class="lead" style="font-size: 1rem;">FastAPI, SQLAlchemy async, Alembic, Redis</p>
-						</div>
-						<div class="model-card">
-							<h3>AI pipeline</h3>
-							<p class="lead" style="font-size: 1rem;">LangGraph orchestration, Anthropic, ARQ worker</p>
-						</div>
-					</div>
-				</div>
-			</section>
+									<fieldset class="hc-fieldset">
+										<legend>Founder/Admin</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-warning">Operational persona</span>
+											<p class="deck-mini">
+												Needs visibility into upload failures, extraction quality, and
+												correction workflows without heavy ops overhead.
+											</p>
+											<p class="deck-mini">
+												Retention driver: maintain reliability and user trust at the edge cases.
+											</p>
+										</div>
+									</fieldset>
+								</div>
 
-			<section class="slide" id="slide-9">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Business Model</div>
-						<h2>Freemium first.<br />Premium intelligence second.</h2>
-						<p class="lead">
-							The immediate goal is to prove the upload-to-insight loop. Monetization should
-							layer onto real repeat usage, not distract from it.
-						</p>
-						<ul>
-							<li>Free tier validates demand and trust</li>
-							<li>Paid tier unlocks deeper AI memory and premium workflows</li>
-							<li>Future expansion: family plans, doctor-share exports, storage upgrades</li>
-						</ul>
-					</div>
-
-					<div class="roadmap-grid">
-						<div class="roadmap-card">
-							<h3>Now</h3>
-							<p class="lead" style="font-size: 1rem;">Validate the core upload → extract → interpret loop.</p>
-						</div>
-						<div class="roadmap-card">
-							<h3>Next</h3>
-							<p class="lead" style="font-size: 1rem;">Increase repeat uploads and cross-document value.</p>
-						</div>
-						<div class="roadmap-card">
-							<h3>Later</h3>
-							<p class="lead" style="font-size: 1rem;">Expand AI companion depth and broader EU reach.</p>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			<section class="slide" id="slide-10">
-				<div class="slide-inner">
-					<div class="content-stack">
-						<div class="kicker">Ask</div>
-						<h2>Help validate the product<br />with real users and real documents.</h2>
-						<p class="lead">
-							HealthCabinet is ready for sharper feedback loops: product critique, design
-							refinement, pilot users, and strategic conversations around trustworthy health
-							data UX.
-						</p>
-						<ul>
-							<li>Early users with recurring lab workflows</li>
-							<li>Partners who care about patient-facing health intelligence</li>
-							<li>Design and product feedback on the clinical-workstation direction</li>
-						</ul>
-						<div class="footer-tag">HealthCabinet / personal health intelligence, not generic wellness</div>
-					</div>
-
-					<div class="window">
-						<div class="window-bar">
-							<span>Next Milestones</span>
-							<span>2026</span>
-						</div>
-						<div class="window-body">
-							<div class="panel">
-								<div class="metric-label">Metric that matters first</div>
-								<div class="metric-value">Repeat uploads across separate dates</div>
+								<div class="deck-grid deck-grid-2">
+									<div class="hc-state hc-state-success">
+										<p class="hc-state-title">Why repeated testers matter</p>
+										<p class="hc-state-description">
+											They produce the exact kind of data history that makes HealthCabinet
+											differentiated. Each upload deepens the moat.
+										</p>
+									</div>
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Why the wedge is practical</p>
+										<p class="hc-state-description">
+											This is a clear B2C starting point with understandable repeat behavior,
+											high motivation, and visible value after every new document.
+										</p>
+									</div>
+								</div>
 							</div>
-							<div class="panel">
-								<div class="metric-label">Product proof</div>
-								<div class="metric-value">Users trust the system enough to return with the next lab</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">User wedge</div>
+								<div class="hc-status-bar-field">Repeated testers prioritized</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-04">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Product flow</span>
+							<span>Slide 4 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Presentation</div>
+							<div class="hc-app-nav-section-label">Story Flow</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Cover</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Problem</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>User</a>
+							<a class="hc-app-nav-item active" href="#slide-04"><span aria-hidden="true">&#9679;</span>Product</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Loop</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Product</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Upload once. Understand immediately. Learn over time.</div>
+										<h2 class="deck-subtitle">The product translates documents into a timeline users can actually read.</h2>
+									</div>
+								</section>
+
+								<div class="deck-process">
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">1</span>
+										<div class="deck-process-step-title">Import document</div>
+										<div class="deck-process-step-copy">User uploads a PDF or photo from any lab.</div>
+									</div>
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">2</span>
+										<div class="deck-process-step-title">Extract values</div>
+										<div class="deck-process-step-copy">Pipeline reads, normalizes, and scores confidence.</div>
+									</div>
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">3</span>
+										<div class="deck-process-step-title">Show history</div>
+										<div class="deck-process-step-copy">Dashboard updates status, ranges, and trends.</div>
+									</div>
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">4</span>
+										<div class="deck-process-step-title">Explain clearly</div>
+										<div class="deck-process-step-copy">AI adds plain-language interpretation with context.</div>
+									</div>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Pipeline status language</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Processing pipeline">
+													<thead>
+														<tr>
+															<th>Stage</th>
+															<th>System behavior</th>
+															<th>User experience</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Uploading</td>
+															<td>Store file + begin job orchestration</td>
+															<td>Clear progress, no ambiguity</td>
+														</tr>
+														<tr>
+															<td>Reading</td>
+															<td>Parse image/PDF content</td>
+															<td>Visible stage naming</td>
+														</tr>
+														<tr>
+															<td>Extracting</td>
+															<td>Map values and ranges into structure</td>
+															<td>Confidence-aware results</td>
+														</tr>
+														<tr>
+															<td>Generating</td>
+															<td>Create AI interpretation</td>
+															<td>Plain-language explanation</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+
+									<div class="deck-stack">
+										<div class="hc-state hc-state-warning">
+											<p class="hc-state-title">Edge cases are first-class</p>
+											<p class="hc-state-description">
+												Partial extraction is not a dead end. The product preserves what it
+												could read and guides the user through a better re-upload.
+											</p>
+										</div>
+										<div class="hc-state hc-state-success">
+											<p class="hc-state-title">The UI stays dense and legible</p>
+											<p class="hc-state-description">
+												Status, reference ranges, and trend all live in the table. Users do
+												not have to open three layers of cards to understand one biomarker.
+											</p>
+										</div>
+									</div>
+								</div>
 							</div>
-							<div class="panel">
-								<div class="metric-label">Long-term payoff</div>
-								<div class="metric-value">Compounding health memory that no single visit can recreate</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Product flow</div>
+								<div class="hc-status-bar-field">Import -> extract -> interpret</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-05">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Compounding loop</span>
+							<span>Slide 5 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Presentation</div>
+							<div class="hc-app-nav-section-label">Story Flow</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Cover</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Problem</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>User</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Product</a>
+							<a class="hc-app-nav-item active" href="#slide-05"><span aria-hidden="true">&#9679;</span>Loop</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Core loop</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Import -> understand -> trust the platform more</div>
+										<h2 class="deck-subtitle">Each upload increases product value instead of merely creating another record.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-4">
+									<div class="deck-metric">
+										<div class="deck-metric-label">Step 1</div>
+										<div class="deck-metric-value">Upload</div>
+										<div class="deck-metric-copy">Any lab document enters the system.</div>
+									</div>
+									<div class="deck-metric">
+										<div class="deck-metric-label">Step 2</div>
+										<div class="deck-metric-value">Structure</div>
+										<div class="deck-metric-copy">Values become queryable history.</div>
+									</div>
+									<div class="deck-metric">
+										<div class="deck-metric-label">Step 3</div>
+										<div class="deck-metric-value">Interpret</div>
+										<div class="deck-metric-copy">AI explains the latest picture clearly.</div>
+									</div>
+									<div class="deck-metric">
+										<div class="deck-metric-label">Step 4</div>
+										<div class="deck-metric-value">Compound</div>
+										<div class="deck-metric-copy">The next upload becomes more valuable.</div>
+									</div>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Why retention can work</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>The product gains context with each new document.</li>
+												<li>Trend visibility becomes stronger after the second and third upload.</li>
+												<li>AI can reason across time instead of summarizing isolated data.</li>
+												<li>The user starts to rely on HealthCabinet as their memory layer.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Not just another AI wrapper</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Differentiation summary">
+													<thead>
+														<tr>
+															<th>Capability</th>
+															<th>Generic wellness app</th>
+															<th>HealthCabinet</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Arbitrary document intake</td>
+															<td>No</td>
+															<td class="hc-status-optimal">Yes</td>
+														</tr>
+														<tr>
+															<td>Cross-upload memory</td>
+															<td>Weak</td>
+															<td class="hc-status-optimal">Core behavior</td>
+														</tr>
+														<tr>
+															<td>Dense clinical table UI</td>
+															<td>Rare</td>
+															<td class="hc-status-optimal">Built into product language</td>
+														</tr>
+														<tr>
+															<td>Admin correction workflow</td>
+															<td>Often missing</td>
+															<td class="hc-status-optimal">Included</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
 							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Loop</div>
+								<div class="hc-status-bar-field">Compounding product value</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-06">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Trust and safety</span>
+							<span>Slide 6 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128737;</span>Trust Layer</div>
+							<div class="hc-app-nav-section-label">Proof</div>
+							<a class="hc-app-nav-item active" href="#slide-06"><span aria-hidden="true">&#9679;</span>Trust</a>
+							<a class="hc-app-nav-item" href="#slide-07"><span aria-hidden="true">&#9679;</span>Build</a>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Model</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Roadmap</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Ask</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Trust and safety</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Sensitive product, serious handling</div>
+										<h2 class="deck-subtitle">The trust model is part of the product, not a footer afterthought.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<fieldset class="hc-fieldset">
+										<legend>Data and compliance posture</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-info">AWS eu-central-1 target</span>
+											<ul class="deck-list">
+												<li>EU-region data handling posture</li>
+												<li>Consent, export, and deletion flows in scope</li>
+												<li>Encryption posture for health data and tokens</li>
+												<li>No casual treatment of special-category data</li>
+											</ul>
+										</div>
+									</fieldset>
+
+									<fieldset class="hc-fieldset">
+										<legend>AI safety posture</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-warning">Informational, not diagnostic</span>
+											<ul class="deck-list">
+												<li>AI explains patterns and context</li>
+												<li>Uncertainty should be surfaced, not hidden</li>
+												<li>No treatment or dosage instruction framing</li>
+												<li>Human review path exists for extraction edge cases</li>
+											</ul>
+										</div>
+									</fieldset>
+								</div>
+
+								<div class="deck-grid deck-grid-3">
+									<div class="hc-state hc-state-success">
+										<p class="hc-state-title">Patient trust</p>
+										<p class="hc-state-description">
+											Users need to believe their history is secure, exportable, and under
+											their control.
+										</p>
+									</div>
+									<div class="hc-state hc-state-warning">
+										<p class="hc-state-title">Operational trust</p>
+										<p class="hc-state-description">
+											Admin tools matter because document intelligence will always have edge
+											cases in the real world.
+										</p>
+									</div>
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Brand trust</p>
+										<p class="hc-state-description">
+											The clinical UI helps, but real credibility comes from bounded claims
+											and visible safety choices.
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Trust</div>
+								<div class="hc-status-bar-field">EU posture + AI guardrails</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-07">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Build status</span>
+							<span>Slide 7 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128295;</span>Proof</div>
+							<div class="hc-app-nav-section-label">Execution</div>
+							<a class="hc-app-nav-item" href="#slide-06"><span aria-hidden="true">&#9679;</span>Trust</a>
+							<a class="hc-app-nav-item active" href="#slide-07"><span aria-hidden="true">&#9679;</span>Build</a>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Model</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Roadmap</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Ask</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Current build</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">This is not deck-only positioning</div>
+										<h2 class="deck-subtitle">There is already product surface in the repository.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">System shape</div>
+										<div class="hc-dash-section-body">
+											<div class="deck-arch">
+												<div class="deck-arch-box">
+													<strong>Frontend</strong>
+													<span>SvelteKit 2, Svelte 5, table-first clinical UI</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>Backend API</strong>
+													<span>FastAPI, SQLAlchemy async, auth, document endpoints</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>Worker</strong>
+													<span>ARQ pipeline for async document processing</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>PostgreSQL</strong>
+													<span>Structured health values and user data</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>Redis</strong>
+													<span>Queues, transient state, and coordination</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>MinIO / S3</strong>
+													<span>Document object storage</span>
+												</div>
+											</div>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Visible repo capabilities</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Implemented product areas">
+													<thead>
+														<tr>
+															<th>Area</th>
+															<th>Status in repo</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Authentication and consent-aware signup</td>
+															<td class="hc-status-optimal">Implemented</td>
+														</tr>
+														<tr>
+															<td>Medical onboarding and profile capture</td>
+															<td class="hc-status-optimal">Implemented</td>
+														</tr>
+														<tr>
+															<td>Document upload and status streaming</td>
+															<td class="hc-status-optimal">Implemented</td>
+														</tr>
+														<tr>
+															<td>Dashboard trends and AI clinical notes</td>
+															<td class="hc-status-optimal">Implemented</td>
+														</tr>
+														<tr>
+															<td>Admin operations surface</td>
+															<td class="hc-status-optimal">Implemented</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
+
+								<div class="hc-state hc-state-info">
+									<p class="hc-state-title">Credibility point</p>
+									<p class="hc-state-description">
+										The pitch should describe an existing direction with working product
+										surfaces, not a speculative idea disconnected from the repository.
+									</p>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Build</div>
+								<div class="hc-status-bar-field">Repo-backed product story</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-08">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Business model</span>
+							<span>Slide 8 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128176;</span>Commercial</div>
+							<div class="hc-app-nav-section-label">Business</div>
+							<a class="hc-app-nav-item" href="#slide-06"><span aria-hidden="true">&#9679;</span>Trust</a>
+							<a class="hc-app-nav-item" href="#slide-07"><span aria-hidden="true">&#9679;</span>Build</a>
+							<a class="hc-app-nav-item active" href="#slide-08"><span aria-hidden="true">&#9679;</span>Model</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Roadmap</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Ask</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Business model and go-to-market</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Validate the core loop before overbuilding monetization</div>
+										<h2 class="deck-subtitle">Freemium proves trust first. Premium layers onto real repeat usage.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<fieldset class="hc-fieldset">
+										<legend>Commercial model</legend>
+										<div class="deck-stack">
+											<div class="hc-state hc-state-success">
+												<p class="hc-state-title">Free tier</p>
+												<p class="hc-state-description">
+													Prove the upload-to-insight loop, reduce friction, and establish trust.
+												</p>
+											</div>
+											<div class="hc-state hc-state-info">
+												<p class="hc-state-title">Premium tier</p>
+												<p class="hc-state-description">
+													Unlock deeper AI memory, richer trend history, and advanced workflows.
+												</p>
+											</div>
+											<div class="hc-state hc-state-warning">
+												<p class="hc-state-title">Later expansion</p>
+												<p class="hc-state-description">
+													Family plans, storage upgrades, and doctor-share features become more
+													compelling after the core loop is proven.
+												</p>
+											</div>
+										</div>
+									</fieldset>
+
+									<fieldset class="hc-fieldset">
+										<legend>Go-to-market wedge</legend>
+										<div class="deck-stack">
+											<ul class="deck-list">
+												<li>Chronic-condition communities with repeated testing behavior</li>
+												<li>Private lab and self-testing audiences already buying panels</li>
+												<li>Founder-led demos and narrative-led product marketing</li>
+												<li>Memorable clinical-workstation aesthetic as a positioning advantage</li>
+											</ul>
+										</div>
+									</fieldset>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Model</div>
+								<div class="hc-status-bar-field">Freemium first, premium intelligence later</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-09">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Roadmap</span>
+							<span>Slide 9 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128198;</span>Roadmap</div>
+							<div class="hc-app-nav-section-label">Next</div>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Model</a>
+							<a class="hc-app-nav-item active" href="#slide-09"><span aria-hidden="true">&#9679;</span>Roadmap</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Ask</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Roadmap</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Prove the loop, then deepen the intelligence</div>
+										<h2 class="deck-subtitle">The roadmap compounds depth instead of scattering into disconnected features.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-3">
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Now</p>
+										<p class="hc-state-description">
+											Improve upload reliability, time-to-first-insight, and the confidence of
+											the extraction-to-interpretation loop.
+										</p>
+									</div>
+									<div class="hc-state hc-state-success">
+										<p class="hc-state-title">Next</p>
+										<p class="hc-state-description">
+											Increase repeat usage, deeper timelines, stronger cross-document AI
+											memory, and better clinical note quality.
+										</p>
+									</div>
+									<div class="hc-state hc-state-warning">
+										<p class="hc-state-title">Later</p>
+										<p class="hc-state-description">
+											Doctor-share workflows, richer exports, premium intelligence layers,
+											and broader EU expansion.
+										</p>
+									</div>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">What to measure first</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Upload success rate</li>
+												<li>Time to first usable insight</li>
+												<li>Repeat uploads across separate dates</li>
+												<li>Users with multi-document histories</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">What not to optimize too early</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Complex billing surface before trust is proven</li>
+												<li>Feature sprawl that weakens the core upload loop</li>
+												<li>Marketing polish detached from product usefulness</li>
+												<li>Medical overclaiming for short-term attention</li>
+											</ul>
+										</div>
+									</section>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Roadmap</div>
+								<div class="hc-status-bar-field">Compound depth, not feature sprawl</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-10">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Closing ask</span>
+							<span>Slide 10 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Deck navigation">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#9993;</span>Close</div>
+							<div class="hc-app-nav-section-label">Final</div>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Roadmap</a>
+							<a class="hc-app-nav-item active" href="#slide-10"><span aria-hidden="true">&#9679;</span>Ask</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<div class="deck-grid deck-grid-2">
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Ask</div>
+											<div class="hc-dash-section-body">
+												<div class="deck-kicker">Validate with real users and real documents</div>
+												<h2 class="deck-subtitle">HealthCabinet is ready for sharper feedback loops.</h2>
+												<p class="deck-lead">
+													The next step is not more abstract strategy. It is better evidence:
+													pilot users, stronger product critique, and partners who care about
+													trustworthy health data UX.
+												</p>
+											</div>
+										</section>
+
+										<div class="deck-grid deck-grid-3">
+											<div class="hc-state hc-state-info">
+												<p class="hc-state-title">Need 1</p>
+												<p class="hc-state-description">Pilot users with recurring lab workflows</p>
+											</div>
+											<div class="hc-state hc-state-success">
+												<p class="hc-state-title">Need 2</p>
+												<p class="hc-state-description">Design and product critique on the current UX direction</p>
+											</div>
+											<div class="hc-state hc-state-warning">
+												<p class="hc-state-title">Need 3</p>
+												<p class="hc-state-description">Strategic conversations around patient-facing health intelligence</p>
+											</div>
+										</div>
+									</div>
+
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Why now</div>
+											<div class="hc-dash-section-body">
+												<div class="hc-data-table">
+													<table aria-label="Closing summary">
+														<thead>
+															<tr>
+																<th>Signal</th>
+																<th>Interpretation</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr>
+																<td>Product story</td>
+																<td>Clear and differentiated</td>
+															</tr>
+															<tr>
+																<td>Design language</td>
+																<td>Memorable and domain-aligned</td>
+															</tr>
+															<tr>
+																<td>Build credibility</td>
+																<td>Repo-backed, not hypothetical</td>
+															</tr>
+															<tr>
+																<td>Next proof needed</td>
+																<td>Repeat usage with real documents</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</section>
+
+										<div class="hc-ai-note">
+											<h2 class="hc-ai-note-header">Closing line</h2>
+											<div class="hc-ai-note-body">
+												<p>
+													HealthCabinet is not trying to be another wellness surface. It is
+													trying to become the patient-owned memory and interpretation layer
+													for recurring health data.
+												</p>
+											</div>
+											<div class="hc-ai-note-disclaimer">
+												Deck rebuilt to match the current HealthCabinet design system:
+												Arctic Blue palette, raised/sunken chrome, table-first workstation UI.
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Ready</div>
+								<div class="hc-status-bar-field">Ask</div>
+								<div class="hc-status-bar-field">Pilot users + product critique + partners</div>
+							</footer>
 						</div>
 					</div>
 				</div>
