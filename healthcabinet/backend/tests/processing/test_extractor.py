@@ -199,7 +199,7 @@ async def test_extract_from_document_uses_openai_fallback_when_anthropic_key_mis
         patch("app.processing.extractor.settings.AI_EXTRACTION_PROVIDER", "auto"),
         patch("app.processing.extractor.settings.ANTHROPIC_API_KEY", ""),
         patch("app.processing.extractor.settings.OPENAI_API_KEY", "  openai-key  "),
-        patch("app.processing.extractor.settings.OPENAI_EXTRACTION_MODEL", "gpt-5-mini"),
+        patch("app.processing.extractor.settings.OPENAI_EXTRACTION_MODEL", "gpt-5.5"),
         patch("app.processing.extractor._get_openai_model", return_value=fake_model) as model_cls,
     ):
         result = await extract_from_document(
@@ -209,7 +209,7 @@ async def test_extract_from_document_uses_openai_fallback_when_anthropic_key_mis
         )
 
     assert result.raw_lab_name == "OpenAI Lab"
-    assert model_cls.call_args.kwargs == {"api_key": "openai-key", "model": "gpt-5-mini"}
+    assert model_cls.call_args.kwargs == {"api_key": "openai-key", "model": "gpt-5.5"}
     messages = fake_model.ainvoke.await_args.args[0]
     content = messages[1].content
     assert content[1]["type"] == "file"
@@ -231,7 +231,7 @@ async def test_extract_from_document_uses_explicit_openai_image_provider():
         patch("app.processing.extractor.settings.AI_EXTRACTION_PROVIDER", "openai"),
         patch("app.processing.extractor.settings.ANTHROPIC_API_KEY", "anthropic-key"),
         patch("app.processing.extractor.settings.OPENAI_API_KEY", "openai-key"),
-        patch("app.processing.extractor.settings.OPENAI_EXTRACTION_MODEL", "gpt-5-mini"),
+        patch("app.processing.extractor.settings.OPENAI_EXTRACTION_MODEL", "gpt-5.5"),
         patch("app.processing.extractor._get_openai_model", return_value=fake_model),
     ):
         await extract_from_document(

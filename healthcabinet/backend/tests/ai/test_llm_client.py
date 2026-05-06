@@ -112,14 +112,14 @@ async def test_call_model_text_uses_openai_fallback_when_anthropic_key_missing(
         patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", ""),
         patch.object(llm_client.settings, "OPENAI_API_KEY", "  openai-key  "),
-        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5-mini"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
         patch.object(llm_client, "ChatOpenAI", return_value=fake_model) as chat_cls,
     ):
         text = await llm_client.call_model_text("Hello")
 
     assert text == "OpenAI response"
     assert chat_cls.call_args.kwargs == {
-        "model": "gpt-5-mini",
+        "model": "gpt-5.5",
         "api_key": llm_client.SecretStr("openai-key"),
         "max_completion_tokens": llm_client._CALL_MAX_TOKENS,
     }
@@ -137,7 +137,7 @@ async def test_call_model_text_uses_explicit_openai_provider_when_both_keys_exis
         patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "openai"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
         patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
-        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5-mini"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
         patch.object(llm_client, "ChatAnthropic") as anthropic_chat_cls,
         patch.object(llm_client, "ChatOpenAI", return_value=fake_model),
     ):
@@ -162,7 +162,7 @@ async def test_call_model_text_falls_back_to_openai_for_temporary_anthropic_erro
         patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
         patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
-        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5-mini"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
         patch.object(
             llm_client,
             "ChatAnthropic",
@@ -231,7 +231,7 @@ async def test_stream_model_text_falls_back_to_openai_before_streaming_chunks(
         patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
         patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
-        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5-mini"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
         patch.object(
             llm_client,
             "ChatAnthropic",

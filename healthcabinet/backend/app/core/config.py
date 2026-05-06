@@ -55,8 +55,8 @@ class Settings(BaseSettings):
 
     # OpenAI
     OPENAI_API_KEY: str = ""
-    OPENAI_CHAT_MODEL: str = "gpt-5-mini"
-    OPENAI_EXTRACTION_MODEL: str = "gpt-5-mini"
+    OPENAI_CHAT_MODEL: str = "gpt-5.5"
+    OPENAI_EXTRACTION_MODEL: str = "gpt-5.5"
 
     # Sentry
     SENTRY_DSN: str = ""
