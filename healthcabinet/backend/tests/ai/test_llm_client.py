@@ -148,6 +148,36 @@ async def test_call_model_text_uses_explicit_openai_provider_when_both_keys_exis
 
 
 @pytest.mark.asyncio
+async def test_call_model_text_falls_back_to_openai_for_temporary_anthropic_error(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+    overloaded_error = _status_error(
+        status_code=529,
+        body={"error": {"type": "overloaded_error", "message": "Overloaded"}},
+    )
+    openai_model = SimpleNamespace(ainvoke=AsyncMock(return_value=_message("OpenAI fallback")))
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5-mini"),
+        patch.object(
+            llm_client,
+            "ChatAnthropic",
+            return_value=SimpleNamespace(ainvoke=AsyncMock(side_effect=overloaded_error)),
+        ) as anthropic_chat_cls,
+        patch.object(llm_client, "ChatOpenAI", return_value=openai_model) as openai_chat_cls,
+    ):
+        text = await llm_client.call_model_text("Hello")
+
+    assert text == "OpenAI fallback"
+    assert anthropic_chat_cls.call_count == 1
+    assert openai_chat_cls.call_count == 1
+
+
+@pytest.mark.asyncio
 async def test_stream_model_text_yields_incremental_text_chunks_and_reuses_client(
     llm_client_module,
 ):
@@ -177,6 +207,77 @@ async def test_stream_model_text_yields_incremental_text_chunks_and_reuses_clien
     assert second_chunks == ["Your ", "glucose ", "is normal."]
     assert chat_cls.call_count == 1
     assert chat_cls.call_args.kwargs["max_tokens"] == llm_client._STREAM_MAX_TOKENS
+
+
+@pytest.mark.asyncio
+async def test_stream_model_text_falls_back_to_openai_before_streaming_chunks(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+    overloaded_error = _status_error(
+        status_code=529,
+        body={"error": {"type": "overloaded_error", "message": "Overloaded"}},
+    )
+
+    async def _anthropic_stream(_prompt: str) -> AsyncIterator[SimpleNamespace]:
+        if False:
+            yield _message("")
+        raise overloaded_error
+
+    def _openai_stream(_prompt: str) -> AsyncIterator[SimpleNamespace]:
+        return _stream_messages("OpenAI ", "fallback")
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5-mini"),
+        patch.object(
+            llm_client,
+            "ChatAnthropic",
+            return_value=SimpleNamespace(astream=_anthropic_stream),
+        ),
+        patch.object(
+            llm_client,
+            "ChatOpenAI",
+            return_value=SimpleNamespace(astream=_openai_stream),
+        ) as openai_chat_cls,
+    ):
+        chunks = [chunk async for chunk in llm_client.stream_model_text("Prompt")]
+
+    assert chunks == ["OpenAI ", "fallback"]
+    assert openai_chat_cls.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_stream_model_text_does_not_fallback_after_partial_stream(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+    overloaded_error = _status_error(
+        status_code=529,
+        body={"error": {"type": "overloaded_error", "message": "Overloaded"}},
+    )
+
+    async def _anthropic_stream(_prompt: str) -> AsyncIterator[SimpleNamespace]:
+        yield _message("partial")
+        raise overloaded_error
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(
+            llm_client,
+            "ChatAnthropic",
+            return_value=SimpleNamespace(astream=_anthropic_stream),
+        ),
+        patch.object(llm_client, "ChatOpenAI") as openai_chat_cls,
+        pytest.raises(llm_client.ModelTemporaryUnavailableError, match="temporarily unavailable"),
+    ):
+        [chunk async for chunk in llm_client.stream_model_text("Prompt")]
+
+    openai_chat_cls.assert_not_called()
 
 
 def _status_error(*, status_code: int, body: object) -> anthropic.APIStatusError:

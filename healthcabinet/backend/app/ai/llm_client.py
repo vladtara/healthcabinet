@@ -7,6 +7,7 @@ from typing import Any, Literal, NamedTuple, cast
 
 import anthropic
 import openai
+import structlog
 from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
@@ -24,6 +25,7 @@ ProviderError = anthropic.AnthropicError | openai.OpenAIError
 
 _chat_model_cache: dict[tuple[ProviderName, str, str, int], BaseChatModel] = {}
 _cache_lock = asyncio.Lock()
+logger = structlog.get_logger()
 
 
 class ModelTemporaryUnavailableError(Exception):
@@ -58,40 +60,55 @@ def _require_provider_key(
     return _ProviderConfig(provider_name, api_key, model)
 
 
-def _get_provider_config() -> _ProviderConfig:
+def _get_provider_configs() -> tuple[_ProviderConfig, ...]:
     anthropic_key = _clean(settings.ANTHROPIC_API_KEY)
     openai_key = _clean(settings.OPENAI_API_KEY)
 
     if settings.AI_CHAT_PROVIDER == "anthropic":
-        return _require_provider_key(
-            provider_name="anthropic",
-            api_key=anthropic_key,
-            env_name="ANTHROPIC_API_KEY",
-            model=_clean(settings.AI_CHAT_MODEL),
+        return (
+            _require_provider_key(
+                provider_name="anthropic",
+                api_key=anthropic_key,
+                env_name="ANTHROPIC_API_KEY",
+                model=_clean(settings.AI_CHAT_MODEL),
+            ),
         )
     if settings.AI_CHAT_PROVIDER == "openai":
-        return _require_provider_key(
-            provider_name="openai",
-            api_key=openai_key,
-            env_name="OPENAI_API_KEY",
-            model=_clean(settings.OPENAI_CHAT_MODEL),
+        return (
+            _require_provider_key(
+                provider_name="openai",
+                api_key=openai_key,
+                env_name="OPENAI_API_KEY",
+                model=_clean(settings.OPENAI_CHAT_MODEL),
+            ),
         )
 
+    provider_configs: list[_ProviderConfig] = []
     if anthropic_key:
-        return _require_provider_key(
-            provider_name="anthropic",
-            api_key=anthropic_key,
-            env_name="ANTHROPIC_API_KEY",
-            model=_clean(settings.AI_CHAT_MODEL),
+        provider_configs.append(
+            _require_provider_key(
+                provider_name="anthropic",
+                api_key=anthropic_key,
+                env_name="ANTHROPIC_API_KEY",
+                model=_clean(settings.AI_CHAT_MODEL),
+            )
         )
     if openai_key:
-        return _require_provider_key(
-            provider_name="openai",
-            api_key=openai_key,
-            env_name="OPENAI_API_KEY",
-            model=_clean(settings.OPENAI_CHAT_MODEL),
+        provider_configs.append(
+            _require_provider_key(
+                provider_name="openai",
+                api_key=openai_key,
+                env_name="OPENAI_API_KEY",
+                model=_clean(settings.OPENAI_CHAT_MODEL),
+            )
         )
+    if provider_configs:
+        return tuple(provider_configs)
     raise RuntimeError("ANTHROPIC_API_KEY or OPENAI_API_KEY is not configured")
+
+
+def _get_provider_config() -> _ProviderConfig:
+    return _get_provider_configs()[0]
 
 
 def get_model_name() -> str:
@@ -99,8 +116,7 @@ def get_model_name() -> str:
     return _get_provider_config().model
 
 
-def _build_chat_model(*, max_tokens: int) -> BaseChatModel:
-    provider_config = _get_provider_config()
+def _build_chat_model(*, provider_config: _ProviderConfig, max_tokens: int) -> BaseChatModel:
     if provider_config.name == "anthropic":
         chat_model_kwargs: dict[str, Any] = {
             "model": provider_config.model,
@@ -120,8 +136,7 @@ def _hash_key(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()[:16]
 
 
-async def _get_chat_model(*, max_tokens: int) -> BaseChatModel:
-    provider_config = _get_provider_config()
+async def _get_chat_model(*, provider_config: _ProviderConfig, max_tokens: int) -> BaseChatModel:
     cache_key = (
         provider_config.name,
         provider_config.model,
@@ -133,7 +148,7 @@ async def _get_chat_model(*, max_tokens: int) -> BaseChatModel:
         async with _cache_lock:
             model = _chat_model_cache.get(cache_key)
             if model is None:
-                model = _build_chat_model(max_tokens=max_tokens)
+                model = _build_chat_model(provider_config=provider_config, max_tokens=max_tokens)
                 _chat_model_cache[cache_key] = model
     return model
 
@@ -237,22 +252,87 @@ def _raise_translated_provider_error(exc: ProviderError) -> None:
     raise ModelPermanentError("The AI provider returned a non-retriable error.") from exc
 
 
+def _should_try_next_provider(
+    *, exc: ProviderError, emitted_stream_content: bool, has_next_provider: bool
+) -> bool:
+    return (
+        not emitted_stream_content
+        and has_next_provider
+        and settings.AI_CHAT_PROVIDER == "auto"
+        and _is_temporary_provider_error(exc)
+    )
+
+
+def _log_provider_fallback(
+    *,
+    failed_provider: _ProviderConfig,
+    fallback_provider: _ProviderConfig,
+    stream: bool,
+) -> None:
+    logger.warning(
+        "ai.chat_provider_temporary_unavailable_fallback",
+        failed_provider=failed_provider.name,
+        fallback_provider=fallback_provider.name,
+        stream=stream,
+    )
+
+
 async def call_model_text(prompt: str) -> str:
     """Return the complete text response for a single prompt."""
-    try:
-        model = await _get_chat_model(max_tokens=_CALL_MAX_TOKENS)
-        message = await model.ainvoke(prompt)
-    except (anthropic.AnthropicError, openai.OpenAIError) as exc:
-        _raise_translated_provider_error(exc)
-    return _extract_text(message.content)
+    provider_configs = _get_provider_configs()
+    for index, provider_config in enumerate(provider_configs):
+        try:
+            model = await _get_chat_model(
+                provider_config=provider_config,
+                max_tokens=_CALL_MAX_TOKENS,
+            )
+            message = await model.ainvoke(prompt)
+        except (anthropic.AnthropicError, openai.OpenAIError) as exc:
+            next_provider = provider_configs[index + 1] if index + 1 < len(provider_configs) else None
+            if next_provider is not None and _should_try_next_provider(
+                exc=exc,
+                emitted_stream_content=False,
+                has_next_provider=True,
+            ):
+                _log_provider_fallback(
+                    failed_provider=provider_config,
+                    fallback_provider=next_provider,
+                    stream=False,
+                )
+                continue
+            _raise_translated_provider_error(exc)
+        else:
+            return _extract_text(message.content)
+    raise RuntimeError("No AI chat provider was available")
 
 
 async def stream_model_text(prompt: str) -> AsyncIterator[str]:
     """Yield text deltas from the configured model for a single prompt."""
-    try:
-        model = await _get_chat_model(max_tokens=_STREAM_MAX_TOKENS)
-        async for chunk in model.astream(prompt):
-            for text in _iter_text_fragments(chunk.content):
-                yield text
-    except (anthropic.AnthropicError, openai.OpenAIError) as exc:
-        _raise_translated_provider_error(exc)
+    provider_configs = _get_provider_configs()
+    for index, provider_config in enumerate(provider_configs):
+        emitted_stream_content = False
+        try:
+            model = await _get_chat_model(
+                provider_config=provider_config,
+                max_tokens=_STREAM_MAX_TOKENS,
+            )
+            async for chunk in model.astream(prompt):
+                for text in _iter_text_fragments(chunk.content):
+                    emitted_stream_content = True
+                    yield text
+        except (anthropic.AnthropicError, openai.OpenAIError) as exc:
+            next_provider = provider_configs[index + 1] if index + 1 < len(provider_configs) else None
+            if next_provider is not None and _should_try_next_provider(
+                exc=exc,
+                emitted_stream_content=emitted_stream_content,
+                has_next_provider=True,
+            ):
+                _log_provider_fallback(
+                    failed_provider=provider_config,
+                    fallback_provider=next_provider,
+                    stream=True,
+                )
+                continue
+            _raise_translated_provider_error(exc)
+        else:
+            return
