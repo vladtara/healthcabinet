@@ -1,4 +1,4 @@
-"""Unit tests for the Claude extraction boundary."""
+"""Unit tests for the provider-backed extraction boundary."""
 
 import json
 from types import SimpleNamespace
@@ -7,6 +7,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.processing.extractor import extract_from_document
+
+
+def _anthropic_config() -> SimpleNamespace:
+    return SimpleNamespace(name="anthropic", api_key="test-key", model="test-model")
 
 
 @pytest.mark.asyncio
@@ -36,7 +40,10 @@ async def test_extract_from_document_validates_structured_output():
         )
     )
 
-    with patch("app.processing.extractor._get_client", return_value=fake_client):
+    with (
+        patch("app.processing.extractor._get_provider_config", return_value=_anthropic_config()),
+        patch("app.processing.extractor._get_anthropic_client", return_value=fake_client),
+    ):
         result = await extract_from_document(
             document_id="doc-1",
             document_bytes=b"%PDF-1.4",
@@ -60,7 +67,10 @@ async def test_extract_from_document_does_not_send_unsupported_metadata():
     )
     fake_client = SimpleNamespace(messages=SimpleNamespace(create=fake_create))
 
-    with patch("app.processing.extractor._get_client", return_value=fake_client):
+    with (
+        patch("app.processing.extractor._get_provider_config", return_value=_anthropic_config()),
+        patch("app.processing.extractor._get_anthropic_client", return_value=fake_client),
+    ):
         await extract_from_document(
             document_id="doc-request-shape",
             document_bytes=b"%PDF-1.4",
@@ -88,7 +98,10 @@ async def test_extract_from_document_accepts_provider_structured_output():
         )
     )
 
-    with patch("app.processing.extractor._get_client", return_value=fake_client):
+    with (
+        patch("app.processing.extractor._get_provider_config", return_value=_anthropic_config()),
+        patch("app.processing.extractor._get_anthropic_client", return_value=fake_client),
+    ):
         result = await extract_from_document(
             document_id="doc-structured",
             document_bytes=b"%PDF-1.4",
@@ -115,7 +128,8 @@ async def test_extract_from_document_rejects_trailing_non_json_content():
     )
 
     with (
-        patch("app.processing.extractor._get_client", return_value=fake_client),
+        patch("app.processing.extractor._get_provider_config", return_value=_anthropic_config()),
+        patch("app.processing.extractor._get_anthropic_client", return_value=fake_client),
         pytest.raises(ValueError, match="trailing non-JSON content"),
     ):
         await extract_from_document(
@@ -153,7 +167,10 @@ async def test_extract_from_document_handles_markdown_fenced_json():
         )
     )
 
-    with patch("app.processing.extractor._get_client", return_value=fake_client):
+    with (
+        patch("app.processing.extractor._get_provider_config", return_value=_anthropic_config()),
+        patch("app.processing.extractor._get_anthropic_client", return_value=fake_client),
+    ):
         result = await extract_from_document(
             document_id="doc-fenced",
             document_bytes=b"%PDF-1.4",
@@ -163,6 +180,70 @@ async def test_extract_from_document_handles_markdown_fenced_json():
     assert result.raw_lab_name == "Test Lab"
     assert result.values[0].biomarker_name == "Hemoglobin"
     assert result.values[0].confidence == 0.95
+
+
+@pytest.mark.asyncio
+async def test_extract_from_document_uses_openai_fallback_when_anthropic_key_missing():
+    response_payload = {
+        "measured_at": None,
+        "partial_measured_at_text": None,
+        "source_language": "en",
+        "raw_lab_name": "OpenAI Lab",
+        "values": [],
+    }
+    fake_model = SimpleNamespace(
+        ainvoke=AsyncMock(return_value=SimpleNamespace(content=json.dumps(response_payload)))
+    )
+
+    with (
+        patch("app.processing.extractor.settings.AI_EXTRACTION_PROVIDER", "auto"),
+        patch("app.processing.extractor.settings.ANTHROPIC_API_KEY", ""),
+        patch("app.processing.extractor.settings.OPENAI_API_KEY", "  openai-key  "),
+        patch("app.processing.extractor.settings.OPENAI_EXTRACTION_MODEL", "gpt-5-mini"),
+        patch("app.processing.extractor._get_openai_model", return_value=fake_model) as model_cls,
+    ):
+        result = await extract_from_document(
+            document_id="doc-openai",
+            document_bytes=b"%PDF-1.4",
+            mime_type="application/pdf",
+        )
+
+    assert result.raw_lab_name == "OpenAI Lab"
+    assert model_cls.call_args.kwargs == {"api_key": "openai-key", "model": "gpt-5-mini"}
+    messages = fake_model.ainvoke.await_args.args[0]
+    content = messages[1].content
+    assert content[1]["type"] == "file"
+    assert content[1]["file"]["file_data"].startswith("data:application/pdf;base64,")
+
+
+@pytest.mark.asyncio
+async def test_extract_from_document_uses_explicit_openai_image_provider():
+    fake_model = SimpleNamespace(
+        ainvoke=AsyncMock(
+            return_value=SimpleNamespace(
+                content='{"measured_at": null, "partial_measured_at_text": null, '
+                '"source_language": null, "raw_lab_name": null, "values": []}'
+            )
+        )
+    )
+
+    with (
+        patch("app.processing.extractor.settings.AI_EXTRACTION_PROVIDER", "openai"),
+        patch("app.processing.extractor.settings.ANTHROPIC_API_KEY", "anthropic-key"),
+        patch("app.processing.extractor.settings.OPENAI_API_KEY", "openai-key"),
+        patch("app.processing.extractor.settings.OPENAI_EXTRACTION_MODEL", "gpt-5-mini"),
+        patch("app.processing.extractor._get_openai_model", return_value=fake_model),
+    ):
+        await extract_from_document(
+            document_id="doc-openai-image",
+            document_bytes=b"image",
+            mime_type="image/png",
+        )
+
+    messages = fake_model.ainvoke.await_args.args[0]
+    content = messages[1].content
+    assert content[1]["type"] == "image_url"
+    assert content[1]["image_url"]["url"].startswith("data:image/png;base64,")
 
 
 @pytest.mark.asyncio
@@ -179,7 +260,8 @@ async def test_extract_from_document_raises_on_truncated_response():
     )
 
     with (
-        patch("app.processing.extractor._get_client", return_value=fake_client),
+        patch("app.processing.extractor._get_provider_config", return_value=_anthropic_config()),
+        patch("app.processing.extractor._get_anthropic_client", return_value=fake_client),
         pytest.raises(ValueError, match="truncated"),
     ):
         await extract_from_document(
