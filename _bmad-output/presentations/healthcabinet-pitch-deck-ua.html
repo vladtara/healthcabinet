@@ -1,0 +1,1981 @@
+<!doctype html>
+<html lang="uk">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>HealthCabinet — презентація</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--surface-base: #e4eaf0;
+				--surface-raised: #eef2f8;
+				--surface-sunken: #ffffff;
+				--surface-window: #ffffff;
+				--text-primary: #1a2030;
+				--text-secondary: #5a6a80;
+				--text-disabled: #8898a8;
+				--accent: #3366ff;
+				--accent-light: #6690ff;
+				--accent-text: #ffffff;
+				--status-optimal: #2e8b57;
+				--status-borderline: #daa520;
+				--status-concerning: #e07020;
+				--status-action: #cc3333;
+				--row-alternate: #eef2f8;
+				--shadow-soft: 0 10px 28px rgba(90, 106, 128, 0.14);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				margin: 0;
+				font-family: 'DM Sans', 'Segoe UI', sans-serif;
+				background:
+					linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)) 0 0 / 100%
+						180px no-repeat,
+					var(--surface-base);
+				color: var(--text-primary);
+			}
+
+			a {
+				color: inherit;
+				text-decoration: none;
+			}
+
+			button,
+			input,
+			table,
+			th,
+			td {
+				font-family: inherit;
+				font-feature-settings: 'tnum' 1;
+			}
+
+			.deck-topbar {
+				position: sticky;
+				top: 0;
+				z-index: 20;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 8px 12px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #a0b0c0;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.deck-topbar-brand {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 16px;
+				font-weight: 700;
+			}
+
+			.deck-topbar-brand-icon {
+				color: var(--accent);
+				font-size: 18px;
+			}
+
+			.deck-topbar-actions,
+			.deck-topbar-links {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+				align-items: center;
+			}
+
+			.btn-standard,
+			.btn-primary,
+			.btn-toolbar {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+				min-height: 23px;
+				min-width: 75px;
+				padding: 0 12px;
+				background: silver;
+				border: none;
+				box-shadow:
+					inset -1px -1px #0a0a0a,
+					inset 1px 1px #fff,
+					inset -2px -2px grey,
+					inset 2px 2px #dfdfdf;
+				color: var(--text-primary);
+				cursor: pointer;
+				font-size: 14px;
+				line-height: 1.2;
+			}
+
+			.btn-standard:active,
+			.btn-primary:active,
+			.btn-toolbar:active {
+				box-shadow:
+					inset -1px -1px #fff,
+					inset 1px 1px #0a0a0a,
+					inset -2px -2px #dfdfdf,
+					inset 2px 2px grey;
+			}
+
+			.btn-standard:focus-visible,
+			.btn-primary:focus-visible,
+			.btn-toolbar:focus-visible,
+			.hc-app-nav-item:focus-visible,
+			.deck-link:focus-visible {
+				outline: 1px dotted #000;
+				outline-offset: -3px;
+			}
+
+			.btn-primary {
+				background: var(--accent);
+				color: var(--accent-text);
+				border: 2px outset var(--accent-light);
+				font-weight: 700;
+			}
+
+			.btn-toolbar {
+				min-width: 0;
+				padding: 4px 10px;
+				font-size: 13px;
+			}
+
+			.deck {
+				display: grid;
+				gap: 14px;
+				padding: 12px;
+			}
+
+			.deck-slide {
+				scroll-margin-top: 72px;
+			}
+
+			.deck-shell {
+				display: flex;
+				flex-direction: column;
+				min-height: 880px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				box-shadow: var(--shadow-soft);
+			}
+
+			.hc-app-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				height: 40px;
+				min-height: 40px;
+				padding: 0 12px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #a0b0c0;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.hc-app-header-brand {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				font-size: 16px;
+				font-weight: 700;
+			}
+
+			.hc-app-header-icon {
+				color: var(--accent);
+				font-size: 18px;
+			}
+
+			.hc-app-header-user {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				font-size: 14px;
+				color: var(--text-secondary);
+			}
+
+			.deck-body {
+				flex: 1;
+				display: flex;
+				gap: 4px;
+				padding: 4px;
+			}
+
+			.hc-app-left-nav {
+				width: 196px;
+				min-width: 196px;
+				background: var(--surface-sunken);
+				border: 2px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.hc-app-nav-header {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				padding: 6px 14px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #a0b0c0;
+				box-shadow: inset 0 1px 0 #fff;
+				font-size: 13px;
+				font-weight: 700;
+				color: var(--accent);
+				letter-spacing: 0.3px;
+			}
+
+			.hc-app-nav-section-label {
+				padding: 8px 14px 2px;
+				font-size: 11px;
+				font-weight: 700;
+				color: var(--text-disabled);
+				text-transform: uppercase;
+				letter-spacing: 0.8px;
+			}
+
+			.hc-app-nav-item {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 10px 14px;
+				border-left: 3px solid transparent;
+				color: var(--text-primary);
+				font-size: 14px;
+				white-space: nowrap;
+			}
+
+			.hc-app-nav-item:hover {
+				background: var(--surface-raised);
+			}
+
+			.hc-app-nav-item.active {
+				background: rgba(51, 102, 255, 0.1);
+				border-left-color: var(--accent);
+				font-weight: 700;
+			}
+
+			.hc-app-nav-separator {
+				margin: 6px 14px;
+				height: 1px;
+				background: #d0d8e4;
+			}
+
+			.deck-content {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				min-width: 0;
+			}
+
+			.deck-content-body {
+				flex: 1;
+				padding: 0 0 4px;
+			}
+
+			.hc-status-bar {
+				display: flex;
+				align-items: center;
+				gap: 2px;
+				height: 24px;
+				padding: 2px 4px;
+				border-top: 2px solid #a0b0c0;
+				background: var(--surface-raised);
+				font-size: 14px;
+			}
+
+			.hc-status-bar-field {
+				display: inline-flex;
+				align-items: center;
+				height: 18px;
+				padding: 0 8px;
+				background: var(--surface-sunken);
+				border: 1px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+				white-space: nowrap;
+			}
+
+			.hc-summary-bar {
+				display: flex;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 4px;
+				padding: 6px 12px;
+				margin-bottom: 8px;
+				font-size: 14px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.hc-summary-label {
+				font-weight: 700;
+				color: var(--text-secondary);
+			}
+
+			.hc-summary-value {
+				color: var(--text-primary);
+			}
+
+			.hc-summary-sep {
+				color: var(--text-disabled);
+			}
+
+			.hc-dash-section {
+				margin-bottom: 10px;
+				background: var(--surface-sunken);
+				border: 2px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+			}
+
+			.hc-dash-section-header {
+				padding: 6px 12px;
+				font-size: 13px;
+				font-weight: 700;
+				color: var(--accent);
+				background: var(--surface-raised);
+				border-bottom: 1px solid #a0b0c0;
+			}
+
+			.hc-dash-section-body {
+				padding: 10px 12px;
+			}
+
+			.hc-data-table {
+				background: var(--surface-sunken);
+				box-shadow:
+					inset -1px -1px #fff,
+					inset 1px 1px #0a0a0a,
+					inset -2px -2px #dfdfdf,
+					inset 2px 2px grey;
+				overflow: hidden;
+			}
+
+			.hc-data-table table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+
+			.hc-data-table th {
+				padding: 8px 12px;
+				background: var(--surface-raised);
+				border-bottom: 2px solid #808080;
+				color: var(--text-primary);
+				font-size: 14px;
+				font-weight: 700;
+				text-align: left;
+				white-space: nowrap;
+			}
+
+			.hc-data-table td {
+				padding: 6px 12px;
+				border-bottom: 1px solid #dfdfdf;
+				color: var(--text-primary);
+				font-size: 15px;
+				vertical-align: top;
+			}
+
+			.hc-data-table tbody tr:nth-child(even) {
+				background: var(--row-alternate);
+			}
+
+			.hc-data-table tbody tr:last-child td {
+				border-bottom: 0;
+			}
+
+			.hc-ai-note {
+				background: var(--surface-sunken);
+				border-left: 3px solid var(--accent);
+				border-top: 2px solid #a0b0c0;
+				border-right: 2px solid #d0d8e4;
+				border-bottom: 2px solid #d0d8e4;
+				padding: 12px 16px;
+			}
+
+			.hc-ai-note-header {
+				margin: 0 0 8px;
+				font-size: 16px;
+				font-weight: 700;
+				color: var(--accent);
+			}
+
+			.hc-ai-note-body {
+				font-size: 15px;
+				line-height: 1.6;
+				color: var(--text-primary);
+			}
+
+			.hc-ai-note-body p {
+				margin: 0 0 8px;
+			}
+
+			.hc-ai-note-disclaimer {
+				margin-top: 10px;
+				padding-top: 8px;
+				border-top: 1px solid var(--surface-raised);
+				color: var(--text-disabled);
+				font-size: 13px;
+				font-style: italic;
+			}
+
+			.hc-fieldset {
+				margin: 0;
+				padding: 8px;
+				border: 2px groove #d0d8e4;
+			}
+
+			.hc-fieldset legend {
+				padding: 0 4px;
+				color: var(--accent);
+				font-size: 15px;
+				font-weight: 700;
+			}
+
+			.hc-badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				padding: 1px 6px;
+				box-shadow:
+					inset -1px -1px #0a0a0a,
+					inset 1px 1px #fff,
+					inset -2px -2px grey,
+					inset 2px 2px #dfdfdf;
+				font-size: 13px;
+				font-weight: 600;
+				line-height: 1.4;
+				white-space: nowrap;
+			}
+
+			.hc-badge-default {
+				background: silver;
+				color: var(--text-primary);
+			}
+
+			.hc-badge-info {
+				background: var(--accent);
+				color: #fff;
+			}
+
+			.hc-badge-success {
+				background: var(--status-optimal);
+				color: #fff;
+			}
+
+			.hc-badge-warning {
+				background: var(--status-borderline);
+				color: var(--text-primary);
+			}
+
+			.hc-badge-danger {
+				background: var(--status-action);
+				color: #fff;
+			}
+
+			.hc-state {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				padding: 12px;
+				background: var(--surface-sunken);
+				box-shadow:
+					inset -1px -1px #fff,
+					inset 1px 1px #0a0a0a,
+					inset -2px -2px #dfdfdf,
+					inset 2px 2px grey;
+				font-size: 15px;
+			}
+
+			.hc-state-title {
+				margin: 0;
+				font-size: 15px;
+				line-height: 1.4;
+				font-weight: 700;
+			}
+
+			.hc-state-description {
+				margin: 0;
+				font-size: 14px;
+				line-height: 1.45;
+				color: var(--text-secondary);
+			}
+
+			.hc-state-success {
+				border-left: 3px solid var(--status-optimal);
+			}
+
+			.hc-state-warning {
+				border-left: 3px solid var(--status-borderline);
+			}
+
+			.hc-state-error {
+				border-left: 3px solid var(--status-action);
+			}
+
+			.hc-state-info {
+				border-left: 3px solid var(--accent);
+			}
+
+			.hc-status-optimal {
+				color: var(--status-optimal);
+				font-weight: 700;
+			}
+
+			.hc-status-borderline {
+				color: var(--status-borderline);
+				font-weight: 700;
+			}
+
+			.hc-status-concerning {
+				color: var(--status-concerning);
+				font-weight: 700;
+			}
+
+			.hc-status-action {
+				color: var(--status-action);
+				font-weight: 700;
+			}
+
+			.deck-kicker {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				margin-bottom: 10px;
+				padding: 3px 8px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				color: var(--accent);
+				font-size: 12px;
+				font-weight: 700;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+			}
+
+			.deck-title {
+				margin: 0;
+				font-size: 42px;
+				line-height: 1.02;
+				letter-spacing: -0.04em;
+			}
+
+			.deck-subtitle {
+				margin: 10px 0 0;
+				font-size: 28px;
+				line-height: 1.1;
+				letter-spacing: -0.03em;
+			}
+
+			.deck-lead {
+				margin: 10px 0 0;
+				max-width: 62ch;
+				font-size: 16px;
+				line-height: 1.6;
+				color: var(--text-secondary);
+			}
+
+			.deck-grid {
+				display: grid;
+				gap: 10px;
+			}
+
+			.deck-grid-2 {
+				grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+			}
+
+			.deck-grid-3 {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.deck-grid-4 {
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+			}
+
+			.deck-stack {
+				display: grid;
+				gap: 10px;
+			}
+
+			.deck-list {
+				margin: 0;
+				padding-left: 18px;
+				font-size: 15px;
+				line-height: 1.55;
+				color: var(--text-secondary);
+			}
+
+			.deck-list li + li {
+				margin-top: 6px;
+			}
+
+			.deck-metric {
+				display: grid;
+				gap: 4px;
+				padding: 10px 8px;
+				text-align: center;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				border-top: 3px solid var(--accent);
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.deck-metric-label {
+				font-size: 12px;
+				font-weight: 700;
+				color: var(--text-secondary);
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+
+			.deck-metric-value {
+				font-size: 24px;
+				font-weight: 700;
+				line-height: 1.1;
+			}
+
+			.deck-metric-copy {
+				font-size: 13px;
+				line-height: 1.4;
+				color: var(--text-secondary);
+			}
+
+			.deck-quote {
+				margin: 0;
+				padding: 12px;
+				background: var(--surface-sunken);
+				border-left: 4px solid var(--accent);
+				font-size: 16px;
+				line-height: 1.55;
+			}
+
+			.deck-mini {
+				font-size: 13px;
+				color: var(--text-secondary);
+				line-height: 1.45;
+			}
+
+			.deck-process {
+				display: grid;
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+				gap: 8px;
+			}
+
+			.deck-process-step {
+				display: grid;
+				gap: 6px;
+				padding: 10px;
+				background: var(--surface-raised);
+				border: 2px solid;
+				border-color: #d0d8e4 #a0b0c0 #a0b0c0 #d0d8e4;
+				box-shadow: inset 0 1px 0 #fff;
+			}
+
+			.deck-process-step-index {
+				width: 24px;
+				height: 24px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				background: var(--accent);
+				color: #fff;
+				font-size: 13px;
+				font-weight: 700;
+				box-shadow:
+					inset -1px -1px rgba(0, 0, 0, 0.2),
+					inset 1px 1px rgba(255, 255, 255, 0.35);
+			}
+
+			.deck-process-step-title {
+				font-size: 15px;
+				font-weight: 700;
+			}
+
+			.deck-process-step-copy {
+				font-size: 13px;
+				line-height: 1.45;
+				color: var(--text-secondary);
+			}
+
+			.deck-arch {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 8px;
+				align-items: stretch;
+			}
+
+			.deck-arch-box {
+				display: grid;
+				gap: 4px;
+				padding: 10px;
+				background: var(--surface-sunken);
+				border: 2px solid;
+				border-color: #a0b0c0 #d0d8e4 #d0d8e4 #a0b0c0;
+			}
+
+			.deck-arch-box strong {
+				font-size: 14px;
+			}
+
+			.deck-arch-box span {
+				font-size: 13px;
+				line-height: 1.45;
+				color: var(--text-secondary);
+			}
+
+			.deck-link {
+				color: var(--accent);
+				text-decoration: underline;
+			}
+
+			@media (max-width: 1200px) {
+				.deck-grid-2,
+				.deck-grid-3,
+				.deck-grid-4,
+				.deck-process,
+				.deck-arch {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			@media (max-width: 980px) {
+				.deck-body {
+					flex-direction: column;
+				}
+
+				.hc-app-left-nav {
+					width: auto;
+					min-width: 0;
+				}
+
+				.deck-topbar {
+					align-items: flex-start;
+					flex-direction: column;
+				}
+			}
+
+			@media print {
+				body {
+					background: #fff;
+				}
+
+				.deck-topbar {
+					display: none;
+				}
+
+				.deck {
+					padding: 0;
+					gap: 0;
+				}
+
+				.deck-slide {
+					break-after: page;
+				}
+
+				.deck-shell {
+					min-height: 100vh;
+					box-shadow: none;
+					border: none;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header class="deck-topbar">
+			<div class="deck-topbar-brand">
+				<span class="deck-topbar-brand-icon" aria-hidden="true">&#9877;</span>
+				<span>HealthCabinet — презентація</span>
+			</div>
+			<nav class="deck-topbar-links" aria-label="Посилання на слайди">
+				<a class="btn-toolbar" href="#slide-01">01</a>
+				<a class="btn-toolbar" href="#slide-02">02</a>
+				<a class="btn-toolbar" href="#slide-03">03</a>
+				<a class="btn-toolbar" href="#slide-04">04</a>
+				<a class="btn-toolbar" href="#slide-05">05</a>
+				<a class="btn-toolbar" href="#slide-06">06</a>
+				<a class="btn-toolbar" href="#slide-07">07</a>
+				<a class="btn-toolbar" href="#slide-08">08</a>
+				<a class="btn-toolbar" href="#slide-09">09</a>
+				<a class="btn-toolbar" href="#slide-10">10</a>
+			</nav>
+			<div class="deck-topbar-actions">
+				<a class="btn-standard" href="healthcabinet-pitch-deck.md">Відкрити план</a>
+				<button class="btn-primary" type="button" onclick="window.print()">Друкувати / PDF</button>
+			</div>
+		</header>
+
+		<main class="deck">
+			<section class="deck-slide" id="slide-01">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Режим презентації</span>
+							<span>Слайд 1 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header">
+								<span aria-hidden="true">&#128240;</span>
+								Презентація
+							</div>
+							<div class="hc-app-nav-section-label">Сюжет</div>
+							<a class="hc-app-nav-item active" href="#slide-01"><span aria-hidden="true">&#9679;</span>Обкладинка</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Проблема</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>Користувач</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Продукт</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Цикл</a>
+							<div class="hc-app-nav-separator"></div>
+							<div class="hc-app-nav-section-label">Доказ</div>
+							<a class="hc-app-nav-item" href="#slide-06"><span aria-hidden="true">&#9679;</span>Довіра</a>
+							<a class="hc-app-nav-item" href="#slide-07"><span aria-hidden="true">&#9679;</span>Реалізація</a>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Модель</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Дорожня карта</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Запит</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<div class="hc-summary-bar">
+									<span class="hc-summary-label">Режим:</span>
+									<span class="hc-summary-value">Презентація продукту</span>
+									<span class="hc-summary-sep">|</span>
+									<span class="hc-summary-label">Візуальна система:</span>
+									<span class="hc-summary-value">Чинний UI HealthCabinet</span>
+									<span class="hc-summary-sep">|</span>
+									<span class="hc-summary-label">Аудиторія:</span>
+									<span class="hc-summary-value">Інвестори, партнери, рецензенти дизайну</span>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Позиціонування</div>
+											<div class="hc-dash-section-body">
+												<div class="deck-kicker">HealthCabinet / Персональна медична аналітика</div>
+												<h1 class="deck-title">Ваші медичні дані — нарешті зрозумілі.</h1>
+												<p class="deck-lead">
+													HealthCabinet перетворює розрізнені PDF-файли та фотографії аналізів
+													на структуровану історію біомаркерів, видимі тренди й зрозумілу AI-інтерпретацію.
+												</p>
+											</div>
+										</section>
+
+										<div class="deck-grid deck-grid-3">
+											<div class="deck-metric">
+												<div class="deck-metric-label">Вхідні дані</div>
+												<div class="deck-metric-value">PDF + фото</div>
+												<div class="deck-metric-copy">Реальні документи, а не ідеалізовані стрічки</div>
+											</div>
+											<div class="deck-metric">
+												<div class="deck-metric-label">Результат</div>
+												<div class="deck-metric-value">Структурована пам'ять трендів</div>
+												<div class="deck-metric-copy">Один таймлайн замість розрізнених файлів</div>
+											</div>
+											<div class="deck-metric">
+												<div class="deck-metric-label">Досвід</div>
+												<div class="deck-metric-value">UI клінічної робочої станції</div>
+												<div class="deck-metric-copy">Серйозний інструмент, а не типова велнес-обгортка</div>
+											</div>
+										</div>
+
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Чому це важливо</div>
+											<div class="hc-dash-section-body">
+												<blockquote class="deck-quote">
+													Лабораторії дають людям цифри. HealthCabinet дає пам'ять,
+													інтерпретацію та безперервність у часі.
+												</blockquote>
+											</div>
+										</section>
+									</div>
+
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Чинна мова продукту</div>
+											<div class="hc-dash-section-body">
+												<div class="hc-summary-bar">
+													<span class="hc-summary-label">Пацієнт:</span>
+													<span class="hc-summary-value">Софія К.</span>
+													<span class="hc-summary-sep">|</span>
+													<span class="hc-summary-label">Вік:</span>
+													<span class="hc-summary-value">34</span>
+													<span class="hc-summary-sep">|</span>
+													<span class="hc-summary-label">Документи:</span>
+													<span class="hc-summary-value">4</span>
+													<span class="hc-summary-sep">|</span>
+													<span class="hc-summary-label">Біомаркери:</span>
+													<span class="hc-summary-value">23</span>
+												</div>
+
+												<div class="hc-data-table">
+													<table aria-label="Приклад таблиці біомаркерів">
+														<thead>
+															<tr>
+																<th>Біомаркер</th>
+																<th>Значення</th>
+																<th>Норма</th>
+																<th>Статус</th>
+																<th>Тренд</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr>
+																<td>TSH</td>
+																<td>5.82 mIU/L</td>
+																<td>0.40 - 4.00</td>
+																<td class="hc-status-borderline">&#9888; Межовий</td>
+																<td>&uarr; 3 результати</td>
+															</tr>
+															<tr>
+																<td>Ferritin</td>
+																<td>17 ng/mL</td>
+																<td>13 - 150</td>
+																<td class="hc-status-concerning">&#9670; Тривожний</td>
+																<td>&darr; 2 результати</td>
+															</tr>
+															<tr>
+																<td>Vitamin D</td>
+																<td>22 ng/mL</td>
+																<td>30 - 100</td>
+																<td class="hc-status-concerning">&#9670; Тривожний</td>
+																<td>&darr; Стабільно низький</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</section>
+
+										<div class="hc-ai-note">
+											<h2 class="hc-ai-note-header">&#8505; AI Клінічна нотатка</h2>
+											<div class="hc-ai-note-body">
+												<p>
+													Ваш феритин поступово знижується від завантаження до завантаження.
+													Окреме значення важливе, але тренд важливіший: патерн вказує
+													на зниження запасів заліза, а не на разову аномалію.
+												</p>
+												<p>
+													Той самий лонгітюдний погляд полегшує інтерпретацію TSH. Він не
+													просто підвищений сьогодні — він зростає протягом кількох результатів.
+												</p>
+											</div>
+											<div class="hc-ai-note-disclaimer">
+												Лише інформаційно. HealthCabinet пояснює патерни та контекст і
+												не замінює професійну медичну консультацію.
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Обкладинка</div>
+								<div class="hc-status-bar-field">Тему клінічної робочої станції застосовано</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-02">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Формулювання проблеми</span>
+							<span>Слайд 2 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Презентація</div>
+							<div class="hc-app-nav-section-label">Сюжет</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Обкладинка</a>
+							<a class="hc-app-nav-item active" href="#slide-02"><span aria-hidden="true">&#9679;</span>Проблема</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>Користувач</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Продукт</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Цикл</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Проблема</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Медичні дані існують. Сенсу немає.</div>
+										<h2 class="deck-subtitle">Пацієнти володіють файлами, але не лонгітюдним розумінням.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Поточна реальність</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Результати надходять як PDF, скани, скріншоти та паперові роздруківки.</li>
+												<li>Кожен аналіз трактується як знімок, а не як таймлайн.</li>
+												<li>Користувачі гуглять аномальні значення і все одно лишаються в невизначеності.</li>
+												<li>Люди з хронічними станами проходять через ту саму плутанину кожні кілька місяців.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Що продукт має замінити</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Поточний стан проти необхідного">
+													<thead>
+														<tr>
+															<th>Сьогодні</th>
+															<th>Потрібно натомість</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Статичний архів PDF</td>
+															<td>Медична пам'ять, що належить пацієнту</td>
+														</tr>
+														<tr>
+															<td>Інтерпретація одного результату</td>
+															<td>Виявлення патернів між завантаженнями</td>
+														</tr>
+														<tr>
+															<td>Сирі цифри й позначки</td>
+															<td>Зрозуміле контекстне пояснення</td>
+														</tr>
+														<tr>
+															<td>Фрагментація між порталами</td>
+															<td>Один цілісний таймлайн</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<div class="hc-state hc-state-warning">
+										<p class="hc-state-title">Біль користувача повторюваний, а не одноразовий.</p>
+										<p class="hc-state-description">
+											Найсильніший сценарій — не разове завантаження. Це людина, яка
+											регулярно здає аналізи й ніколи не отримує лонгітюдного погляду, що належить їй.
+										</p>
+									</div>
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Можливість — у безперервності.</p>
+										<p class="hc-state-description">
+											HealthCabinet не потребує винаходити нові медичні дані. Він має
+											перетворити наявні документи на аналітику, що накопичується.
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Проблема</div>
+								<div class="hc-status-bar-field">Фрагментовані дані → втрачений сенс</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-03">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Цільові користувачі</span>
+							<span>Слайд 3 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Презентація</div>
+							<div class="hc-app-nav-section-label">Сюжет</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Обкладинка</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Проблема</a>
+							<a class="hc-app-nav-item active" href="#slide-03"><span aria-hidden="true">&#9679;</span>Користувач</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Продукт</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Цикл</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Сегмент-плацдарм</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Починати там, де накопичується історія</div>
+										<h2 class="deck-subtitle">Постійні тестувальники — найцінніший стартовий сегмент.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-3">
+									<fieldset class="hc-fieldset">
+										<legend>Софія</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-info">Основна персона</span>
+											<p class="deck-mini">
+												Пацієнтка з Хашимото, здає аналізи щокварталу. Їй не потрібна ще одна
+												тека з файлами. Їй потрібна аналітика трендів і контекст,
+												який можна взяти на прийом.
+											</p>
+											<p class="deck-mini">
+												Драйвер утримання: кожне нове завантаження робить продукт кориснішим.
+											</p>
+										</div>
+									</fieldset>
+
+									<fieldset class="hc-fieldset">
+										<legend>Макс</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-default">Вторинна персона</span>
+											<p class="deck-mini">
+												Самостійний тестувальник, що здає панель двічі на рік і хоче зрозуміле,
+												без панікерства, пояснення того, що змінилося.
+											</p>
+											<p class="deck-mini">
+												Драйвер утримання: зрозуміла інтерпретація й довіра.
+											</p>
+										</div>
+									</fieldset>
+
+									<fieldset class="hc-fieldset">
+										<legend>Засновник/Адмін</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-warning">Операційна персона</span>
+											<p class="deck-mini">
+												Потребує видимості збоїв завантаження, якості видобування та
+												робочих процесів виправлень — без важкого операційного навантаження.
+											</p>
+											<p class="deck-mini">
+												Драйвер утримання: підтримувати надійність і довіру користувачів на крайових випадках.
+											</p>
+										</div>
+									</fieldset>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<div class="hc-state hc-state-success">
+										<p class="hc-state-title">Чому постійні тестувальники важливі</p>
+										<p class="hc-state-description">
+											Саме вони створюють той тип історії даних, який вирізняє HealthCabinet.
+											Кожне завантаження поглиблює рів.
+										</p>
+									</div>
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Чому цей сегмент практичний</p>
+										<p class="hc-state-description">
+											Це чіткий B2C-старт із зрозумілою повторною поведінкою,
+											високою мотивацією та видимою цінністю після кожного нового документа.
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Сегмент</div>
+								<div class="hc-status-bar-field">Пріоритет — постійні тестувальники</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-04">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Потік продукту</span>
+							<span>Слайд 4 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Презентація</div>
+							<div class="hc-app-nav-section-label">Сюжет</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Обкладинка</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Проблема</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>Користувач</a>
+							<a class="hc-app-nav-item active" href="#slide-04"><span aria-hidden="true">&#9679;</span>Продукт</a>
+							<a class="hc-app-nav-item" href="#slide-05"><span aria-hidden="true">&#9679;</span>Цикл</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Продукт</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Завантажте один раз. Зрозумійте одразу. Дізнавайтесь із часом.</div>
+										<h2 class="deck-subtitle">Продукт перетворює документи на таймлайн, який користувачі справді можуть читати.</h2>
+									</div>
+								</section>
+
+								<div class="deck-process">
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">1</span>
+										<div class="deck-process-step-title">Імпорт документа</div>
+										<div class="deck-process-step-copy">Користувач завантажує PDF або фото з будь-якої лабораторії.</div>
+									</div>
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">2</span>
+										<div class="deck-process-step-title">Видобути значення</div>
+										<div class="deck-process-step-copy">Конвеєр читає, нормалізує та оцінює впевненість.</div>
+									</div>
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">3</span>
+										<div class="deck-process-step-title">Показати історію</div>
+										<div class="deck-process-step-copy">Дашборд оновлює статус, норми й тренди.</div>
+									</div>
+									<div class="deck-process-step">
+										<span class="deck-process-step-index">4</span>
+										<div class="deck-process-step-title">Пояснити зрозуміло</div>
+										<div class="deck-process-step-copy">AI додає зрозуміле пояснення з контекстом.</div>
+									</div>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Мова статусів конвеєра</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Конвеєр обробки">
+													<thead>
+														<tr>
+															<th>Етап</th>
+															<th>Поведінка системи</th>
+															<th>Досвід користувача</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Завантаження</td>
+															<td>Зберегти файл + запустити оркестрацію задачі</td>
+															<td>Чіткий прогрес, без двозначності</td>
+														</tr>
+														<tr>
+															<td>Читання</td>
+															<td>Парсити вміст зображення/PDF</td>
+															<td>Видима назва етапу</td>
+														</tr>
+														<tr>
+															<td>Видобування</td>
+															<td>Зіставити значення та норми в структуру</td>
+															<td>Результати з рівнем впевненості</td>
+														</tr>
+														<tr>
+															<td>Генерація</td>
+															<td>Створити AI-інтерпретацію</td>
+															<td>Зрозуміле пояснення</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+
+									<div class="deck-stack">
+										<div class="hc-state hc-state-warning">
+											<p class="hc-state-title">Крайові випадки — повноцінні</p>
+											<p class="hc-state-description">
+												Часткове видобування — не глухий кут. Продукт зберігає те, що
+												зміг прочитати, і веде користувача до кращого повторного завантаження.
+											</p>
+										</div>
+										<div class="hc-state hc-state-success">
+											<p class="hc-state-title">Інтерфейс лишається щільним і читабельним</p>
+											<p class="hc-state-description">
+												Статус, референсні норми й тренд — усе в таблиці. Користувачам
+												не потрібно відкривати три шари карток, щоб зрозуміти один біомаркер.
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Потік продукту</div>
+								<div class="hc-status-bar-field">Імпорт → видобути → інтерпретувати</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-05">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Накопичувальний цикл</span>
+							<span>Слайд 5 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128240;</span>Презентація</div>
+							<div class="hc-app-nav-section-label">Сюжет</div>
+							<a class="hc-app-nav-item" href="#slide-01"><span aria-hidden="true">&#9679;</span>Обкладинка</a>
+							<a class="hc-app-nav-item" href="#slide-02"><span aria-hidden="true">&#9679;</span>Проблема</a>
+							<a class="hc-app-nav-item" href="#slide-03"><span aria-hidden="true">&#9679;</span>Користувач</a>
+							<a class="hc-app-nav-item" href="#slide-04"><span aria-hidden="true">&#9679;</span>Продукт</a>
+							<a class="hc-app-nav-item active" href="#slide-05"><span aria-hidden="true">&#9679;</span>Цикл</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Базовий цикл</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Імпорт → зрозуміти → більше довіряти платформі</div>
+										<h2 class="deck-subtitle">Кожне завантаження збільшує цінність продукту, а не просто створює ще один запис.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-4">
+									<div class="deck-metric">
+										<div class="deck-metric-label">Крок 1</div>
+										<div class="deck-metric-value">Завантажити</div>
+										<div class="deck-metric-copy">Будь-який лабораторний документ потрапляє в систему.</div>
+									</div>
+									<div class="deck-metric">
+										<div class="deck-metric-label">Крок 2</div>
+										<div class="deck-metric-value">Структурувати</div>
+										<div class="deck-metric-copy">Значення стають історією з можливістю запитів.</div>
+									</div>
+									<div class="deck-metric">
+										<div class="deck-metric-label">Крок 3</div>
+										<div class="deck-metric-value">Інтерпретувати</div>
+										<div class="deck-metric-copy">AI зрозуміло пояснює актуальну картину.</div>
+									</div>
+									<div class="deck-metric">
+										<div class="deck-metric-label">Крок 4</div>
+										<div class="deck-metric-value">Накопичити</div>
+										<div class="deck-metric-copy">Наступне завантаження стає ціннішим.</div>
+									</div>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Чому утримання може спрацювати</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Продукт здобуває контекст із кожним новим документом.</li>
+												<li>Видимість трендів посилюється після другого й третього завантаження.</li>
+												<li>AI може мислити крізь час, а не лише підсумовувати ізольовані дані.</li>
+												<li>Користувач починає покладатися на HealthCabinet як на власний шар пам'яті.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Не просто чергова AI-обгортка</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Підсумок диференціації">
+													<thead>
+														<tr>
+															<th>Можливість</th>
+															<th>Звичайний велнес-додаток</th>
+															<th>HealthCabinet</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Прийом довільних документів</td>
+															<td>Ні</td>
+															<td class="hc-status-optimal">Так</td>
+														</tr>
+														<tr>
+															<td>Пам'ять між завантаженнями</td>
+															<td>Слабка</td>
+															<td class="hc-status-optimal">Базова поведінка</td>
+														</tr>
+														<tr>
+															<td>Щільний клінічний UI з таблицями</td>
+															<td>Рідкість</td>
+															<td class="hc-status-optimal">Вбудовано в мову продукту</td>
+														</tr>
+														<tr>
+															<td>Адміністративний воркфлоу виправлень</td>
+															<td>Часто відсутній</td>
+															<td class="hc-status-optimal">Включено</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Цикл</div>
+								<div class="hc-status-bar-field">Цінність продукту, що накопичується</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-06">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Довіра і безпека</span>
+							<span>Слайд 6 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128737;</span>Шар довіри</div>
+							<div class="hc-app-nav-section-label">Доказ</div>
+							<a class="hc-app-nav-item active" href="#slide-06"><span aria-hidden="true">&#9679;</span>Довіра</a>
+							<a class="hc-app-nav-item" href="#slide-07"><span aria-hidden="true">&#9679;</span>Реалізація</a>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Модель</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Дорожня карта</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Запит</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Довіра і безпека</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Чутливий продукт, серйозне поводження</div>
+										<h2 class="deck-subtitle">Модель довіри — частина продукту, а не приписка у футері.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<fieldset class="hc-fieldset">
+										<legend>Підхід до даних і відповідності</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-info">Цільовий регіон AWS eu-central-1</span>
+											<ul class="deck-list">
+												<li>Підхід до обробки даних у регіоні ЄС</li>
+												<li>Потоки згоди, експорту та видалення — у скоупі</li>
+												<li>Підхід до шифрування медичних даних і токенів</li>
+												<li>Жодного недбалого ставлення до даних особливої категорії</li>
+											</ul>
+										</div>
+									</fieldset>
+
+									<fieldset class="hc-fieldset">
+										<legend>Підхід до безпеки AI</legend>
+										<div class="deck-stack">
+											<span class="hc-badge hc-badge-warning">Інформаційно, не діагностично</span>
+											<ul class="deck-list">
+												<li>AI пояснює патерни й контекст</li>
+												<li>Невизначеність має бути показана, а не прихована</li>
+												<li>Без формулювань з призначенням лікування чи дозування</li>
+												<li>Існує шлях людської перевірки для крайових випадків видобування</li>
+											</ul>
+										</div>
+									</fieldset>
+								</div>
+
+								<div class="deck-grid deck-grid-3">
+									<div class="hc-state hc-state-success">
+										<p class="hc-state-title">Довіра пацієнта</p>
+										<p class="hc-state-description">
+											Користувачі мають вірити, що їхня історія безпечна, експортована
+											й під їхнім контролем.
+										</p>
+									</div>
+									<div class="hc-state hc-state-warning">
+										<p class="hc-state-title">Операційна довіра</p>
+										<p class="hc-state-description">
+											Адмін-інструменти важливі, бо обробка документів завжди матиме
+											крайові випадки в реальному світі.
+										</p>
+									</div>
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Довіра до бренду</p>
+										<p class="hc-state-description">
+											Клінічний UI допомагає, але справжня довіра — від обмежених тверджень
+											і видимих рішень щодо безпеки.
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Довіра</div>
+								<div class="hc-status-bar-field">Підхід ЄС + AI-обмеження</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-07">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Стан реалізації</span>
+							<span>Слайд 7 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128295;</span>Доказ</div>
+							<div class="hc-app-nav-section-label">Виконання</div>
+							<a class="hc-app-nav-item" href="#slide-06"><span aria-hidden="true">&#9679;</span>Довіра</a>
+							<a class="hc-app-nav-item active" href="#slide-07"><span aria-hidden="true">&#9679;</span>Реалізація</a>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Модель</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Дорожня карта</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Запит</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Поточна реалізація</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Це не лише позиціонування у презентації</div>
+										<h2 class="deck-subtitle">Поверхня продукту вже існує в репозиторії.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Форма системи</div>
+										<div class="hc-dash-section-body">
+											<div class="deck-arch">
+												<div class="deck-arch-box">
+													<strong>Frontend</strong>
+													<span>SvelteKit 2, Svelte 5, табличний клінічний UI</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>Backend API</strong>
+													<span>FastAPI, SQLAlchemy async, авторизація, ендпойнти документів</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>Worker</strong>
+													<span>ARQ-конвеєр для асинхронної обробки документів</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>PostgreSQL</strong>
+													<span>Структуровані медичні значення та дані користувачів</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>Redis</strong>
+													<span>Черги, тимчасовий стан і координація</span>
+												</div>
+												<div class="deck-arch-box">
+													<strong>MinIO / S3</strong>
+													<span>Об'єктне сховище документів</span>
+												</div>
+											</div>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Видимі можливості в репозиторії</div>
+										<div class="hc-dash-section-body">
+											<div class="hc-data-table">
+												<table aria-label="Реалізовані напрями продукту">
+													<thead>
+														<tr>
+															<th>Область</th>
+															<th>Стан у репозиторії</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td>Авторизація та реєстрація з урахуванням згоди</td>
+															<td class="hc-status-optimal">Реалізовано</td>
+														</tr>
+														<tr>
+															<td>Медичний онбординг і збір профілю</td>
+															<td class="hc-status-optimal">Реалізовано</td>
+														</tr>
+														<tr>
+															<td>Завантаження документів і стрімінг статусів</td>
+															<td class="hc-status-optimal">Реалізовано</td>
+														</tr>
+														<tr>
+															<td>Тренди на дашборді й клінічні AI-нотатки</td>
+															<td class="hc-status-optimal">Реалізовано</td>
+														</tr>
+														<tr>
+															<td>Поверхня адміністративних операцій</td>
+															<td class="hc-status-optimal">Реалізовано</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
+
+								<div class="hc-state hc-state-info">
+									<p class="hc-state-title">Аргумент довіри</p>
+									<p class="hc-state-description">
+										Презентація має описувати наявний напрям із робочими поверхнями
+										продукту, а не спекулятивну ідею, відірвану від репозиторія.
+									</p>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Реалізація</div>
+								<div class="hc-status-bar-field">Історія продукту, підтверджена репозиторієм</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-08">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Бізнес-модель</span>
+							<span>Слайд 8 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128176;</span>Комерція</div>
+							<div class="hc-app-nav-section-label">Бізнес</div>
+							<a class="hc-app-nav-item" href="#slide-06"><span aria-hidden="true">&#9679;</span>Довіра</a>
+							<a class="hc-app-nav-item" href="#slide-07"><span aria-hidden="true">&#9679;</span>Реалізація</a>
+							<a class="hc-app-nav-item active" href="#slide-08"><span aria-hidden="true">&#9679;</span>Модель</a>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Дорожня карта</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Запит</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Бізнес-модель і вихід на ринок</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Підтвердити базовий цикл перед надмірною монетизацією</div>
+										<h2 class="deck-subtitle">Freemium спершу доводить довіру. Premium нашаровується на справжнє повторне використання.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-2">
+									<fieldset class="hc-fieldset">
+										<legend>Комерційна модель</legend>
+										<div class="deck-stack">
+											<div class="hc-state hc-state-success">
+												<p class="hc-state-title">Безкоштовний рівень</p>
+												<p class="hc-state-description">
+													Підтвердити цикл «завантаження → інсайт», зменшити тертя та сформувати довіру.
+												</p>
+											</div>
+											<div class="hc-state hc-state-info">
+												<p class="hc-state-title">Преміум-рівень</p>
+												<p class="hc-state-description">
+													Розблокувати глибшу AI-пам'ять, багатшу історію трендів і розширені сценарії.
+												</p>
+											</div>
+											<div class="hc-state hc-state-warning">
+												<p class="hc-state-title">Подальше розширення</p>
+												<p class="hc-state-description">
+													Сімейні плани, розширення сховища й функції розшарювання з лікарем
+													стануть переконливішими, коли базовий цикл буде підтверджено.
+												</p>
+											</div>
+										</div>
+									</fieldset>
+
+									<fieldset class="hc-fieldset">
+										<legend>Стартовий сегмент виходу на ринок</legend>
+										<div class="deck-stack">
+											<ul class="deck-list">
+												<li>Спільноти людей із хронічними станами з регулярним тестуванням</li>
+												<li>Аудиторії приватних лабораторій і самотестування, які вже купують панелі</li>
+												<li>Демо від засновника та продуктовий маркетинг, побудований на наративі</li>
+												<li>Запам'ятовувана естетика клінічної робочої станції як перевага позиціонування</li>
+											</ul>
+										</div>
+									</fieldset>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Модель</div>
+								<div class="hc-status-bar-field">Спершу freemium, преміум-аналітика згодом</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-09">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Дорожня карта</span>
+							<span>Слайд 9 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#128198;</span>Дорожня карта</div>
+							<div class="hc-app-nav-section-label">Далі</div>
+							<a class="hc-app-nav-item" href="#slide-08"><span aria-hidden="true">&#9679;</span>Модель</a>
+							<a class="hc-app-nav-item active" href="#slide-09"><span aria-hidden="true">&#9679;</span>Дорожня карта</a>
+							<a class="hc-app-nav-item" href="#slide-10"><span aria-hidden="true">&#9679;</span>Запит</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<section class="hc-dash-section">
+									<div class="hc-dash-section-header">Дорожня карта</div>
+									<div class="hc-dash-section-body">
+										<div class="deck-kicker">Підтвердити цикл, потім поглиблювати аналітику</div>
+										<h2 class="deck-subtitle">Дорожня карта накопичує глибину, а не розпорошується на не пов'язані функції.</h2>
+									</div>
+								</section>
+
+								<div class="deck-grid deck-grid-3">
+									<div class="hc-state hc-state-info">
+										<p class="hc-state-title">Зараз</p>
+										<p class="hc-state-description">
+											Підвищити надійність завантаження, час до першого інсайту та впевненість
+											циклу «видобути → інтерпретувати».
+										</p>
+									</div>
+									<div class="hc-state hc-state-success">
+										<p class="hc-state-title">Далі</p>
+										<p class="hc-state-description">
+											Збільшити повторне використання, поглибити таймлайни, посилити AI-пам'ять
+											між документами й покращити якість клінічних нотаток.
+										</p>
+									</div>
+									<div class="hc-state hc-state-warning">
+										<p class="hc-state-title">Згодом</p>
+										<p class="hc-state-description">
+											Сценарії розшарювання з лікарем, багатші експорти, преміум-шари аналітики
+											й ширше розширення в ЄС.
+										</p>
+									</div>
+								</div>
+
+								<div class="deck-grid deck-grid-2">
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Що вимірювати першочергово</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Частка успішних завантажень</li>
+												<li>Час до першого корисного інсайту</li>
+												<li>Повторні завантаження в різні дати</li>
+												<li>Користувачі з історіями з кількох документів</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="hc-dash-section">
+										<div class="hc-dash-section-header">Що не оптимізувати зарано</div>
+										<div class="hc-dash-section-body">
+											<ul class="deck-list">
+												<li>Складну поверхню білінгу до того, як доведено довіру</li>
+												<li>Розширення функцій, що послаблює базовий цикл завантаження</li>
+												<li>Маркетингове полірування, відірване від корисності продукту</li>
+												<li>Завищені медичні твердження заради короткочасної уваги</li>
+											</ul>
+										</div>
+									</section>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Дорожня карта</div>
+								<div class="hc-status-bar-field">Накопичувати глибину, а не розширюватись</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="deck-slide" id="slide-10">
+				<div class="deck-shell">
+					<header class="hc-app-header">
+						<div class="hc-app-header-brand">
+							<span class="hc-app-header-icon" aria-hidden="true">&#9877;</span>
+							<span>HealthCabinet</span>
+						</div>
+						<div class="hc-app-header-user">
+							<span>Підсумковий запит</span>
+							<span>Слайд 10 / 10</span>
+						</div>
+					</header>
+
+					<div class="deck-body">
+						<aside class="hc-app-left-nav" aria-label="Навігація презентації">
+							<div class="hc-app-nav-header"><span aria-hidden="true">&#9993;</span>Закриття</div>
+							<div class="hc-app-nav-section-label">Фінал</div>
+							<a class="hc-app-nav-item" href="#slide-09"><span aria-hidden="true">&#9679;</span>Дорожня карта</a>
+							<a class="hc-app-nav-item active" href="#slide-10"><span aria-hidden="true">&#9679;</span>Запит</a>
+						</aside>
+
+						<div class="deck-content">
+							<div class="deck-content-body">
+								<div class="deck-grid deck-grid-2">
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Запит</div>
+											<div class="hc-dash-section-body">
+												<div class="deck-kicker">Перевірка з реальними користувачами й реальними документами</div>
+												<h2 class="deck-subtitle">HealthCabinet готовий до гостріших циклів зворотного зв'язку.</h2>
+												<p class="deck-lead">
+													Наступний крок — не ще більше абстрактної стратегії. Це кращі докази:
+													пілотні користувачі, гостріша продуктова критика й партнери,
+													яким важливий надійний UX медичних даних.
+												</p>
+											</div>
+										</section>
+
+										<div class="deck-grid deck-grid-3">
+											<div class="hc-state hc-state-info">
+												<p class="hc-state-title">Потреба 1</p>
+												<p class="hc-state-description">Пілотні користувачі з регулярними лабораторними сценаріями</p>
+											</div>
+											<div class="hc-state hc-state-success">
+												<p class="hc-state-title">Потреба 2</p>
+												<p class="hc-state-description">Дизайн- і продуктова критика поточного UX-напряму</p>
+											</div>
+											<div class="hc-state hc-state-warning">
+												<p class="hc-state-title">Потреба 3</p>
+												<p class="hc-state-description">Стратегічні розмови щодо медичної аналітики, орієнтованої на пацієнта</p>
+											</div>
+										</div>
+									</div>
+
+									<div class="deck-stack">
+										<section class="hc-dash-section">
+											<div class="hc-dash-section-header">Чому зараз</div>
+											<div class="hc-dash-section-body">
+												<div class="hc-data-table">
+													<table aria-label="Підсумок закриття">
+														<thead>
+															<tr>
+																<th>Сигнал</th>
+																<th>Інтерпретація</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr>
+																<td>Історія продукту</td>
+																<td>Зрозуміла та відмінна</td>
+															</tr>
+															<tr>
+																<td>Дизайн-мова</td>
+																<td>Запам'ятовувана та відповідна домену</td>
+															</tr>
+															<tr>
+																<td>Довіра до реалізації</td>
+																<td>Підкріплена репозиторієм, не гіпотетична</td>
+															</tr>
+															<tr>
+																<td>Який наступний доказ потрібен</td>
+																<td>Повторне використання з реальними документами</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</section>
+
+										<div class="hc-ai-note">
+											<h2 class="hc-ai-note-header">Закриваюча теза</h2>
+											<div class="hc-ai-note-body">
+												<p>
+													HealthCabinet не намагається бути ще однією велнес-поверхнею. Він
+													прагне стати шаром пам'яті та інтерпретації, що належить пацієнту,
+													для регулярних медичних даних.
+												</p>
+											</div>
+											<div class="hc-ai-note-disclaimer">
+												Презентацію перебудовано під чинну дизайн-систему HealthCabinet:
+												палітра Arctic Blue, підняті/занурені елементи, табличний UI робочої станції.
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<footer class="hc-status-bar">
+								<div class="hc-status-bar-field">Готово</div>
+								<div class="hc-status-bar-field">Запит</div>
+								<div class="hc-status-bar-field">Пілотні користувачі + продуктова критика + партнери</div>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</body>
+</html>
