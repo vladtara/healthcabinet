@@ -130,11 +130,14 @@
 	const hasFilteredDocuments = $derived(filteredDocuments.length > 0);
 	const filterHasValues = $derived(values.length > 0);
 	// Tri-state signal: false = "confirmed empty" (skip AI round-trip; disable
-	// Send); true = "confirmed populated"; undefined = "still resolving"
-	// (children treat this as pending: AIClinicalNote runs the query / shows
-	// skeleton, AIChatWindow disables Send until resolution — see 15.3 review).
+	// Send); true = "confirmed populated"; undefined = "still resolving".
+	// Dashboard chat can work from per-document AI context even when the
+	// aggregate note endpoint still returns 409, so extracted values are enough
+	// to allow chat. AIClinicalNote will still render its own soft-empty state
+	// if the aggregate interpretation row has not been generated yet.
 	const dashboardHasContext = $derived.by((): boolean | undefined => {
 		if (!hasFilteredDocuments) return false;
+		if (filterHasValues) return true;
 		if (dashboardInterpretationQuery.data) return true;
 		if (errorStatus(dashboardInterpretationQuery.error) === 409) return false;
 		return undefined;

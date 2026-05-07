@@ -126,7 +126,7 @@ describe('AIChatWindow', () => {
 
 		const hint = getByTestId('dashboard-chat-no-context-hint');
 		expect(hint).toBeInTheDocument();
-		expect(hint.textContent).toMatch(/at least one interpreted document/i);
+		expect(hint.textContent).toMatch(/extracted health values/i);
 		// Title bar still renders so the component remains visible/addressable.
 		const titlebar = container.querySelector('.hc-ai-chat-titlebar-title');
 		expect(titlebar?.textContent).toContain('Dr. Health');

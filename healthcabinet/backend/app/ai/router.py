@@ -61,7 +61,19 @@ async def get_document_interpretation(
         db, user_id=current_user.id, document_id=document_id
     )
     if result is None:
-        raise HTTPException(status_code=404, detail="Interpretation not available")
+        recovered = await ai_service.ensure_document_interpretation_from_values(
+            db, user_id=current_user.id, document_id=document_id
+        )
+        if not recovered:
+            raise HTTPException(status_code=404, detail="Interpretation not available")
+        result = await ai_repository.get_interpretation_and_metadata(
+            db, user_id=current_user.id, document_id=document_id
+        )
+        if result is None:
+            raise HTTPException(
+                status_code=503,
+                detail="AI interpretation is temporarily unavailable. Please try again in a moment.",
+            )
 
     interpretation, reasoning_dict, memory = result
     reasoning: ReasoningContext | None = None

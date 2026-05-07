@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import anthropic
 import httpx
 import langchain_anthropic
+import langchain_openai
 import pytest
 
 
@@ -32,9 +33,13 @@ def llm_client_module():
 def test_llm_client_import_is_lazy(llm_client_module):
     llm_client = llm_client_module
 
-    with patch.object(langchain_anthropic, "ChatAnthropic") as chat_cls:
+    with (
+        patch.object(langchain_anthropic, "ChatAnthropic") as anthropic_chat_cls,
+        patch.object(langchain_openai, "ChatOpenAI") as openai_chat_cls,
+    ):
         importlib.reload(llm_client)
-        chat_cls.assert_not_called()
+        anthropic_chat_cls.assert_not_called()
+        openai_chat_cls.assert_not_called()
 
     importlib.reload(llm_client)
 
@@ -44,8 +49,10 @@ async def test_call_model_text_raises_when_api_key_missing(llm_client_module):
     llm_client = llm_client_module
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", ""),
-        pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
+        pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY or OPENAI_API_KEY"),
     ):
         await llm_client.call_model_text("Hello")
 
@@ -55,8 +62,10 @@ async def test_call_model_text_treats_whitespace_api_key_as_missing(llm_client_m
     llm_client = llm_client_module
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "   "),
-        pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "   "),
+        pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY or OPENAI_API_KEY"),
     ):
         await llm_client.call_model_text("Hello")
 
@@ -72,7 +81,9 @@ async def test_call_model_text_returns_text_from_langchain_response_and_reuses_c
     )
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "  test-key  "),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(llm_client, "ChatAnthropic", return_value=fake_model) as chat_cls,
     ):
         first = await llm_client.call_model_text("Hello")
@@ -87,6 +98,83 @@ async def test_call_model_text_returns_text_from_langchain_response_and_reuses_c
         "max_tokens": llm_client._CALL_MAX_TOKENS,
         "stop": None,
     }
+
+
+@pytest.mark.asyncio
+async def test_call_model_text_uses_openai_fallback_when_anthropic_key_missing(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+
+    fake_model = SimpleNamespace(ainvoke=AsyncMock(return_value=_message("OpenAI response")))
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", ""),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "  openai-key  "),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
+        patch.object(llm_client, "ChatOpenAI", return_value=fake_model) as chat_cls,
+    ):
+        text = await llm_client.call_model_text("Hello")
+
+    assert text == "OpenAI response"
+    assert chat_cls.call_args.kwargs == {
+        "model": "gpt-5.5",
+        "api_key": llm_client.SecretStr("openai-key"),
+        "max_completion_tokens": llm_client._CALL_MAX_TOKENS,
+    }
+
+
+@pytest.mark.asyncio
+async def test_call_model_text_uses_explicit_openai_provider_when_both_keys_exist(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+
+    fake_model = SimpleNamespace(ainvoke=AsyncMock(return_value=_message("OpenAI explicit")))
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "openai"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
+        patch.object(llm_client, "ChatAnthropic") as anthropic_chat_cls,
+        patch.object(llm_client, "ChatOpenAI", return_value=fake_model),
+    ):
+        text = await llm_client.call_model_text("Hello")
+
+    assert text == "OpenAI explicit"
+    anthropic_chat_cls.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_call_model_text_falls_back_to_openai_for_temporary_anthropic_error(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+    overloaded_error = _status_error(
+        status_code=529,
+        body={"error": {"type": "overloaded_error", "message": "Overloaded"}},
+    )
+    openai_model = SimpleNamespace(ainvoke=AsyncMock(return_value=_message("OpenAI fallback")))
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
+        patch.object(
+            llm_client,
+            "ChatAnthropic",
+            return_value=SimpleNamespace(ainvoke=AsyncMock(side_effect=overloaded_error)),
+        ) as anthropic_chat_cls,
+        patch.object(llm_client, "ChatOpenAI", return_value=openai_model) as openai_chat_cls,
+    ):
+        text = await llm_client.call_model_text("Hello")
+
+    assert text == "OpenAI fallback"
+    assert anthropic_chat_cls.call_count == 1
+    assert openai_chat_cls.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -107,7 +195,9 @@ async def test_stream_model_text_yields_incremental_text_chunks_and_reuses_clien
     fake_model = SimpleNamespace(astream=_astream)
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "test-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(llm_client, "ChatAnthropic", return_value=fake_model) as chat_cls,
     ):
         first_chunks = [chunk async for chunk in llm_client.stream_model_text("Prompt")]
@@ -117,6 +207,77 @@ async def test_stream_model_text_yields_incremental_text_chunks_and_reuses_clien
     assert second_chunks == ["Your ", "glucose ", "is normal."]
     assert chat_cls.call_count == 1
     assert chat_cls.call_args.kwargs["max_tokens"] == llm_client._STREAM_MAX_TOKENS
+
+
+@pytest.mark.asyncio
+async def test_stream_model_text_falls_back_to_openai_before_streaming_chunks(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+    overloaded_error = _status_error(
+        status_code=529,
+        body={"error": {"type": "overloaded_error", "message": "Overloaded"}},
+    )
+
+    async def _anthropic_stream(_prompt: str) -> AsyncIterator[SimpleNamespace]:
+        if False:
+            yield _message("")
+        raise overloaded_error
+
+    def _openai_stream(_prompt: str) -> AsyncIterator[SimpleNamespace]:
+        return _stream_messages("OpenAI ", "fallback")
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(llm_client.settings, "OPENAI_CHAT_MODEL", "gpt-5.5"),
+        patch.object(
+            llm_client,
+            "ChatAnthropic",
+            return_value=SimpleNamespace(astream=_anthropic_stream),
+        ),
+        patch.object(
+            llm_client,
+            "ChatOpenAI",
+            return_value=SimpleNamespace(astream=_openai_stream),
+        ) as openai_chat_cls,
+    ):
+        chunks = [chunk async for chunk in llm_client.stream_model_text("Prompt")]
+
+    assert chunks == ["OpenAI ", "fallback"]
+    assert openai_chat_cls.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_stream_model_text_does_not_fallback_after_partial_stream(
+    llm_client_module,
+):
+    llm_client = llm_client_module
+    overloaded_error = _status_error(
+        status_code=529,
+        body={"error": {"type": "overloaded_error", "message": "Overloaded"}},
+    )
+
+    async def _anthropic_stream(_prompt: str) -> AsyncIterator[SimpleNamespace]:
+        yield _message("partial")
+        raise overloaded_error
+
+    with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
+        patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "anthropic-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", "openai-key"),
+        patch.object(
+            llm_client,
+            "ChatAnthropic",
+            return_value=SimpleNamespace(astream=_anthropic_stream),
+        ),
+        patch.object(llm_client, "ChatOpenAI") as openai_chat_cls,
+        pytest.raises(llm_client.ModelTemporaryUnavailableError, match="temporarily unavailable"),
+    ):
+        [chunk async for chunk in llm_client.stream_model_text("Prompt")]
+
+    openai_chat_cls.assert_not_called()
 
 
 def _status_error(*, status_code: int, body: object) -> anthropic.APIStatusError:
@@ -136,7 +297,9 @@ async def test_call_model_text_raises_temporary_unavailable_for_overloaded_provi
     )
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "test-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(
             llm_client,
             "ChatAnthropic",
@@ -163,7 +326,9 @@ async def test_stream_model_text_raises_temporary_unavailable_for_overloaded_pro
         raise overloaded_error
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "test-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(llm_client, "ChatAnthropic", return_value=SimpleNamespace(astream=_astream)),
         pytest.raises(llm_client.ModelTemporaryUnavailableError, match="temporarily unavailable"),
     ):
@@ -190,7 +355,9 @@ async def test_call_model_text_raises_temporary_unavailable_for_various_status_c
     error = _status_error(status_code=status_code, body=body)
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "test-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(
             llm_client,
             "ChatAnthropic",
@@ -210,7 +377,9 @@ async def test_call_model_text_raises_temporary_unavailable_for_connection_error
     conn_error = anthropic.APIConnectionError(request=request)
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "test-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(
             llm_client,
             "ChatAnthropic",
@@ -229,7 +398,9 @@ async def test_call_model_text_raises_permanent_error_for_non_temporary_status_c
     permanent_error = _status_error(status_code=400, body={"type": "invalid_request_error"})
 
     with (
+        patch.object(llm_client.settings, "AI_CHAT_PROVIDER", "auto"),
         patch.object(llm_client.settings, "ANTHROPIC_API_KEY", "test-key"),
+        patch.object(llm_client.settings, "OPENAI_API_KEY", ""),
         patch.object(
             llm_client,
             "ChatAnthropic",

@@ -32,6 +32,7 @@ from app.ai.schemas import (
     DashboardKind,
     PatternObservation,
 )
+from app.health_data import repository as health_data_repository
 from app.processing.schemas import NormalizedHealthValue
 from app.users import repository as users_repository
 from app.users.repository import ProfileContext
@@ -138,6 +139,97 @@ async def generate_interpretation(
         reasoning_json=reasoning,
     )
     return text
+
+
+async def ensure_document_interpretation_from_values(
+    db: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    document_id: uuid.UUID,
+) -> bool:
+    """Best-effort recovery for completed docs whose AI note was never persisted.
+
+    Extraction and interpretation happen in the same worker job. If the model is
+    temporarily unavailable during the interpretation step, health values can be
+    present while the AI memory row is missing. Retrying from stored values lets
+    the document recover on the next user read instead of staying unavailable.
+    """
+    existing = await ai_repository.get_interpretation_and_metadata(
+        db, user_id=user_id, document_id=document_id
+    )
+    if existing is not None:
+        return True
+
+    result = await health_data_repository.list_values_by_document(
+        db, document_id=document_id, user_id=user_id
+    )
+    if not result.records:
+        return False
+
+    values = [
+        NormalizedHealthValue(
+            biomarker_name=record.biomarker_name,
+            canonical_biomarker_name=record.canonical_biomarker_name,
+            value=record.value,
+            unit=record.unit,
+            reference_range_low=record.reference_range_low,
+            reference_range_high=record.reference_range_high,
+            confidence=record.confidence,
+            needs_review=record.needs_review,
+        )
+        for record in result.records
+    ]
+    generated = await generate_interpretation(
+        db,
+        document_id=document_id,
+        user_id=user_id,
+        values=values,
+    )
+    return generated is not None
+
+
+async def _ensure_dashboard_interpretations_from_values(
+    db: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    document_kind: DashboardKind,
+) -> int:
+    """Recover missing per-document AI rows for docs visible in a dashboard filter."""
+    values_result = await health_data_repository.list_values_by_user(
+        db, user_id=user_id, document_kind=document_kind
+    )
+    if not values_result.records:
+        return 0
+
+    context_rows = await ai_repository.list_user_ai_context(
+        db, user_id=user_id, document_kind=document_kind
+    )
+    context_doc_ids: set[uuid.UUID] = set()
+    for row in context_rows:
+        raw_id = row.get("document_id")
+        if not isinstance(raw_id, str):
+            continue
+        try:
+            context_doc_ids.add(uuid.UUID(raw_id))
+        except ValueError:
+            continue
+
+    candidate_doc_ids: list[uuid.UUID] = []
+    seen_doc_ids: set[uuid.UUID] = set()
+    for record in values_result.records:
+        if record.document_id in seen_doc_ids:
+            continue
+        seen_doc_ids.add(record.document_id)
+        if record.document_id not in context_doc_ids:
+            candidate_doc_ids.append(record.document_id)
+
+    recovered = 0
+    for doc_id in candidate_doc_ids:
+        if await ensure_document_interpretation_from_values(
+            db, user_id=user_id, document_id=doc_id
+        ):
+            recovered += 1
+    return recovered
 
 
 async def _load_main_summary_for_chat(
@@ -784,7 +876,21 @@ async def _generate_and_persist_overall(
         db, user_id=user_id, document_kind=document_kind
     )
     if not context_rows:
-        raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
+        recovered_count = await _ensure_dashboard_interpretations_from_values(
+            db, user_id=user_id, document_kind=document_kind
+        )
+        if recovered_count:
+            logger.info(
+                "ai.dashboard_context_recovered",
+                user_id=str(user_id),
+                document_kind=document_kind,
+                recovered_count=recovered_count,
+            )
+            context_rows = await ai_repository.list_user_ai_context(
+                db, user_id=user_id, document_kind=document_kind
+            )
+        if not context_rows:
+            raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
     # Provenance invariant: every row fed into the prompt must also appear in
     # source_document_ids. list_user_ai_context always stringifies the UUID, so
@@ -985,7 +1091,21 @@ async def stream_dashboard_follow_up(
         db, user_id=user_id, document_kind=document_kind
     )
     if not context_rows:
-        raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
+        recovered_count = await _ensure_dashboard_interpretations_from_values(
+            db, user_id=user_id, document_kind=document_kind
+        )
+        if recovered_count:
+            logger.info(
+                "ai.dashboard_chat_context_recovered",
+                user_id=str(user_id),
+                document_kind=document_kind,
+                recovered_count=recovered_count,
+            )
+            context_rows = await ai_repository.list_user_ai_context(
+                db, user_id=user_id, document_kind=document_kind
+            )
+        if not context_rows:
+            raise NoDashboardAiContextError(_NO_DASHBOARD_AI_CONTEXT_DETAIL)
 
     thread_id = ai_repository.thread_id_for_dashboard(user_id, document_kind)
     main_summary = await _load_main_summary_for_chat(db, user_id=user_id)

@@ -44,10 +44,19 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
 
+    # AI providers
+    AI_CHAT_PROVIDER: Literal["auto", "anthropic", "openai"] = "auto"
+    AI_EXTRACTION_PROVIDER: Literal["auto", "anthropic", "openai"] = "auto"
+
     # Anthropic
     ANTHROPIC_API_KEY: str = ""
     AI_CHAT_MODEL: str = "claude-sonnet-4-6"
     ANTHROPIC_EXTRACTION_MODEL: str = "claude-sonnet-4-20250514"
+
+    # OpenAI
+    OPENAI_API_KEY: str = ""
+    OPENAI_CHAT_MODEL: str = "gpt-5.5"
+    OPENAI_EXTRACTION_MODEL: str = "gpt-5.5"
 
     # Sentry
     SENTRY_DSN: str = ""

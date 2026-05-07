@@ -213,7 +213,7 @@ const en = {
 		send: 'Send ▶',
 		sendingIndicator: '…',
 		hintTip: 'Tip: Ask about specific biomarkers, trends, or what to discuss with your doctor',
-		hintNoContext: 'Chat is available once this filter has at least one interpreted document',
+		hintNoContext: 'Chat is available once this filter has extracted health values',
 		errorGeneric: 'Unable to get a response. Please try again.',
 		errorNetwork: 'A network error occurred. Please try again.',
 		errorStreaming: 'Streaming not supported in this environment.',
@@ -775,7 +775,7 @@ const uk: Messages = {
 		sendingIndicator: '…',
 		hintTip: 'Порада: запитайте про конкретні біомаркери, тенденції або про що спитати лікаря',
 		hintNoContext:
-			'Чат стане доступним, коли за цим фільтром буде хоча б один інтерпретований документ',
+			'Чат стане доступним, коли за цим фільтром будуть витягнуті показники здоровʼя',
 		errorGeneric: 'Не вдалося отримати відповідь. Спробуйте ще раз.',
 		errorNetwork: 'Сталася помилка мережі. Спробуйте ще раз.',
 		errorStreaming: 'Потокове передавання не підтримується в цьому середовищі.',

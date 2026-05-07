@@ -147,6 +147,47 @@ async def test_get_interpretation_returns_404_when_not_generated(
 
 
 @pytest.mark.asyncio
+async def test_get_interpretation_recovers_missing_note_from_stored_values(
+    ai_client: AsyncClient,
+    user_with_document,
+    make_health_value,
+):
+    user, doc = user_with_document
+    await make_health_value(
+        user=user,
+        document=doc,
+        biomarker_name="Glucose",
+        canonical_biomarker_name="Glucose",
+        value=91.0,
+        unit="mg/dL",
+    )
+
+    async def _identity_text(text: str) -> str:
+        return text
+
+    async def _identity_with_values(text: str, _values) -> str:
+        return text
+
+    with (
+        patch("app.ai.service.call_model_text", AsyncMock(return_value="Your glucose is normal.")),
+        patch("app.ai.service.validate_no_diagnostic", AsyncMock(side_effect=_identity_text)),
+        patch("app.ai.service.surface_uncertainty", AsyncMock(side_effect=_identity_with_values)),
+        patch("app.ai.service.inject_disclaimer", AsyncMock(side_effect=_identity_text)),
+        patch("app.ai.service.get_model_name", return_value="test-model"),
+    ):
+        response = await ai_client.get(
+            f"/api/v1/ai/documents/{doc.id}/interpretation",
+            headers=auth_headers(user),
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["document_id"] == str(doc.id)
+    assert data["interpretation"] == "Your glucose is normal."
+    assert data["model_version"] == "test-model"
+
+
+@pytest.mark.asyncio
 async def test_get_interpretation_returns_404_for_processing_document(
     ai_client: AsyncClient,
     async_db_session: AsyncSession,
